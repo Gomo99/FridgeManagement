@@ -1,0 +1,41 @@
+﻿@model IEnumerable<FridgeManagement.Models.FridgeAllocation>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Customer Fridges";
+    ViewData["ActivePage"] = "CustomerFridges";
+}
+
+<div class="page-header">
+    <h1>Customer Fridges</h1>
+    <p>All currently allocated fridges</p>
+    <a asp-action="Dashboard" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead>
+            <tr>
+                <th>Fridge Serial</th>
+                <th>Model</th>
+                <th>Customer</th>
+                <th>Location</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alloc in Model)
+            {
+                <tr>
+                    <td>@alloc.Fridge?.SerialNumber</td>
+                    <td>@alloc.Fridge?.Model</td>
+                    <td>@alloc.Customer?.Name</td>
+                    <td>@alloc.Customer?.Address</td>
+                    <td>
+                        <a asp-action="History" asp-route-fridgeId="@alloc.FridgeId" class="btn-fms btn-sm-fms btn-ghost-fms">History</a>
+                        <a asp-action="CreateFaultFromMaintenance" asp-route-fridgeId="@alloc.FridgeId" class="btn-fms btn-sm-fms btn-warning-fms">Report Fault</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

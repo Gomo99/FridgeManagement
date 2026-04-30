@@ -1,0 +1,96 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.FridgeAllocation>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Process Allocations";
+    ViewData["ActivePage"] = "Allocations";
+    string statusFilter = Context.Request.Query["statusFilter"];
+}
+
+<div class="page-header">
+    <h1>Fridge Allocations</h1>
+    <a asp-action="Dashboard" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+</div>
+
+<div class="fms-card" style="margin-bottom:16px;">
+    <div style="display:flex; gap:8px; padding:10px 16px;">
+        <a asp-action="ProcessAllocations" class="btn-fms btn-sm-fms @(string.IsNullOrEmpty(statusFilter) ? "btn-primary-fms" : "btn-ghost-fms")">All</a>
+        <a asp-action="ProcessAllocations" asp-route-statusFilter="Active" class="btn-fms btn-sm-fms @(statusFilter == "Active" ? "btn-primary-fms" : "btn-ghost-fms")">Active</a>
+        <a asp-action="ProcessAllocations" asp-route-statusFilter="Returned" class="btn-fms btn-sm-fms @(statusFilter == "Returned" ? "btn-primary-fms" : "btn-ghost-fms")">Returned</a>
+        <a asp-action="ProcessAllocations" asp-route-statusFilter="Cancelled" class="btn-fms btn-sm-fms @(statusFilter == "Cancelled" ? "btn-primary-fms" : "btn-ghost-fms")">Cancelled</a>
+    </div>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead><tr><th>Fridge</th><th>Customer</th><th>Date</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>
+            @foreach (var alloc in Model)
+            {
+                <tr>
+                    <td>@alloc.Fridge?.SerialNumber</td>
+                    <td>@alloc.Customer?.Name</td>
+                    <td>@alloc.AllocationDate.ToString("yyyy-MM-dd")</td>
+                    <td><span class="fms-badge @(alloc.Status == AllocationStatus.Active ? "green" : "gray")">@alloc.Status</span></td>
+                    <td style="text-align:right;">
+                        @if (alloc.Status == AllocationStatus.Active)
+                        {
+                            <button class="btn-fms btn-sm-fms btn-primary-fms" onclick="openProcessModal(@alloc.Id, '@alloc.Fridge?.SerialNumber', '@alloc.Customer?.Name')">Process Return</button>
+                        }
+                        else
+                        {
+
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Process Return Modal -->
+<div class="fms-modal-overlay" id="processModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-rotate-left"></i> Process Allocation</div>
+            <button class="fms-modal-close" onclick="closeModal('processModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:16px;">
+            <p><strong id="processFridge"></strong> – <span id="processCustomer"></span></p>
+            <form asp-action="ProcessAllocation" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="processAllocId" />
+                <div class="fms-form-group">
+                    <label>Action</label>
+                    <select name="action" class="fms-select">
+                        <option value="return">Mark as Returned</option>
+                        <option value="cancel">Cancel Allocation</option>
+                    </select>
+                </div>
+                <div class="fms-form-group">
+                    <label>Notes</label>
+                    <textarea name="notes" class="fms-textarea" rows="2"></textarea>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('processModal')">Cancel</button>
+                    <button type="submit" class="btn-fms btn-primary-fms">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+        function openProcessModal(allocId, fridgeSerial, customerName) {
+            document.getElementById('processAllocId').value = allocId;
+            document.getElementById('processFridge').innerText = fridgeSerial;
+            document.getElementById('processCustomer').innerText = customerName;
+            openModal('processModal');
+        }
+    </script>
+}

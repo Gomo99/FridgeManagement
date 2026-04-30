@@ -1,0 +1,202 @@
+﻿@model IEnumerable<FridgeManagement.Models.Customer>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Manage Customers";
+    ViewData["ActivePage"] = "Customers";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Customers</h1>
+        <p>All active customers</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="InactiveCustomers" class="btn-fms btn-ghost-fms btn-sm-fms">
+            <i class="fa-solid fa-user-slash"></i> View Inactive
+        </a>
+        <button class="btn-fms btn-primary-fms" onclick="openAddModal()">
+            <i class="fa-solid fa-plus"></i> Add Customer
+        </button>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Customer List</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Search customers..." id="custSearch" oninput="filterTable()" />
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="custTable">
+            <thead>
+                <tr>
+                    <th>Business Name</th>
+                    <th>Contact Person</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr data-search="@c.Name @c.ContactPerson @c.Email">
+                        <td>
+                            <div style="font-weight:600; color:var(--white);">@c.Name</div>
+                            <div style="font-size:12px; color:var(--muted);">ID #@c.Id</div>
+                        </td>
+                        <td>@c.ContactPerson</td>
+                        <td style="color:var(--muted);">@c.PhoneNumber</td>
+                        <td style="color:var(--muted);">@c.Email</td>
+                        <td><span class="fms-badge green">Active</span></td>
+                        <td style="text-align:right;">
+                            <button class="btn-fms btn-ghost-fms btn-sm-fms"
+                                    onclick="openEditModal(@c.Id, '@c.Name.Replace("'", "\\'")', '@c.ContactPerson.Replace("'", "\\'")', '@c.PhoneNumber', '@c.Email', '@c.Address.Replace("'", "\\'")')">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="btn-fms btn-danger-fms btn-sm-fms" onclick="openDeleteModal(@c.Id, '@c.Name.Replace("'", "\\'")')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══ ADD CUSTOMER MODAL ═══ -->
+<div class="fms-modal-overlay" id="addCustomerModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-store" style="color:var(--ice); margin-right:10px;"></i>Add Customer</div>
+            <button class="fms-modal-close" onclick="closeModal('addCustomerModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="CreateCustomer" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label class="fms-label">Business Name</label>
+                <input type="text" name="Name" class="fms-input" placeholder="e.g. Sipho's Spaza" required />
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Contact Person</label>
+                    <input type="text" name="ContactPerson" class="fms-input" placeholder="Full name" required />
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Phone</label>
+                    <input type="tel" name="PhoneNumber" class="fms-input" placeholder="0XX XXX XXXX" />
+                </div>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Email</label>
+                <input type="email" name="Email" class="fms-input" placeholder="email@example.com" />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Address</label>
+                <textarea name="Address" class="fms-textarea" rows="2" placeholder="Full address..."></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('addCustomerModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-plus"></i> Add Customer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ EDIT CUSTOMER MODAL ═══ -->
+<div class="fms-modal-overlay" id="editCustomerModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-pen" style="color:var(--ice); margin-right:10px;"></i>Edit Customer</div>
+            <button class="fms-modal-close" onclick="closeModal('editCustomerModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="EditCustomer" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="editCustId" />
+            <div class="fms-form-group">
+                <label class="fms-label">Business Name</label>
+                <input type="text" name="Name" id="editCustName" class="fms-input" required />
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Contact Person</label>
+                    <input type="text" name="ContactPerson" id="editCustContact" class="fms-input" />
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Phone</label>
+                    <input type="tel" name="PhoneNumber" id="editCustPhone" class="fms-input" />
+                </div>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Email</label>
+                <input type="email" name="Email" id="editCustEmail" class="fms-input" />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Address</label>
+                <textarea name="Address" id="editCustAddress" class="fms-textarea" rows="2"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('editCustomerModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ DELETE CUSTOMER MODAL ═══ -->
+<div class="fms-modal-overlay" id="deleteCustomerModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning); margin-right:10px;"></i>Confirm Delete</div>
+            <button class="fms-modal-close" onclick="closeModal('deleteCustomerModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p style="color:var(--muted);">Are you sure you want to delete <strong id="delCustName"></strong>?</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('deleteCustomerModal')">Cancel</button>
+                <form asp-action="DeleteCustomer" method="post" id="delCustomerForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="delCustId" />
+                    <button type="submit" class="btn-fms btn-danger-fms">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const q = document.getElementById('custSearch').value.toLowerCase();
+            document.querySelectorAll('#custTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        function openAddModal() { openModal('addCustomerModal'); }
+
+        function openEditModal(id, name, contact, phone, email, address) {
+            document.getElementById('editCustId').value = id;
+            document.getElementById('editCustName').value = name;
+            document.getElementById('editCustContact').value = contact;
+            document.getElementById('editCustPhone').value = phone;
+            document.getElementById('editCustEmail').value = email;
+            document.getElementById('editCustAddress').value = address;
+            openModal('editCustomerModal');
+        }
+
+        function openDeleteModal(id, name) {
+            document.getElementById('delCustId').value = id;
+            document.getElementById('delCustName').textContent = name;
+            openModal('deleteCustomerModal');
+        }
+    </script>
+}

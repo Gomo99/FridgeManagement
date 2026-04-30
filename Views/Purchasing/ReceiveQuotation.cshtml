@@ -1,0 +1,55 @@
+﻿@model FridgeManagement.Models.Quotation
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Receive Quotation";
+    ViewData["ActivePage"] = "RFQs";
+    var suppliers = ViewBag.Suppliers as SelectList;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Receive Quotation</h1>
+        <p>For RFQ #@Model.RFQId</p>
+    </div>
+    <a asp-action="RFQDetails" asp-route-id="@Model.RFQId" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to RFQ
+    </a>
+</div>
+
+<div class="fms-card" style="max-width:600px; margin:auto;">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-file-invoice-dollar" style="color:var(--ice); margin-right:10px;"></i>Quotation Details</div>
+    </div>
+    <form asp-action="ReceiveQuotation" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="RFQId" />
+        <div class="fms-form-group">
+            <label class="fms-label" asp-for="SupplierId"></label>
+            <select asp-for="SupplierId" class="fms-select" asp-items="suppliers" required>
+                <option value="">-- Select Supplier --</option>
+            </select>
+            <span asp-validation-for="SupplierId" class="text-danger"></span>
+        </div>
+        <div class="fms-form-group">
+            <label class="fms-label" asp-for="TotalAmount">Total Amount (R)</label>
+            <input asp-for="TotalAmount" class="fms-input" type="number" step="0.01" required />
+            <span asp-validation-for="TotalAmount" class="text-danger"></span>
+        </div>
+        <div class="fms-form-group">
+            <label class="fms-label" asp-for="EstimatedDeliveryDays">Estimated Delivery (days)</label>
+            <input asp-for="EstimatedDeliveryDays" class="fms-input" type="number" min="1" />
+        </div>
+        <div class="fms-form-group">
+            <label class="fms-label" asp-for="Notes"></label>
+            <textarea asp-for="Notes" class="fms-textarea" rows="3"></textarea>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+            <a asp-action="RFQDetails" asp-route-id="@Model.RFQId" class="btn-fms btn-ghost-fms">Cancel</a>
+            <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-save"></i> Save Quotation</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

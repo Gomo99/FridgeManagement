@@ -1,0 +1,34 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.FaultReport>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "My Assigned Faults";
+    ViewData["ActivePage"] = "Assigned";
+}
+
+<div class="page-header">
+    <h1>My Assigned Faults</h1>
+    <a asp-action="Dashboard" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead><tr><th>ID</th><th>Fridge</th><th>Customer</th><th>Priority</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>
+            @foreach (var f in Model)
+            {
+                <tr>
+                    <td>#@f.Id</td>
+                    <td>@f.Fridge?.SerialNumber</td>
+                    <td>@f.ReportedByCustomer?.Name</td>
+                    <td><span class="fms-badge @(f.Priority >= FaultPriority.High ? "red" : "amber")">@f.Priority</span></td>
+                    <td>@f.Status</td>
+                    <td style="text-align:right;">
+                        <a asp-action="ProcessFault" asp-route-id="@f.Id" class="btn-fms btn-sm-fms btn-primary-fms">Process</a>
+                        <a asp-action="Details" asp-route-id="@f.Id" class="btn-fms btn-sm-fms btn-ghost-fms">View</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

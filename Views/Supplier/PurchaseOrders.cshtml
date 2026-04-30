@@ -1,0 +1,83 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.PurchaseOrder>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Purchase Orders";
+}
+<div class="page-header">
+    <h1>Purchase Orders</h1>
+</div>
+<div class="fms-card">
+    <table class="fms-table">
+        <thead>
+            <tr>
+                <th>PO #</th>
+                <th>Order Date</th>
+                <th>Expected Delivery</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th style="text-align:right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var po in Model)
+            {
+                <tr>
+                    <td>@po.Id</td>
+                    <td>@po.OrderDate.ToString("yyyy-MM-dd")</td>
+                    <td>@po.ExpectedDeliveryDate?.ToString("yyyy-MM-dd")</td>
+                    <td>@po.Quotation?.TotalAmount.ToString("C")</td>
+                    <td><span class="fms-badge @(po.Status == PurchaseOrderStatus.Delivered ? "green" : "amber")">@po.Status</span></td>
+                    <td style="text-align:right;">
+                        <a asp-action="PurchaseOrderDetails" asp-route-id="@po.Id" class="btn-fms btn-sm-fms btn-ghost-fms">Details</a>
+                        @if (po.Status == PurchaseOrderStatus.Ordered || po.Status == PurchaseOrderStatus.Shipped)
+                        {
+                            <button onclick="openDeliveryModal(@po.Id)" class="btn-fms btn-sm-fms btn-success-fms">Create Delivery</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Delivery Note Modal -->
+<div class="fms-modal-overlay" id="deliveryModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-truck"></i> Create Delivery Note</div>
+            <button class="fms-modal-close" onclick="closeModal('deliveryModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="CreateDeliveryNote" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="PurchaseOrderId" id="deliveryPOId" />
+            <div class="fms-form-group">
+                <label>Quantity Delivered</label>
+                <input type="number" name="QuantityDelivered" class="fms-input" min="1" required />
+            </div>
+            <div class="fms-form-group">
+                <label>Delivery Date</label>
+                <input type="date" name="DeliveryDate" class="fms-input" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="fms-form-group">
+                <label>Notes</label>
+                <textarea name="Notes" class="fms-textarea" rows="2"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('deliveryModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-success-fms">Create Delivery</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function openDeliveryModal(poId) {
+            document.getElementById('deliveryPOId').value = poId;
+            openModal('deliveryModal');
+        }
+    </script>
+}

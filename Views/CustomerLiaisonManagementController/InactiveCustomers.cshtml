@@ -1,0 +1,27 @@
+﻿@model IEnumerable<FridgeManagement.Models.Customer>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Inactive Customers";
+}
+
+<div class="page-header">
+    <h1>Inactive Customers</h1>
+    <a asp-action="Customers" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Active Customers</a>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Email</th></tr></thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td>@c.Name</td>
+                    <td>@c.ContactPerson</td>
+                    <td>@c.PhoneNumber</td>
+                    <td>@c.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

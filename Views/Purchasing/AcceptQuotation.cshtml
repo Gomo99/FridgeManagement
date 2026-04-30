@@ -1,0 +1,57 @@
+﻿@model FridgeManagement.Models.Quotation
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Accept Quotation";
+    ViewData["ActivePage"] = "RFQs";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Accept Quotation</h1>
+        <p>Are you sure you want to accept this quotation?</p>
+    </div>
+    <a asp-action="RFQDetails" asp-route-id="@Model.RFQId" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+    <div class="fms-card">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Quotation Details</div>
+        </div>
+        <dl class="row" style="padding:16px;">
+            <dt class="col-sm-4">Supplier</dt>
+            <dd class="col-sm-8">@Model.Supplier?.Name</dd>
+            <dt class="col-sm-4">Total Amount</dt>
+            <dd class="col-sm-8">R @Model.TotalAmount.ToString("F2")</dd>
+            <dt class="col-sm-4">Delivery Days</dt>
+            <dd class="col-sm-8">@Model.EstimatedDeliveryDays</dd>
+            <dt class="col-sm-4">Notes</dt>
+            <dd class="col-sm-8">@Model.Notes</dd>
+            <dt class="col-sm-4">RFQ Request</dt>
+            <dd class="col-sm-8">@Model.RFQ?.PurchaseRequest?.Reason</dd>
+        </dl>
+    </div>
+
+    <div class="fms-card">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Confirmation</div>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p class="text-warning">Accepting this quotation will automatically:</p>
+            <ul style="text-align:left; display:inline-block;">
+                <li>Reject all other quotations for this RFQ.</li>
+                <li>Create a <strong>Purchase Order</strong> for this supplier.</li>
+            </ul>
+            <form asp-action="AcceptQuotationConfirmed" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn-fms btn-success-fms btn-lg w-100">
+                    <i class="fa-solid fa-check-circle"></i> Accept Quotation & Create Order
+                </button>
+            </form>
+            <a asp-action="RFQDetails" asp-route-id="@Model.RFQId" class="btn-fms btn-ghost-fms w-100 mt-2">Cancel</a>
+        </div>
+    </div>
+</div>

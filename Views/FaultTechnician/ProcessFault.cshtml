@@ -1,0 +1,94 @@
+﻿@using FridgeManagement.AppStatus
+@model FridgeManagement.Models.FaultReport
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Process Fault #" + Model.Id;
+    var technicians = ViewBag.Technicians as SelectList;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Process Fault #@Model.Id</h1>
+        <p>@Model.Fridge?.SerialNumber – @Model.ReportedByCustomer?.Name</p>
+    </div>
+    <a asp-action="Index" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back to List</a>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+    <!-- Fault Information -->
+    <div class="fms-card">
+        <div class="fms-card-header"><div class="fms-card-title"><i class="fa-solid fa-info-circle"></i> Fault Info</div></div>
+        <dl class="row" style="padding:16px;">
+            <dt class="col-sm-4">Reported</dt>
+            <dd class="col-sm-8">@Model.ReportedDate.ToString("g")</dd>
+            <dt class="col-sm-4">Priority</dt>
+            <dd class="col-sm-8"><span class="fms-badge @(Model.Priority >= FaultPriority.High ? "red" : "amber")">@Model.Priority</span></dd>
+            <dt class="col-sm-4">Status</dt>
+            <dd class="col-sm-8">@Model.Status</dd>
+            @if (!string.IsNullOrEmpty(Model.DiagnosisNotes))
+            {
+                <dt>Diagnosis</dt>
+                <dd>@Model.DiagnosisNotes</dd>
+ }
+            @if (!string.IsNullOrEmpty(Model.ResolutionNotes))
+            {
+                <dt>Resolution</dt>
+                <dd>@Model.ResolutionNotes</dd>
+ }
+            @if (Model.ScheduledRepairDate.HasValue)
+            {
+                <dt>Scheduled</dt>
+                <dd>@Model.ScheduledRepairDate.Value.ToString("g")</dd>
+ }
+        </dl>
+    </div>
+
+    <!-- Action Forms -->
+    <div class="fms-card">
+        <div class="fms-card-header"><div class="fms-card-title"><i class="fa-solid fa-wrench"></i> Update Fault</div></div>
+        <div style="padding:16px;">
+            <form asp-action="ProcessFault" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <!-- Assign Technician -->
+                <div class="fms-form-group">
+                    <label class="fms-label" for="AssignedTechnicianId">Assign Technician</label>
+                    <select name="AssignedTechnicianId" class="fms-select" asp-items="technicians">
+                        <option value="">-- Select --</option>
+                    </select>
+                    <button type="submit" name="action" value="assign" class="btn-fms btn-sm-fms btn-primary-fms mt-2">Assign</button>
+                </div>
+
+                <!-- Schedule Repair -->
+                <div class="fms-form-group">
+                    <label class="fms-label" for="ScheduledRepairDate">Schedule Repair</label>
+                    <input type="datetime-local" name="ScheduledRepairDate" class="fms-input" />
+                    <button type="submit" name="action" value="schedule" class="btn-fms btn-sm-fms btn-primary-fms mt-2">Schedule</button>
+                </div>
+
+                <!-- Diagnose -->
+                <div class="fms-form-group">
+                    <label class="fms-label" for="DiagnosisNotes">Diagnosis Notes</label>
+                    <textarea name="DiagnosisNotes" class="fms-textarea" rows="2"></textarea>
+                    <button type="submit" name="action" value="diagnose" class="btn-fms btn-sm-fms btn-primary-fms mt-2">Start Diagnosis</button>
+                </div>
+
+                <!-- Repair -->
+                <div class="fms-form-group">
+                    <label class="fms-label" for="ResolutionNotes">Resolution Notes</label>
+                    <textarea name="ResolutionNotes" class="fms-textarea" rows="2"></textarea>
+                    <button type="submit" name="action" value="repair" class="btn-fms btn-sm-fms btn-success-fms mt-2">Mark Repaired</button>
+                </div>
+
+                <!-- Close -->
+                <div class="fms-form-group">
+                    <button type="submit" name="action" value="close" class="btn-fms btn-danger-fms"
+                            onclick="return confirm('Close this fault? It will be soft‑deleted.');">
+                        <i class="fa-solid fa-xmark"></i> Close Fault
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

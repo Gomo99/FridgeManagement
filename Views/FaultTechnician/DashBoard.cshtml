@@ -1,0 +1,48 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.FaultReport>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Fault Technician Dashboard";
+    var totalOpen = ViewBag.TotalOpen ?? 0;
+    var assignedToMe = ViewBag.AssignedToMe ?? 0;
+    var highPriority = ViewBag.HighPriority ?? 0;
+}
+
+<div class="page-header">
+    <h1>Fault Technician Dashboard</h1>
+    <a asp-action="Index" class="btn-fms btn-primary-fms"><i class="fa-solid fa-list"></i> All Faults</a>
+</div>
+
+<div class="grid-4" style="margin-bottom:28px;">
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div><div class="stat-value">@totalOpen</div><div class="stat-label">Open Faults</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa-solid fa-user-check"></i></div>
+        <div><div class="stat-value">@assignedToMe</div><div class="stat-label">Assigned to Me</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon amber"><i class="fa-solid fa-arrow-up-right-dots"></i></div>
+        <div><div class="stat-value">@highPriority</div><div class="stat-label">High Priority</div></div>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header"><div class="fms-card-title">Recent Faults</div></div>
+    <table class="fms-table">
+        <thead><tr><th>Fridge</th><th>Customer</th><th>Description</th><th>Priority</th><th>Status</th></tr></thead>
+        <tbody>
+            @foreach (var f in Model)
+            {
+                <tr>
+                    <td>@f.Fridge?.SerialNumber</td>
+                    <td>@f.ReportedByCustomer?.Name</td>
+                    <td>@f.Description</td>
+                    <td><span class="fms-badge @(f.Priority >= FaultPriority.High ? "red" : "amber")">@f.Priority</span></td>
+                    <td><span class="fms-badge @(f.Status == FaultStatus.Closed ? "gray" : f.Status == FaultStatus.Repaired ? "green" : "blue")">@f.Status</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

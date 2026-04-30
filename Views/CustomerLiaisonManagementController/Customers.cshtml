@@ -1,0 +1,108 @@
+﻿@model IEnumerable<FridgeManagement.Models.Customer>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Manage Customers";
+    ViewData["ActivePage"] = "Customers";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Active Customers</h1>
+        <p>All registered businesses</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="InactiveCustomers" class="btn-fms btn-ghost-fms btn-sm-fms"><i class="fa-solid fa-user-slash"></i> View Inactive</a>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Customer List</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="custSearch" placeholder="Search..." oninput="filterTable()" />
+        </div>
+    </div>
+    <table class="fms-table" id="custTable">
+        <thead>
+            <tr>
+                <th>Business Name</th>
+                <th>Contact</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th style="text-align:right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr data-name="@c.Name" data-contact="@c.ContactPerson" data-phone="@c.PhoneNumber" data-email="@c.Email" data-address="@c.Address">
+                    <td style="font-weight:600; color:var(--white);">@c.Name</td>
+                    <td>@c.ContactPerson</td>
+                    <td>@c.PhoneNumber</td>
+                    <td>@c.Email</td>
+                    <td style="text-align:right;">
+                        <button class="btn-fms btn-sm-fms btn-ghost-fms"
+                                onclick="openDetailsModal(this)">
+                            <i class="fa-solid fa-eye"></i> Quick View
+                        </button>
+                        <a asp-action="CustomerDetails" asp-route-id="@c.Id" class="btn-fms btn-sm-fms btn-info-fms">Full Details</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Quick View Modal -->
+<div class="fms-modal-overlay" id="quickViewModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-store" style="color:var(--ice);"></i> Customer Details</div>
+            <button class="fms-modal-close" onclick="closeModal('quickViewModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px;">
+            <dl class="row">
+                <dt class="col-sm-4">Business Name</dt>
+                <dd class="col-sm-8" id="modalName"></dd>
+                <dt class="col-sm-4">Contact Person</dt>
+                <dd class="col-sm-8" id="modalContact"></dd>
+                <dt class="col-sm-4">Phone</dt>
+                <dd class="col-sm-8" id="modalPhone"></dd>
+                <dt class="col-sm-4">Email</dt>
+                <dd class="col-sm-8" id="modalEmail"></dd>
+                <dt class="col-sm-4">Address</dt>
+                <dd class="col-sm-8" id="modalAddress"></dd>
+            </dl>
+            <div style="text-align:right;">
+                <button onclick="closeModal('quickViewModal')" class="btn-fms btn-ghost-fms">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const q = document.getElementById('custSearch').value.toLowerCase();
+            document.querySelectorAll('#custTable tbody tr').forEach(row => {
+                const text = (row.dataset.name + ' ' + row.dataset.contact + ' ' + row.dataset.email).toLowerCase();
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+
+        function openDetailsModal(btn) {
+            var row = btn.closest('tr');
+            document.getElementById('modalName').innerText = row.dataset.name;
+            document.getElementById('modalContact').innerText = row.dataset.contact;
+            document.getElementById('modalPhone').innerText = row.dataset.phone;
+            document.getElementById('modalEmail').innerText = row.dataset.email;
+            document.getElementById('modalAddress').innerText = row.dataset.address;
+            openModal('quickViewModal');
+        }
+    </script>
+}

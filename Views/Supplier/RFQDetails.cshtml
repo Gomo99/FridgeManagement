@@ -1,0 +1,48 @@
+﻿@using FridgeManagement.AppStatus
+@model FridgeManagement.Models.RequestForQuotation
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "RFQ Details";
+    var existing = ViewBag.ExistingQuotation as FridgeManagement.Models.Quotation;
+}
+<div class="page-header">
+    <h1>RFQ #@Model.Id</h1>
+    <a asp-action="RFQs" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+<div class="grid-2">
+    <div class="fms-card">
+        <div class="fms-card-header"><div class="fms-card-title">RFQ Information</div></div>
+        <dl class="row" style="padding:16px;">
+            <dt class="col-sm-4">Date Created</dt>
+            <dd class="col-sm-8">@Model.CreatedDate.ToString("g")</dd>
+            <dt class="col-sm-4">Purchase Reason</dt>
+            <dd class="col-sm-8">@Model.PurchaseRequest?.Reason</dd>
+            <dt class="col-sm-4">Quantity Needed</dt>
+            <dd class="col-sm-8">@Model.PurchaseRequest?.QuantityRequested</dd>
+        </dl>
+    </div>
+    <div class="fms-card">
+        <div class="fms-card-header"><div class="fms-card-title">Your Quotation</div></div>
+        @if (existing != null)
+        {
+            <dl class="row" style="padding:16px;">
+                <dt class="col-sm-4">Total Amount</dt>
+                <dd class="col-sm-8">R @existing.TotalAmount.ToString("F2")</dd>
+                <dt class="col-sm-4">Delivery Days</dt>
+                <dd class="col-sm-8">@existing.EstimatedDeliveryDays</dd>
+                <dt class="col-sm-4">Status</dt>
+                <dd class="col-sm-8"><span class="fms-badge @(existing.Status == QuotationStatus.Accepted ? "green" : "amber")">@existing.Status</span></dd>
+            </dl>
+        }
+        else
+        {
+            <div style="padding:20px; text-align:center; color:var(--muted);">
+                No quotation submitted yet.
+                <br /><button onclick="openSubmitQuoteModal(@Model.Id)" class="btn-fms btn-primary-fms mt-2">Submit Now</button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Include the same Submit Quotation Modal as in RFQs.cshtml (use a partial) -->
+@await Html.PartialAsync("_SubmitQuotationModal")

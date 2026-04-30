@@ -1,0 +1,29 @@
+﻿@model FridgeManagement.Models.PurchaseRequest
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Create Purchase Request";
+}
+<div class="page-header">
+    <h1>Create Purchase Request</h1>
+    <a asp-action="PurchaseRequests" class="btn-fms btn-ghost-fms">Back</a>
+</div>
+<div class="fms-card" style="max-width:600px; margin:auto;">
+    <div class="fms-card-header"><div class="fms-card-title">New Request</div></div>
+    <form asp-action="CreatePurchaseRequest" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="RequestedById" />
+        <div class="fms-form-group">
+            <label asp-for="Reason" class="fms-label">Reason</label>
+            <textarea asp-for="Reason" class="fms-textarea" rows="3" required></textarea>
+        </div>
+        <div class="fms-form-group">
+            <label asp-for="QuantityRequested" class="fms-label">Quantity</label>
+            <input asp-for="QuantityRequested" class="fms-input" type="number" min="1" />
+        </div>
+        <div class="fms-form-group">
+            <label asp-for="Notes" class="fms-label">Notes</label>
+            <textarea asp-for="Notes" class="fms-textarea" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn-fms btn-primary-fms">Submit Request</button>
+    </form>
+</div>

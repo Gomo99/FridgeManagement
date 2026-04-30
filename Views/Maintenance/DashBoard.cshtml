@@ -1,0 +1,74 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Maintenance Dashboard";
+    var upcoming = ViewBag.Upcoming as List<FridgeManagement.Models.MaintenanceSchedule>;
+    var mySchedules = ViewBag.MySchedules as List<FridgeManagement.Models.MaintenanceSchedule>;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Maintenance Dashboard</h1>
+        <p>Upcoming schedules and your assignments</p>
+    </div>
+    <a asp-action="Index" class="btn-fms btn-primary-fms">All Schedules</a>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+    <div class="fms-card">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Upcoming Maintenance (Next 7 Days)</div>
+        </div>
+        <div style="padding:16px;">
+            @if (upcoming != null && upcoming.Any())
+            {
+                <table class="fms-table">
+                    <thead><tr><th>Fridge</th><th>Date</th><th>Technician</th></tr></thead>
+                    <tbody>
+                        @foreach (var s in upcoming)
+                        {
+                            <tr>
+                                <td>@s.Fridge?.SerialNumber</td>
+                                <td>@s.ScheduledDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@s.AssignedTechnician?.FullName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">No upcoming maintenance.</p>
+            }
+        </div>
+    </div>
+
+    <div class="fms-card">
+        <div class="fms-card-header">
+            <div class="fms-card-title">My Assigned Schedules</div>
+        </div>
+        <div style="padding:16px;">
+            @if (mySchedules != null && mySchedules.Any())
+            {
+                <table class="fms-table">
+                    <thead><tr><th>Fridge</th><th>Date</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        @foreach (var s in mySchedules)
+                        {
+                            <tr>
+                                <td>@s.Fridge?.SerialNumber</td>
+                                <td>@s.ScheduledDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    <a asp-action="ServiceFridge" asp-route-scheduleId="@s.Id" class="btn-fms btn-sm-fms btn-success-fms">Service</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">You have no assigned schedules.</p>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,49 @@
+﻿@model FridgeManagement.Models.FaultReport
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Report Fault";
+    ViewData["ActivePage"] = "CustomerFridges";
+    var customerName = ViewBag.CustomerName as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Report Fault from Maintenance</h1>
+        <p>Fridge: @Model.FridgeId (Customer: @customerName)</p>
+    </div>
+    <a asp-action="CustomerFridges" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="fms-card" style="max-width:600px; margin:auto;">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning);"></i> Fault Details</div>
+    </div>
+    <form asp-action="CreateFaultFromMaintenance" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="FridgeId" />
+        <input type="hidden" asp-for="ReportedByCustomerId" />
+        <input type="hidden" asp-for="ReportedDate" />
+
+        <div class="fms-form-group">
+            <label asp-for="Description" class="fms-label">Description of Fault</label>
+            <textarea asp-for="Description" class="fms-textarea" rows="4" required
+                      placeholder="Describe the problem in detail..."></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="fms-form-group">
+            <label asp-for="Priority" class="fms-label">Priority</label>
+            <select asp-for="Priority" class="fms-select" asp-items="Html.GetEnumSelectList<FridgeManagement.AppStatus.FaultPriority>()"></select>
+            <span asp-validation-for="Priority" class="text-danger"></span>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+            <a asp-action="CustomerFridges" class="btn-fms btn-ghost-fms">Cancel</a>
+            <button type="submit" class="btn-fms btn-danger-fms"><i class="fa-solid fa-flag"></i> Report Fault</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

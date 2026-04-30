@@ -1,0 +1,198 @@
+﻿@model IEnumerable<FridgeManagement.Models.Supplier>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Manage Suppliers";
+    ViewData["ActivePage"] = "Suppliers";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Suppliers</h1>
+        <p>All active suppliers</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="InactiveSuppliers" class="btn-fms btn-ghost-fms btn-sm-fms">
+            <i class="fa-solid fa-trash"></i> View Inactive
+        </a>
+        <button class="btn-fms btn-primary-fms" onclick="openAddModal()">
+            <i class="fa-solid fa-plus"></i> Add Supplier
+        </button>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Supplier Directory</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="supplierSearch" placeholder="Search suppliers..." oninput="filterTable()" />
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="supplierTable">
+            <thead>
+                <tr>
+                    <th>Company Name</th>
+                    <th>Contact Person</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model)
+                {
+                    <tr data-search="@s.Name @s.ContactPerson @s.Email">
+                        <td style="font-weight:600; color:var(--white);">@s.Name</td>
+                        <td>@s.ContactPerson</td>
+                        <td style="color:var(--muted);">@s.PhoneNumber</td>
+                        <td style="color:var(--muted);">@s.Email</td>
+                        <td style="text-align:right;">
+                            <button class="btn-fms btn-ghost-fms btn-sm-fms"
+                                    onclick="openEditModal(@s.Id, '@s.Name.Replace("'", "\\'")', '@s.ContactPerson.Replace("'", "\\'")', '@s.PhoneNumber', '@s.Email', '@s.Address.Replace("'", "\\'")')">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="btn-fms btn-danger-fms btn-sm-fms"
+                                    onclick="openDeleteModal(@s.Id, '@s.Name.Replace("'", "\\'")')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════ ADD SUPPLIER MODAL ═══════ -->
+<div class="fms-modal-overlay" id="addSupplierModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-truck" style="color:var(--ice); margin-right:10px;"></i>Add Supplier</div>
+            <button class="fms-modal-close" onclick="closeModal('addSupplierModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="CreateSupplier" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label class="fms-label">Company Name</label>
+                <input type="text" name="Name" class="fms-input" placeholder="ABC Fridges (Pty) Ltd" required />
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Contact Person</label>
+                    <input type="text" name="ContactPerson" class="fms-input" placeholder="Full name" required />
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Phone</label>
+                    <input type="tel" name="PhoneNumber" class="fms-input" placeholder="0XX XXX XXXX" />
+                </div>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Email</label>
+                <input type="email" name="Email" class="fms-input" placeholder="contact@supplier.co.za" />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Address</label>
+                <textarea name="Address" class="fms-textarea" rows="2" placeholder="Physical address..."></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('addSupplierModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-plus"></i> Add Supplier</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ EDIT SUPPLIER MODAL ═══════ -->
+<div class="fms-modal-overlay" id="editSupplierModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-pen" style="color:var(--ice); margin-right:10px;"></i>Edit Supplier</div>
+            <button class="fms-modal-close" onclick="closeModal('editSupplierModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="EditSupplier" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="editSuppId" />
+            <div class="fms-form-group">
+                <label class="fms-label">Company Name</label>
+                <input type="text" name="Name" id="editSuppName" class="fms-input" required />
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Contact Person</label>
+                    <input type="text" name="ContactPerson" id="editSuppContact" class="fms-input" />
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Phone</label>
+                    <input type="tel" name="PhoneNumber" id="editSuppPhone" class="fms-input" />
+                </div>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Email</label>
+                <input type="email" name="Email" id="editSuppEmail" class="fms-input" />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Address</label>
+                <textarea name="Address" id="editSuppAddress" class="fms-textarea" rows="2"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('editSupplierModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ DELETE SUPPLIER MODAL ═══════ -->
+<div class="fms-modal-overlay" id="deleteSupplierModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning); margin-right:10px;"></i>Deactivate Supplier</div>
+            <button class="fms-modal-close" onclick="closeModal('deleteSupplierModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p style="color:var(--muted);">Are you sure you want to deactivate <strong id="delSuppName"></strong>?</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('deleteSupplierModal')">Cancel</button>
+                <form asp-action="DeleteSupplier" method="post" id="delSupplierForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="delSuppId" />
+                    <button type="submit" class="btn-fms btn-danger-fms">Deactivate</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const q = document.getElementById('supplierSearch').value.toLowerCase();
+            document.querySelectorAll('#supplierTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        function openAddModal() { openModal('addSupplierModal'); }
+
+        function openEditModal(id, name, contact, phone, email, address) {
+            document.getElementById('editSuppId').value      = id;
+            document.getElementById('editSuppName').value    = name;
+            document.getElementById('editSuppContact').value = contact;
+            document.getElementById('editSuppPhone').value   = phone;
+            document.getElementById('editSuppEmail').value   = email;
+            document.getElementById('editSuppAddress').value = address;
+            openModal('editSupplierModal');
+        }
+
+        function openDeleteModal(id, name) {
+            document.getElementById('delSuppId').value   = id;
+            document.getElementById('delSuppName').textContent = name;
+            openModal('deleteSupplierModal');
+        }
+    </script>
+}

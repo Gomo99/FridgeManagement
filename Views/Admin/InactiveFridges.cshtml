@@ -1,0 +1,94 @@
+﻿@model IEnumerable<FridgeManagement.Models.Fridge>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Inactive Fridges";
+    ViewData["ActivePage"] = "Fridges";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Inactive Fridges</h1>
+        <p>Soft‑deleted fridges (scrapped / deactivated)</p>
+    </div>
+    <a asp-action="Fridges" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back to Active</a>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Deactivated Fridges</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="inactSearch" placeholder="Search..." oninput="filterTable()" />
+        </div>
+    </div>
+    <table class="fms-table" id="inactTable">
+        <thead>
+            <tr>
+                <th>Serial Number</th>
+                <th>Model</th>
+                <th>Brand</th>
+                <th>Purchase Date</th>
+                <th style="text-align:right;">Restore</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var f in Model)
+            {
+                <tr data-search="@f.SerialNumber @f.Model @f.Brand">
+                    <td>@f.SerialNumber</td>
+                    <td>@f.Model</td>
+                    <td>@f.Brand</td>
+                    <td>@f.PurchaseDate?.ToString("yyyy-MM-dd")</td>
+                    <td style="text-align:right;">
+                        <button class="btn-fms btn-success-fms btn-sm-fms"
+                                onclick="openRestoreModal(@f.Id, '@f.SerialNumber.Replace("'", "\\'")')">
+                            <i class="fa-solid fa-rotate-left"></i> Restore
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════ RESTORE FRIDGE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="restoreFridgeModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-rotate-left" style="color:var(--success); margin-right:10px;"></i>Restore Fridge</div>
+            <button class="fms-modal-close" onclick="closeModal('restoreFridgeModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Reactivate fridge <strong id="restFridgeSerial"></strong>?</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('restoreFridgeModal')">Cancel</button>
+                <form asp-action="RestoreFridge" method="post" id="restoreFridgeForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="restFridgeId" />
+                    <button type="submit" class="btn-fms btn-success-fms">Restore</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const q = document.getElementById('inactSearch').value.toLowerCase();
+            document.querySelectorAll('#inactTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        function openRestoreModal(id, serial) {
+            document.getElementById('restFridgeId').value = id;
+            document.getElementById('restFridgeSerial').textContent = serial;
+            openModal('restoreFridgeModal');
+        }
+    </script>
+}

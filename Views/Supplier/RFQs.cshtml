@@ -1,0 +1,108 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.RequestForQuotation>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "RFQs";
+    var quotedRfqIds = ViewBag.QuotedRfqIds as List<int>;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Requests for Quotation</h1>
+        <p>RFQs sent to you</p>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">RFQ List</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="rfqSearch" placeholder="Search RFQs..." oninput="filterTable()" />
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="rfqTable">
+            <thead>
+                <tr>
+                    <th>RFQ #</th>
+                    <th>Purchase Reason</th>
+                    <th>Date Created</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var rfq in Model)
+                {
+                    var hasQuoted = quotedRfqIds.Contains(rfq.Id);
+                    <tr data-search="@rfq.PurchaseRequest?.Reason @rfq.Id">
+                        <td>#@rfq.Id</td>
+                        <td>@rfq.PurchaseRequest?.Reason</td>
+                        <td>@rfq.CreatedDate.ToString("yyyy-MM-dd")</td>
+                        <td><span class="fms-badge @(rfq.Status == RFQStatus.Sent ? "blue" : "gray")">@rfq.Status</span></td>
+                        <td style="text-align:right;">
+                            <a asp-action="RFQDetails" asp-route-id="@rfq.Id" class="btn-fms btn-sm-fms btn-ghost-fms">Details</a>
+                            @if (!hasQuoted && rfq.Status == RFQStatus.Sent)
+                            {
+                                <button onclick="openSubmitQuoteModal(@rfq.Id)" class="btn-fms btn-sm-fms btn-primary-fms">Submit Quote</button>
+                            }
+                            else if (hasQuoted)
+                            {
+                                <span class="text-success" style="margin-left:8px;"><i class="fa-solid fa-check"></i> Quoted</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Submit Quotation Modal -->
+<div class="fms-modal-overlay" id="submitQuoteModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-file-signature" style="color:var(--ice);"></i> Submit Quotation</div>
+            <button class="fms-modal-close" onclick="closeModal('submitQuoteModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="SubmitQuotation" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="RFQId" id="quotationRFQId" />
+            <div class="fms-form-group">
+                <label class="fms-label">Total Amount (R)</label>
+                <input type="number" name="TotalAmount" class="fms-input" step="0.01" required />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Estimated Delivery (days)</label>
+                <input type="number" name="EstimatedDeliveryDays" class="fms-input" min="1" required />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Notes</label>
+                <textarea name="Notes" class="fms-textarea" rows="3"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('submitQuoteModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function openSubmitQuoteModal(rfqId) {
+            document.getElementById('quotationRFQId').value = rfqId;
+            openModal('submitQuoteModal');
+        }
+        function filterTable() {
+            const q = document.getElementById('rfqSearch').value.toLowerCase();
+            document.querySelectorAll('#rfqTable tbody tr').forEach(r => {
+                r.style.display = (r.dataset.search||'').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+    </script>
+}

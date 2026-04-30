@@ -1,0 +1,63 @@
+﻿@model FridgeManagement.Models.MaintenanceLog
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Service Fridge";
+    ViewData["ActivePage"] = "Schedules";
+    var checklist = ViewBag.ChecklistItems as List<string>;
+    var technicianId = ViewBag.TechnicianId ?? 0;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Service Fridge</h1>
+        <p>Maintenance Schedule #@Model.MaintenanceScheduleId</p>
+    </div>
+    <a asp-action="Index" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="fms-card" style="max-width:700px; margin:auto;">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-tools" style="color:var(--ice); margin-right:10px;"></i>Service Checklist</div>
+    </div>
+    <form asp-action="ServiceFridge" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="MaintenanceScheduleId" />
+        <input type="hidden" name="TechnicianId" value="@technicianId" />
+
+        @if (checklist != null && checklist.Any())
+        {
+            for (int i = 0; i < checklist.Count; i++)
+            {
+                <div class="fms-form-group" style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:12px; margin-bottom:12px;">
+                    <label class="fms-label" style="font-weight:600; color:var(--white);">@checklist[i]</label>
+                    <div style="display:flex; gap:20px; margin-top:4px;">
+                        <label style="display:flex; align-items:center; gap:6px; color:var(--muted);">
+                            <input type="radio" name="checklistResults[@i]" value="@checklist[i]:Pass" required /> Pass
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; color:var(--muted);">
+                            <input type="radio" name="checklistResults[@i]" value="@checklist[i]:Fail" /> Fail
+                        </label>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="text-muted">No checklist items defined.</p>
+        }
+
+        <div class="fms-form-group">
+            <label asp-for="ServiceNotes" class="fms-label">Service Notes</label>
+            <textarea asp-for="ServiceNotes" class="fms-textarea" rows="4" placeholder="Any observations or repairs performed..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+            <a asp-action="Index" class="btn-fms btn-ghost-fms">Cancel</a>
+            <button type="submit" class="btn-fms btn-success-fms"><i class="fa-solid fa-check-circle"></i> Complete Service</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

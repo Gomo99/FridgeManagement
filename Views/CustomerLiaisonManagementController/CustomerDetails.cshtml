@@ -1,0 +1,50 @@
+﻿@model FridgeManagement.Models.Customer
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Customer Details: " + Model.Name;
+}
+
+<div class="page-header">
+    <h1>@Model.Name</h1>
+    <a asp-action="Customers" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back to List</a>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+    <div class="fms-card">
+        <div class="fms-card-header"><div class="fms-card-title">Contact Information</div></div>
+        <dl class="row" style="padding:16px;">
+            <dt class="col-sm-4">Contact Person</dt>
+            <dd class="col-sm-8">@Model.ContactPerson</dd>
+            <dt class="col-sm-4">Phone</dt>
+            <dd class="col-sm-8">@Model.PhoneNumber</dd>
+            <dt class="col-sm-4">Email</dt>
+            <dd class="col-sm-8">@Model.Email</dd>
+            <dt class="col-sm-4">Address</dt>
+            <dd class="col-sm-8">@Model.Address</dd>
+        </dl>
+    </div>
+
+    <div class="fms-card">
+        <div class="fms-card-header"><div class="fms-card-title">Allocated Fridges</div></div>
+        @if (Model.FridgeAllocations != null && Model.FridgeAllocations.Any())
+        {
+            <table class="fms-table">
+                <thead><tr><th>Serial</th><th>Model</th><th>Allocated Since</th></tr></thead>
+                <tbody>
+                    @foreach (var a in Model.FridgeAllocations)
+                    {
+                        <tr>
+                            <td>@a.Fridge?.SerialNumber</td>
+                            <td>@a.Fridge?.Model</td>
+                            <td>@a.AllocationDate.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-muted" style="padding:16px;">No fridges currently allocated.</p>
+        }
+    </div>
+</div>

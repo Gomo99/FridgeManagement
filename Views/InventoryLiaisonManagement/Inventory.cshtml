@@ -1,0 +1,115 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.Fridge>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Fridge Inventory";
+    ViewData["ActivePage"] = "Inventory";
+    string statusFilter = ViewBag.StatusFilter as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Fridge Inventory</h1>
+        <p>All fridges – Active &amp; Scrapped</p>
+    </div>
+    <a asp-action="ReceiveFridge" class="btn-fms btn-primary-fms"><i class="fa-solid fa-plus"></i> Receive New</a>
+</div>
+
+<div class="fms-card" style="margin-bottom:16px;">
+    <div style="display:flex; gap:8px; padding:10px 16px;">
+        <a asp-action="Inventory" class="btn-fms btn-sm-fms @(string.IsNullOrEmpty(statusFilter) ? "btn-primary-fms" : "btn-ghost-fms")">All</a>
+        <a asp-action="Inventory" asp-route-statusFilter="active" class="btn-fms btn-sm-fms @(statusFilter == "active" ? "btn-primary-fms" : "btn-ghost-fms")">Active</a>
+        <a asp-action="Inventory" asp-route-statusFilter="scrapped" class="btn-fms btn-sm-fms @(statusFilter == "scrapped" ? "btn-primary-fms" : "btn-ghost-fms")">Scrapped</a>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Fridge List</div>
+        <div class="search-bar"><input type="text" id="fridgeSearch" placeholder="Search..." oninput="filterTable()" /></div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="fridgeTable">
+            <thead>
+                <tr>
+                    <th>Serial Number</th>
+                    <th>Model</th>
+                    <th>Brand</th>
+                    <th>Current Customer</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var f in Model)
+                {
+                    var activeAlloc = f.FridgeAllocations?.FirstOrDefault(a => a.Status == AllocationStatus.Active);
+                    <tr data-search="@f.SerialNumber @f.Model @f.Brand @(activeAlloc?.Customer?.Name)">
+                        <td style="font-weight:600; color:var(--white);">@f.SerialNumber</td>
+                        <td>@f.Model</td>
+                        <td>@f.Brand</td>
+                        <td>@activeAlloc?.Customer?.Name</td>
+                        <td><span class="fms-badge @(f.Status == Status.Active ? "green" : "gray")">@f.Status</span></td>
+                        <td style="text-align:right;">
+                            @if (f.Status == Status.Active)
+                            {
+                                if (activeAlloc == null)
+                                {
+                                    <button class="btn-fms btn-sm-fms btn-danger-fms" onclick="openScrapModal(@f.Id, '@f.SerialNumber.Replace("'", "\\'")')">Scrap</button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Allocated</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Scrap Confirmation Modal -->
+<div class="fms-modal-overlay" id="scrapModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning);"></i> Scrap Fridge</div>
+            <button class="fms-modal-close" onclick="closeModal('scrapModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Scrap fridge <strong id="scrapSerial"></strong>?</p>
+            <form asp-action="ScrapFridge" method="post" id="scrapForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="scrapFridgeId" />
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('scrapModal')">Cancel</button>
+                    <button type="submit" class="btn-fms btn-danger-fms">Scrap</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+        function filterTable() {
+            const q = document.getElementById('fridgeSearch').value.toLowerCase();
+            document.querySelectorAll('#fridgeTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+        function openScrapModal(id, serial) {
+            document.getElementById('scrapFridgeId').value = id;
+            document.getElementById('scrapSerial').textContent = serial;
+            openModal('scrapModal');
+        }
+    </script>
+}

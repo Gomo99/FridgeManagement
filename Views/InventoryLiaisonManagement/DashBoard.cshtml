@@ -1,0 +1,55 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Inventory Dashboard";
+    var totalFridges = ViewBag.TotalFridges ?? 0;
+    var allocatedFridges = ViewBag.AllocatedFridges ?? 0;
+    var availableFridges = ViewBag.AvailableFridges ?? 0;
+    var scrappedFridges = ViewBag.ScrappedFridges ?? 0;
+    var pendingRequests = ViewBag.PendingRequests ?? 0;
+    var isLowStock = ViewBag.IsLowStock ?? false;
+    var lowStockThreshold = ViewBag.LowStockThreshold ?? 5;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Inventory Dashboard</h1>
+        <p>Real‑time stock overview</p>
+    </div>
+</div>
+
+<div class="grid-4" style="margin-bottom:28px;">
+    <div class="stat-card">
+        <div class="stat-icon teal"><i class="fa-solid fa-snowflake"></i></div>
+        <div><div class="stat-value">@totalFridges</div><div class="stat-label">Total Active Fridges</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-link"></i></div>
+        <div><div class="stat-value">@allocatedFridges</div><div class="stat-label">Currently Allocated</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon @(isLowStock ? "red" : "blue")"><i class="fa-solid fa-boxes"></i></div>
+        <div><div class="stat-value">@availableFridges</div><div class="stat-label">Available Stock</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon amber"><i class="fa-solid fa-clipboard-list"></i></div>
+        <div><div class="stat-value">@pendingRequests</div><div class="stat-label">Pending Requests</div></div>
+    </div>
+</div>
+
+@if (isLowStock)
+{
+    <div class="alert alert-warning" style="border-radius:10px;">
+        <i class="fa-solid fa-exclamation-triangle"></i> Low stock: only @availableFridges fridges available (threshold @lowStockThreshold).
+        <a asp-action="CreatePurchaseRequest" class="btn btn-sm btn-light ms-3">Create Purchase Request</a>
+    </div>
+}
+
+<div class="fms-card">
+    <div class="fms-card-header"><div class="fms-card-title">Quick Actions</div></div>
+    <div class="grid-2" style="gap:12px; padding:16px;">
+        <a asp-action="Inventory" class="btn-fms btn-primary-fms w-100"><i class="fa-solid fa-warehouse"></i> Manage Inventory</a>
+        <a asp-action="ReceiveFridge" class="btn-fms btn-success-fms w-100"><i class="fa-solid fa-plus"></i> Receive New Fridge</a>
+        <a asp-action="ProcessAllocations" class="btn-fms btn-info-fms w-100"><i class="fa-solid fa-people-arrows"></i> Process Allocations</a>
+        <a asp-action="PurchaseRequests" class="btn-fms btn-warning-fms w-100"><i class="fa-solid fa-file-signature"></i> Purchase Requests</a>
+    </div>
+</div>

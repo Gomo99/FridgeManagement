@@ -1,0 +1,125 @@
+﻿@model IEnumerable<FridgeManagement.Models.FridgeAllocation>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Fridge Allocations";
+    ViewData["ActivePage"] = "Allocations";
+}
+
+<div class="page-header">
+    <h1>Active Allocations</h1>
+    <div style="display:flex; gap:10px;">
+        <button class="btn-fms btn-primary-fms" onclick="openCreateAllocModal()"><i class="fa-solid fa-plus"></i> New Allocation</button>
+    </div>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table" id="allocTable">
+        <thead><tr><th>Fridge S/N</th><th>Customer</th><th>Allocation Date</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td>@a.Fridge?.SerialNumber</td>
+                    <td>@a.Customer?.Name</td>
+                    <td>@a.AllocationDate.ToString("yyyy-MM-dd")</td>
+                    <td style="text-align:right;">
+                        <button class="btn-fms btn-sm-fms btn-warning-fms"
+                                onclick="openReturnModal(@a.Id, '@a.Fridge?.SerialNumber', '@a.Customer?.Name')">
+                            <i class="fa-solid fa-rotate-left"></i> Return
+                        </button>
+                        <a asp-action="FridgeHistory" asp-route-fridgeId="@a.FridgeId" class="btn-fms btn-sm-fms btn-info-fms">History</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- New Allocation Modal -->
+<div class="fms-modal-overlay" id="createAllocModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-link" style="color:var(--ice);"></i> Assign Fridge to Customer</div>
+            <button class="fms-modal-close" onclick="closeModal('createAllocModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="CreateAllocation" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label class="fms-label">Customer</label>
+                <select name="CustomerId" class="fms-select" id="allocCustomerSelect" required></select>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Fridge</label>
+                <select name="FridgeId" class="fms-select" id="allocFridgeSelect" required></select>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Notes</label>
+                <textarea name="Notes" class="fms-textarea" rows="2"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('createAllocModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms">Assign</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Return Allocation Modal -->
+<div class="fms-modal-overlay" id="returnAllocModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-rotate-left" style="color:var(--warning);"></i> Return Allocation</div>
+            <button class="fms-modal-close" onclick="closeModal('returnAllocModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Return fridge <strong id="returnFridge"></strong> from <strong id="returnCustomer"></strong>?</p>
+            <form asp-action="ReturnAllocation" method="post" id="returnAllocForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="returnAllocId" />
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:16px;">
+                    <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('returnAllocModal')">Cancel</button>
+                    <button type="submit" class="btn-fms btn-warning-fms">Return</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Include JSON lists for customers and available fridges from ViewData (must be set in the Allocations action) -->
+    <script>
+        // We'll load these from the controller by serializing the SelectList items (alternatively we can make AJAX calls)
+        // For simplicity, we'll embed the data as JSON strings in the page. Add these to the Allocations action:
+        // ViewBag.CustomerList = new SelectList(_context.Customers.Where(c => c.Status == Status.Active), "Id", "Name");
+        // ViewBag.AvailableFridgeList = new SelectList(availableFridges, "Id", "SerialNumber");
+        // Then serialize them here.
+
+        var customerList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.CustomerList as SelectList));
+        var fridgeList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.AvailableFridgeList as SelectList));
+
+        function populateSelect(id, items, placeholder) {
+            var select = document.getElementById(id);
+            select.innerHTML = '<option value="">' + placeholder + '</option>';
+            items.forEach(item => {
+                select.innerHTML += `<option value="${item.value}">${item.text}</option>`;
+            });
+        }
+
+        function openCreateAllocModal() {
+            populateSelect('allocCustomerSelect', customerList, '-- Select Customer --');
+            populateSelect('allocFridgeSelect', fridgeList, '-- Select Fridge --');
+            openModal('createAllocModal');
+        }
+
+        function openReturnModal(allocId, fridgeSerial, customerName) {
+            document.getElementById('returnAllocId').value = allocId;
+            document.getElementById('returnFridge').innerText = fridgeSerial;
+            document.getElementById('returnCustomer').innerText = customerName;
+            openModal('returnAllocModal');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+    </script>
+}

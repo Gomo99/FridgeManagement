@@ -1,0 +1,62 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.FaultReport>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "All Fault Reports";
+    ViewData["ActivePage"] = "Faults";
+    string statusFilter = Context.Request.Query["statusFilter"];
+    string priorityFilter = Context.Request.Query["priorityFilter"];
+}
+
+<div class="page-header">
+    <h1>All Fault Reports</h1>
+    <a asp-action="Dashboard" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+</div>
+
+<div class="fms-card" style="margin-bottom:16px;">
+    <div style="display:flex; gap:12px; padding:10px 16px; flex-wrap:wrap;">
+        <div>
+            <label class="fms-label" style="margin:0 6px 0 0;">Status:</label>
+            <a asp-action="Index" class="btn-fms btn-sm-fms @(string.IsNullOrEmpty(statusFilter) ? "btn-primary-fms" : "btn-ghost-fms")">All</a>
+            @foreach (FaultStatus s in Enum.GetValues(typeof(FaultStatus)))
+            {
+                <a asp-action="Index" asp-route-statusFilter="@s" class="btn-fms btn-sm-fms @(statusFilter == s.ToString() ? "btn-primary-fms" : "btn-ghost-fms")">@s</a>
+            }
+        </div>
+        <div>
+            <label class="fms-label" style="margin:0 6px 0 0;">Priority:</label>
+            <a asp-action="Index" class="btn-fms btn-sm-fms @(string.IsNullOrEmpty(priorityFilter) ? "btn-primary-fms" : "btn-ghost-fms")">All</a>
+            @foreach (FaultPriority p in Enum.GetValues(typeof(FaultPriority)))
+            {
+                <a asp-action="Index" asp-route-priorityFilter="@p" class="btn-fms btn-sm-fms @(priorityFilter == p.ToString() ? "btn-primary-fms" : "btn-ghost-fms")">@p</a>
+            }
+            @if (!string.IsNullOrEmpty(statusFilter) || !string.IsNullOrEmpty(priorityFilter))
+            {
+                <a asp-action="Index" class="btn-fms btn-sm-fms btn-danger-fms">Clear</a>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead><tr><th>ID</th><th>Fridge</th><th>Customer</th><th>Description</th><th>Priority</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>
+            @foreach (var f in Model)
+            {
+                <tr>
+                    <td>#@f.Id</td>
+                    <td>@f.Fridge?.SerialNumber</td>
+                    <td>@f.ReportedByCustomer?.Name</td>
+                    <td>@f.Description</td>
+                    <td><span class="fms-badge @(f.Priority >= FaultPriority.High ? "red" : "amber")">@f.Priority</span></td>
+                    <td><span class="fms-badge @(f.Status == FaultStatus.Closed ? "gray" : f.Status == FaultStatus.Repaired ? "green" : "blue")">@f.Status</span></td>
+                    <td style="text-align:right;">
+                        <a asp-action="ProcessFault" asp-route-id="@f.Id" class="btn-fms btn-sm-fms btn-primary-fms">Process</a>
+                        <a asp-action="Details" asp-route-id="@f.Id" class="btn-fms btn-sm-fms btn-ghost-fms">View</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

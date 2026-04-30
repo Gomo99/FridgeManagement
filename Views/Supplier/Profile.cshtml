@@ -1,0 +1,36 @@
+﻿@model FridgeManagement.Models.Supplier
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "My Profile";
+}
+<div class="page-header">
+    <h1>My Profile</h1>
+</div>
+<div class="fms-card" style="max-width:600px; margin:auto;">
+    <div class="fms-card-header"><div class="fms-card-title">Company Details</div></div>
+    <form asp-action="Profile" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div class="fms-form-group">
+            <label>Company Name</label>
+            <input asp-for="Name" class="fms-input" readonly />
+        </div>
+        <div class="fms-form-group">
+            <label>Contact Person</label>
+            <input asp-for="ContactPerson" class="fms-input" />
+        </div>
+        <div class="fms-form-group">
+            <label>Phone</label>
+            <input asp-for="PhoneNumber" class="fms-input" />
+        </div>
+        <div class="fms-form-group">
+            <label>Email</label>
+            <input asp-for="Email" class="fms-input" readonly />
+        </div>
+        <div class="fms-form-group">
+            <label>Address</label>
+            <textarea asp-for="Address" class="fms-textarea" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn-fms btn-primary-fms">Update</button>
+    </form>
+</div>

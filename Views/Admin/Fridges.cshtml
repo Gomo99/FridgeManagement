@@ -1,0 +1,189 @@
+﻿@model IEnumerable<FridgeManagement.Models.Fridge>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Manage Fridges";
+    ViewData["ActivePage"] = "Fridges";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Fridges</h1>
+        <p>All active fridges in inventory</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="InactiveFridges" class="btn-fms btn-ghost-fms btn-sm-fms">
+            <i class="fa-solid fa-trash"></i> View Inactive
+        </a>
+        <button class="btn-fms btn-primary-fms" onclick="openAddModal()">
+            <i class="fa-solid fa-plus"></i> Add Fridge
+        </button>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Fridge Inventory</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="fridgeSearch" placeholder="Search fridges..." oninput="filterTable()" />
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="fridgeTable">
+            <thead>
+                <tr>
+                    <th>Serial Number</th>
+                    <th>Model</th>
+                    <th>Brand</th>
+                    <th>Purchase Date</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var f in Model)
+                {
+                    <tr data-search="@f.SerialNumber @f.Model @f.Brand">
+                        <td style="font-weight:600; color:var(--white);">@f.SerialNumber</td>
+                        <td style="color:var(--muted);">@f.Model</td>
+                        <td style="color:var(--muted);">@f.Brand</td>
+                        <td style="color:var(--muted);">@f.PurchaseDate?.ToString("yyyy-MM-dd")</td>
+                        <td style="text-align:right;">
+                            <button class="btn-fms btn-ghost-fms btn-sm-fms"
+                                    onclick="openEditModal(@f.Id, '@f.SerialNumber.Replace("'", "\\'")', '@f.Model.Replace("'", "\\'")', '@f.Brand.Replace("'", "\\'")', '@f.PurchaseDate?.ToString("yyyy-MM-dd")')">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="btn-fms btn-danger-fms btn-sm-fms"
+                                    onclick="openDeleteModal(@f.Id, '@f.SerialNumber.Replace("'", "\\'")')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════ ADD FRIDGE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="addFridgeModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-snowflake" style="color:var(--ice); margin-right:10px;"></i>Add Fridge</div>
+            <button class="fms-modal-close" onclick="closeModal('addFridgeModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="CreateFridge" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label class="fms-label">Serial Number</label>
+                <input type="text" name="SerialNumber" class="fms-input" placeholder="FRIDGE-XXXX" required />
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Model</label>
+                    <input type="text" name="Model" class="fms-input" placeholder="e.g. Cooler X100" />
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Brand</label>
+                    <input type="text" name="Brand" class="fms-input" placeholder="e.g. Frosty" />
+                </div>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Purchase Date</label>
+                <input type="date" name="PurchaseDate" class="fms-input" />
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('addFridgeModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-plus"></i> Add Fridge</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ EDIT FRIDGE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="editFridgeModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-pen" style="color:var(--ice); margin-right:10px;"></i>Edit Fridge</div>
+            <button class="fms-modal-close" onclick="closeModal('editFridgeModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="EditFridge" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="editFridgeId" />
+            <div class="fms-form-group">
+                <label class="fms-label">Serial Number</label>
+                <input type="text" name="SerialNumber" id="editSerial" class="fms-input" required />
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Model</label>
+                    <input type="text" name="Model" id="editModel" class="fms-input" />
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Brand</label>
+                    <input type="text" name="Brand" id="editBrand" class="fms-input" />
+                </div>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Purchase Date</label>
+                <input type="date" name="PurchaseDate" id="editPurchaseDate" class="fms-input" />
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('editFridgeModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ DELETE FRIDGE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="deleteFridgeModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning); margin-right:10px;"></i>Deactivate Fridge</div>
+            <button class="fms-modal-close" onclick="closeModal('deleteFridgeModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p style="color:var(--muted);">Are you sure you want to deactivate fridge <strong id="delFridgeSerial"></strong>?</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('deleteFridgeModal')">Cancel</button>
+                <form asp-action="DeleteFridge" method="post" id="delFridgeForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="delFridgeId" />
+                    <button type="submit" class="btn-fms btn-danger-fms">Deactivate</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const q = document.getElementById('fridgeSearch').value.toLowerCase();
+            document.querySelectorAll('#fridgeTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        function openAddModal() { openModal('addFridgeModal'); }
+
+        function openEditModal(id, serial, model, brand, purchaseDate) {
+            document.getElementById('editFridgeId').value = id;
+            document.getElementById('editSerial').value = serial;
+            document.getElementById('editModel').value = model;
+            document.getElementById('editBrand').value = brand;
+            document.getElementById('editPurchaseDate').value = purchaseDate || '';
+            openModal('editFridgeModal');
+        }
+
+        function openDeleteModal(id, serial) {
+            document.getElementById('delFridgeId').value = id;
+            document.getElementById('delFridgeSerial').textContent = serial;
+            openModal('deleteFridgeModal');
+        }
+    </script>
+}

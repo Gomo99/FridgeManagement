@@ -1,0 +1,42 @@
+﻿@model FridgeManagement.Models.FaultReport
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Fault Details";
+}
+
+<div class="page-header">
+    <h1>Fault #@Model.Id</h1>
+    <a asp-action="Index" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back to List</a>
+</div>
+
+<div class="fms-card" style="max-width:700px;">
+    <div class="fms-card-header"><div class="fms-card-title">Fault Information</div></div>
+    <dl class="row" style="padding:16px;">
+        <dt class="col-sm-4">Fridge</dt>
+        <dd class="col-sm-8">@Model.Fridge?.SerialNumber</dd>
+        <dt class="col-sm-4">Customer</dt>
+        <dd class="col-sm-8">@Model.ReportedByCustomer?.Name</dd>
+        <dt class="col-sm-4">Reported</dt>
+        <dd class="col-sm-8">@Model.ReportedDate.ToString("g")</dd>
+        <dt class="col-sm-4">Priority</dt>
+        <dd class="col-sm-8">@Model.Priority</dd>
+        <dt class="col-sm-4">Status</dt>
+        <dd class="col-sm-8">@Model.Status</dd>
+        @if (!string.IsNullOrEmpty(Model.DiagnosisNotes))
+        {
+            <dt>Diagnosis</dt>
+            <dd>@Model.DiagnosisNotes</dd>
+ }
+        @if (!string.IsNullOrEmpty(Model.ResolutionNotes))
+        {
+            <dt>Resolution</dt>
+            <dd>@Model.ResolutionNotes</dd>
+ }
+        <dt class="col-sm-4">Assigned Technician</dt>
+        <dd class="col-sm-8">@Model.AssignedTechnician?.FullName</dd>
+        <dt class="col-sm-4">Scheduled</dt>
+        <dd class="col-sm-8">@Model.ScheduledRepairDate?.ToString("g")</dd>
+        <dt class="col-sm-4">Resolved</dt>
+        <dd class="col-sm-8">@Model.ResolvedDate?.ToString("g")</dd>
+    </dl>
+</div>

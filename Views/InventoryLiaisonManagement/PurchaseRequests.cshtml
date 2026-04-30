@@ -1,0 +1,33 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.PurchaseRequest>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Purchase Requests";
+    ViewData["ActivePage"] = "Requests";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Purchase Requests</h1>
+        <p>Requests sent to Purchasing</p>
+    </div>
+    <a asp-action="CreatePurchaseRequest" class="btn-fms btn-primary-fms"><i class="fa-solid fa-plus"></i> New Request</a>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead><tr><th>Date</th><th>Requester</th><th>Reason</th><th>Qty</th><th>Status</th></tr></thead>
+        <tbody>
+            @foreach (var req in Model)
+            {
+                <tr>
+                    <td>@req.RequestDate.ToString("yyyy-MM-dd")</td>
+                    <td>@req.RequestedBy?.FullName</td>
+                    <td>@req.Reason</td>
+                    <td>@req.QuantityRequested</td>
+                    <td><span class="fms-badge @(req.Status == PurchaseRequestStatus.Pending ? "amber" : req.Status == PurchaseRequestStatus.Approved ? "green" : "gray")">@req.Status</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

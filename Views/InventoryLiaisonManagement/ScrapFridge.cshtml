@@ -1,0 +1,18 @@
+﻿@model FridgeManagement.Models.Fridge
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Scrap Fridge";
+}
+<div class="page-header"><h1>Scrap Fridge</h1></div>
+<div class="fms-card" style="max-width:400px; margin:auto;">
+    <div class="fms-card-header"><div class="fms-card-title">Confirm Scrap</div></div>
+    <div style="padding:20px; text-align:center;">
+        <p>Scrap fridge <strong>@Model.SerialNumber</strong>?</p>
+        <form asp-action="ScrapFridge" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn-fms btn-danger-fms">Scrap</button>
+            <a asp-action="Inventory" class="btn-fms btn-ghost-fms">Cancel</a>
+        </form>
+    </div>
+</div>

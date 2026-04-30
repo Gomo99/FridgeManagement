@@ -1,0 +1,188 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.PurchaseRequest>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Purchase Requests";
+    ViewData["ActivePage"] = "PurchaseRequests";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Purchase Requests</h1>
+        <p>Pending and approved requests from the Inventory Liaison</p>
+    </div>
+    <a asp-action="Dashboard" class="btn-fms btn-ghost-fms btn-sm-fms">
+        <i class="fa-solid fa-arrow-left"></i> Dashboard
+    </a>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Request List</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="reqSearch" placeholder="Search requests..." oninput="filterTable()" />
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="reqTable">
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Requester</th>
+                    <th>Reason</th>
+                    <th>Qty</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var req in Model)
+                {
+                    <tr data-search="@req.RequestedBy?.FullName @req.Reason @req.Id">
+                        <td style="font-weight:600; color:var(--white);">#@req.Id</td>
+                        <td>@req.RequestedBy?.FullName</td>
+                        <td>@req.Reason</td>
+                        <td>@req.QuantityRequested</td>
+                        <td>
+                            <span class="fms-badge @(req.Status == PurchaseRequestStatus.Approved ? "green" : req.Status == PurchaseRequestStatus.Rejected ? "red" : "amber")">
+                                @req.Status
+                            </span>
+                        </td>
+                        <td style="text-align:right;">
+                            <div style="display:flex; gap:6px; justify-content:flex-end;">
+                                <button class="btn-fms btn-ghost-fms btn-sm-fms"
+                                        onclick="openDetailsModal(@req.Id, '@req.RequestedBy?.FullName', '@req.Reason.Replace("'", "\\'")', @req.QuantityRequested, '@req.Status', '@req.RequestDate.ToString("dd MMM yyyy HH:mm")')">
+                                    <i class="fa-solid fa-eye"></i> Details
+                                </button>
+                                @if (req.Status == PurchaseRequestStatus.Pending)
+                                {
+                                    <button class="btn-fms btn-success-fms btn-sm-fms"
+                                            onclick="openApproveModal(@req.Id, @req.QuantityRequested)">
+                                        <i class="fa-solid fa-check"></i> Approve
+                                    </button>
+                                    <button class="btn-fms btn-danger-fms btn-sm-fms"
+                                            onclick="openRejectModal(@req.Id)">
+                                        <i class="fa-solid fa-xmark"></i> Reject
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════ DETAILS MODAL ═══════ -->
+<div class="fms-modal-overlay" id="detailsModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-info-circle" style="color:var(--ice); margin-right:10px;"></i>Request Details</div>
+            <button class="fms-modal-close" onclick="closeModal('detailsModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px;">
+            <dl class="row">
+                <dt class="col-sm-4">Request ID</dt>
+                <dd class="col-sm-8" id="detailId"></dd>
+                <dt class="col-sm-4">Requester</dt>
+                <dd class="col-sm-8" id="detailRequester"></dd>
+                <dt class="col-sm-4">Reason</dt>
+                <dd class="col-sm-8" id="detailReason"></dd>
+                <dt class="col-sm-4">Quantity</dt>
+                <dd class="col-sm-8" id="detailQty"></dd>
+                <dt class="col-sm-4">Status</dt>
+                <dd class="col-sm-8" id="detailStatus"></dd>
+                <dt class="col-sm-4">Request Date</dt>
+                <dd class="col-sm-8" id="detailDate"></dd>
+            </dl>
+            <div style="text-align:right;">
+                <button onclick="closeModal('detailsModal')" class="btn-fms btn-ghost-fms">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════ APPROVE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="approveModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-check-circle" style="color:var(--success); margin-right:10px;"></i>Approve Request</div>
+            <button class="fms-modal-close" onclick="closeModal('approveModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Approve request <strong id="approveIdLabel"></strong> for <span id="approveQty"></span> fridges?</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('approveModal')">Cancel</button>
+                <form asp-action="ApproveRequest" method="post" id="approveForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="approveId" />
+                    <button type="submit" class="btn-fms btn-success-fms">Approve</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════ REJECT MODAL ═══════ -->
+<div class="fms-modal-overlay" id="rejectModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-xmark-circle" style="color:var(--danger); margin-right:10px;"></i>Reject Request</div>
+            <button class="fms-modal-close" onclick="closeModal('rejectModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Reject request <strong id="rejectIdLabel"></strong>?</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('rejectModal')">Cancel</button>
+                <form asp-action="RejectRequest" method="post" id="rejectForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="rejectId" />
+                    <button type="submit" class="btn-fms btn-danger-fms">Reject</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const q = document.getElementById('reqSearch').value.toLowerCase();
+            document.querySelectorAll('#reqTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        // ---------- Details Modal ----------
+        function openDetailsModal(id, requester, reason, qty, status, date) {
+            document.getElementById('detailId').innerText = '#' + id;
+            document.getElementById('detailRequester').innerText = requester;
+            document.getElementById('detailReason').innerText = reason;
+            document.getElementById('detailQty').innerText = qty;
+            document.getElementById('detailStatus').innerText = status;
+            document.getElementById('detailDate').innerText = date;
+            openModal('detailsModal');
+        }
+
+        // ---------- Approve Modal ----------
+        function openApproveModal(id, qty) {
+            document.getElementById('approveId').value = id;
+            document.getElementById('approveIdLabel').innerText = '#' + id;
+            document.getElementById('approveQty').innerText = qty;
+            openModal('approveModal');
+        }
+
+        // ---------- Reject Modal ----------
+        function openRejectModal(id) {
+            document.getElementById('rejectId').value = id;
+            document.getElementById('rejectIdLabel').innerText = '#' + id;
+            openModal('rejectModal');
+        }
+    </script>
+}

@@ -1,0 +1,157 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.PurchaseOrder>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Purchase Orders";
+    ViewData["ActivePage"] = "PurchaseOrders";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Purchase Orders</h1>
+        <p>All orders placed with suppliers</p>
+    </div>
+    <a asp-action="Dashboard" class="btn-fms btn-ghost-fms btn-sm-fms">
+        <i class="fa-solid fa-arrow-left"></i> Dashboard
+    </a>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Order List</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="poSearch" placeholder="Search orders..." oninput="filterTable()" />
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="poTable">
+            <thead>
+                <tr>
+                    <th>PO #</th>
+                    <th>Supplier</th>
+                    <th>Order Date</th>
+                    <th>Expected Delivery</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var po in Model)
+                {
+                    <tr data-search="@po.Quotation?.Supplier?.Name @po.Id @po.Quotation?.RFQ?.PurchaseRequest?.Reason">
+                        <td style="font-weight:600; color:var(--white);">#@po.Id</td>
+                        <td>@po.Quotation?.Supplier?.Name</td>
+                        <td>@po.OrderDate.ToString("yyyy-MM-dd")</td>
+                        <td>@po.ExpectedDeliveryDate?.ToString("yyyy-MM-dd")</td>
+                        <td>@po.Quotation?.TotalAmount.ToString("C")</td>
+                        <td>
+                            <span class="fms-badge @(po.Status == PurchaseOrderStatus.Delivered ? "green" : po.Status == PurchaseOrderStatus.Cancelled ? "red" : "amber")">
+                                @po.Status
+                            </span>
+                        </td>
+                        <td style="text-align:right;">
+                            <div style="display:flex; gap:6px; justify-content:flex-end;">
+                                <a asp-action="PurchaseOrderDetails" asp-route-id="@po.Id" class="btn-fms btn-sm-fms btn-ghost-fms">
+                                    <i class="fa-solid fa-eye"></i> Details
+                                </a>
+                                @if (po.Status == PurchaseOrderStatus.Ordered || po.Status == PurchaseOrderStatus.Shipped)
+                                {
+                                    <button class="btn-fms btn-sm-fms btn-success-fms"
+                                            onclick="openDeliveryModal(@po.Id)">
+                                        <i class="fa-solid fa-truck"></i> Deliver
+                                    </button>
+                                }
+                                @if (po.Status != PurchaseOrderStatus.Delivered && po.Status != PurchaseOrderStatus.Cancelled)
+                                {
+                                    <button class="btn-fms btn-sm-fms btn-danger-fms"
+                                            onclick="openCancelModal(@po.Id, '#@po.Id')">
+                                        <i class="fa-solid fa-xmark"></i> Cancel
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════ CANCEL PURCHASE ORDER MODAL ═══════ -->
+<div class="fms-modal-overlay" id="cancelPOModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning); margin-right:10px;"></i>Cancel Order</div>
+            <button class="fms-modal-close" onclick="closeModal('cancelPOModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Cancel purchase order <strong id="cancelPONumber"></strong>?</p>
+            <form asp-action="CancelPurchaseOrder" method="post" id="cancelPOForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="cancelPOId" />
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                    <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('cancelPOModal')">No</button>
+                    <button type="submit" class="btn-fms btn-danger-fms">Yes, Cancel Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════ PROCESS DELIVERY MODAL ═══════ -->
+<div class="fms-modal-overlay" id="deliveryModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-truck" style="color:var(--success); margin-right:10px;"></i>Process Delivery</div>
+            <button class="fms-modal-close" onclick="closeModal('deliveryModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="ProcessDelivery" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="PurchaseOrderId" id="deliveryPOId" />
+            <div class="fms-form-group">
+                <label class="fms-label">Quantity Delivered</label>
+                <input type="number" name="QuantityDelivered" class="fms-input" min="1" required />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Delivery Date</label>
+                <input type="date" name="DeliveryDate" class="fms-input" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Notes</label>
+                <textarea name="Notes" class="fms-textarea" rows="2"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('deliveryModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-success-fms">Confirm Delivery</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const q = document.getElementById('poSearch').value.toLowerCase();
+            document.querySelectorAll('#poTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        function openCancelModal(poId, poNumber) {
+            document.getElementById('cancelPOId').value = poId;
+            document.getElementById('cancelPONumber').innerText = poNumber;
+            openModal('cancelPOModal');
+        }
+
+        function openDeliveryModal(poId) {
+            document.getElementById('deliveryPOId').value = poId;
+            openModal('deliveryModal');
+        }
+    </script>
+}

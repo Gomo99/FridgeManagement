@@ -1,0 +1,57 @@
+﻿@model FridgeManagement.Models.DeliveryNote
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Process Delivery";
+    ViewData["ActivePage"] = "PurchaseOrders";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Process Delivery</h1>
+        <p>For Purchase Order #@Model.PurchaseOrderId</p>
+    </div>
+    <a asp-action="PurchaseOrders" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to Orders
+    </a>
+</div>
+
+<div class="fms-card" style="max-width:600px; margin:auto;">
+    <div class="fms-card-header">
+        <div class="fms-card-title">
+            <i class="fa-solid fa-truck" style="color:var(--success); margin-right:10px;"></i>Delivery Details
+        </div>
+    </div>
+    <form asp-action="ProcessDelivery" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="PurchaseOrderId" />
+
+        <div class="fms-form-group">
+            <label class="fms-label" asp-for="QuantityDelivered"></label>
+            <input asp-for="QuantityDelivered" class="fms-input" type="number" min="1" required />
+            <span asp-validation-for="QuantityDelivered" class="text-danger"></span>
+        </div>
+
+        <div class="fms-form-group">
+            <label class="fms-label" asp-for="DeliveryDate"></label>
+            <input asp-for="DeliveryDate" class="fms-input" type="date"
+                   value="@(Model.DeliveryDate == default ? DateTime.Now.ToString("yyyy-MM-dd") : Model.DeliveryDate.ToString("yyyy-MM-dd"))" />
+            <span asp-validation-for="DeliveryDate" class="text-danger"></span>
+        </div>
+
+        <div class="fms-form-group">
+            <label class="fms-label" asp-for="Notes"></label>
+            <textarea asp-for="Notes" class="fms-textarea" rows="3"></textarea>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+            <a asp-action="PurchaseOrders" class="btn-fms btn-ghost-fms">Cancel</a>
+            <button type="submit" class="btn-fms btn-success-fms">
+                <i class="fa-solid fa-check"></i> Confirm Delivery
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

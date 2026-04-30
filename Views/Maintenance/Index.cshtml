@@ -1,0 +1,243 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.MaintenanceSchedule>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Maintenance Schedules";
+    ViewData["ActivePage"] = "Schedules";
+
+    // These must be set in the Index action (see note above)
+    var fridges = ViewBag.Fridges as SelectList;
+    var technicians = ViewBag.Technicians as SelectList;
+    string statusFilter = Context.Request.Query["statusFilter"];
+}
+
+<div class="page-header">
+    <div>
+        <h1>Maintenance Schedules</h1>
+        <p>All planned maintenance visits</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="Dashboard" class="btn-fms btn-ghost-fms btn-sm-fms"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+        <button class="btn-fms btn-primary-fms" onclick="openAddModal()">
+            <i class="fa-solid fa-plus"></i> Schedule Maintenance
+        </button>
+    </div>
+</div>
+
+<!-- Status filter buttons -->
+<div class="fms-card" style="margin-bottom:16px; padding:10px 16px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a asp-action="Index" class="btn-fms btn-sm-fms @(string.IsNullOrEmpty(statusFilter) ? "btn-primary-fms" : "btn-ghost-fms")">All</a>
+        <a asp-action="Index" asp-route-statusFilter="Scheduled" class="btn-fms btn-sm-fms @(statusFilter == "Scheduled" ? "btn-primary-fms" : "btn-ghost-fms")">Scheduled</a>
+        <a asp-action="Index" asp-route-statusFilter="InProgress" class="btn-fms btn-sm-fms @(statusFilter == "InProgress" ? "btn-primary-fms" : "btn-ghost-fms")">In Progress</a>
+        <a asp-action="Index" asp-route-statusFilter="Completed" class="btn-fms btn-sm-fms @(statusFilter == "Completed" ? "btn-primary-fms" : "btn-ghost-fms")">Completed</a>
+        <a asp-action="Index" asp-route-statusFilter="Cancelled" class="btn-fms btn-sm-fms @(statusFilter == "Cancelled" ? "btn-primary-fms" : "btn-ghost-fms")">Cancelled</a>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Schedule List</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="schedSearch" placeholder="Search..." oninput="filterTable()" />
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="schedTable">
+            <thead>
+                <tr>
+                    <th>Fridge</th>
+                    <th>Date</th>
+                    <th>Technician</th>
+                    <th>Notes</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var sched in Model)
+                {
+                    <tr data-search="@sched.Fridge?.SerialNumber @sched.AssignedTechnician?.FullName">
+                        <td>@sched.Fridge?.SerialNumber</td>
+                        <td>@sched.ScheduledDate.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@sched.AssignedTechnician?.FullName</td>
+                        <td>@sched.Notes</td>
+                        <td>
+                            <span class="fms-badge @(sched.Status == MaintenanceStatus.Scheduled ? "blue" : sched.Status == MaintenanceStatus.InProgress ? "amber" : sched.Status == MaintenanceStatus.Completed ? "green" : "gray")">
+                                @sched.Status
+                            </span>
+                        </td>
+                        <td style="text-align:right;">
+                            @if (sched.Status == MaintenanceStatus.Scheduled)
+                            {
+                                <button class="btn-fms btn-sm-fms btn-ghost-fms"
+                                        onclick="openEditModal(@sched.Id, @sched.FridgeId, '@sched.ScheduledDate.ToString("yyyy-MM-ddTHH:mm")', '@sched.Notes', @sched.AssignedTechnicianId)">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="btn-fms btn-sm-fms btn-danger-fms"
+                                        onclick="openCancelModal(@sched.Id, '@sched.Fridge?.SerialNumber')">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <a asp-action="ServiceFridge" asp-route-scheduleId="@sched.Id" class="btn-fms btn-sm-fms btn-success-fms">Service</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════ ADD SCHEDULE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="addScheduleModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-calendar-plus" style="color:var(--ice);"></i> Schedule Maintenance</div>
+            <button class="fms-modal-close" onclick="closeModal('addScheduleModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="CreateSchedule" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label class="fms-label">Fridge</label>
+                <select name="FridgeId" class="fms-select" id="addFridgeSelect" required></select>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Scheduled Date & Time</label>
+                <input type="datetime-local" name="ScheduledDate" class="fms-input" required />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Assigned Technician</label>
+                <select name="AssignedTechnicianId" class="fms-select" id="addTechSelect" required></select>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Notes</label>
+                <textarea name="Notes" class="fms-textarea" rows="2"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('addScheduleModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ EDIT SCHEDULE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="editScheduleModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-pen" style="color:var(--ice);"></i> Edit Schedule</div>
+            <button class="fms-modal-close" onclick="closeModal('editScheduleModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="EditSchedule" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="editSchedId" />
+            <div class="fms-form-group">
+                <label class="fms-label">Fridge</label>
+                <select name="FridgeId" class="fms-select" id="editFridgeSelect" required></select>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Scheduled Date & Time</label>
+                <input type="datetime-local" name="ScheduledDate" id="editSchedDate" class="fms-input" required />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Assigned Technician</label>
+                <select name="AssignedTechnicianId" class="fms-select" id="editTechSelect" required></select>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Notes</label>
+                <textarea name="Notes" id="editNotes" class="fms-textarea" rows="2"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('editScheduleModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ CANCEL SCHEDULE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="cancelScheduleModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning);"></i> Cancel Schedule</div>
+            <button class="fms-modal-close" onclick="closeModal('cancelScheduleModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Cancel maintenance for <strong id="cancelFridgeSerial"></strong>?</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('cancelScheduleModal')">No</button>
+                <form asp-action="CancelSchedule" method="post" id="cancelSchedForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="cancelSchedId" />
+                    <button type="submit" class="btn-fms btn-danger-fms">Yes, Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Populate dropdowns with data from ViewBag (serialized as JSON)
+        const fridgeList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new SelectList(ViewBag.Fridges as List<FridgeManagement.Models.Fridge> ?? new List<FridgeManagement.Models.Fridge>(), "Id", "SerialNumber").Items));
+        const techList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new SelectList(ViewBag.Technicians as List<FridgeManagement.Models.User> ?? new List<FridgeManagement.Models.User>(), "Id", "FullName").Items));
+
+        function populateSelects() {
+            let addFridge = document.getElementById('addFridgeSelect');
+            let addTech = document.getElementById('addTechSelect');
+            let editFridge = document.getElementById('editFridgeSelect');
+            let editTech = document.getElementById('editTechSelect');
+
+            [addFridge, editFridge].forEach(sel => {
+                if (sel) {
+                    sel.innerHTML = '<option value="">-- Select Fridge --</option>';
+                    fridgeList.forEach(f => sel.innerHTML += `<option value="${f.Value}">${f.Text}</option>`);
+                }
+            });
+            [addTech, editTech].forEach(sel => {
+                if (sel) {
+                    sel.innerHTML = '<option value="">-- Select Technician --</option>';
+                    techList.forEach(t => sel.innerHTML += `<option value="${t.Value}">${t.Text}</option>`);
+                }
+            });
+        }
+
+        // Modal functions
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const q = document.getElementById('schedSearch').value.toLowerCase();
+            document.querySelectorAll('#schedTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        function openAddModal() {
+            populateSelects();
+            openModal('addScheduleModal');
+        }
+
+        function openEditModal(id, fridgeId, scheduledDate, notes, techId) {
+            document.getElementById('editSchedId').value = id;
+            populateSelects();
+            document.getElementById('editFridgeSelect').value = fridgeId;
+            document.getElementById('editSchedDate').value = scheduledDate;
+            document.getElementById('editNotes').value = notes || '';
+            document.getElementById('editTechSelect').value = techId;
+            openModal('editScheduleModal');
+        }
+
+        function openCancelModal(id, serial) {
+            document.getElementById('cancelSchedId').value = id;
+            document.getElementById('cancelFridgeSerial').innerText = serial;
+            openModal('cancelScheduleModal');
+        }
+    </script>
+}

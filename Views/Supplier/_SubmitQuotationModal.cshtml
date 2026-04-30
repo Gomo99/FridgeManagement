@@ -1,0 +1,34 @@
+﻿<div class="fms-modal-overlay" id="submitQuoteModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-file-signature" style="color:var(--ice);"></i> Submit Quotation</div>
+            <button class="fms-modal-close" onclick="closeModal('submitQuoteModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="SubmitQuotation" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="RFQId" id="quotationRFQId" />
+            <div class="fms-form-group">
+                <label>Total Amount (R)</label>
+                <input type="number" name="TotalAmount" class="fms-input" step="0.01" required />
+            </div>
+            <div class="fms-form-group">
+                <label>Estimated Delivery (days)</label>
+                <input type="number" name="EstimatedDeliveryDays" class="fms-input" min="1" required />
+            </div>
+            <div class="fms-form-group">
+                <label>Notes</label>
+                <textarea name="Notes" class="fms-textarea" rows="3"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('submitQuoteModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function openSubmitQuoteModal(rfqId) {
+        document.getElementById('quotationRFQId').value = rfqId;
+        openModal('submitQuoteModal');
+    }
+</script>

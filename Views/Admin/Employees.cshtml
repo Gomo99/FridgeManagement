@@ -1,0 +1,293 @@
+﻿@model IEnumerable<FridgeManagement.Models.User>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Manage Employees";
+    ViewData["ActivePage"] = "Employees";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Employees</h1>
+        <p>Active system users</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="InactiveEmployees" class="btn-fms btn-ghost-fms btn-sm-fms">
+            <i class="fa-solid fa-user-slash"></i> View Inactive
+        </a>
+        <button class="btn-fms btn-primary-fms" onclick="openAddModal()">
+            <i class="fa-solid fa-user-plus"></i> Add Employee
+        </button>
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div class="fms-card" style="margin-bottom:20px; padding:16px 20px;">
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="employeeSearch" placeholder="Search employees..." oninput="filterTable()" />
+        </div>
+        <select class="fms-select" id="roleFilter" style="width:200px;" onchange="filterTable()">
+            <option value="">All Roles</option>
+            @foreach (var role in Enum.GetValues(typeof(FridgeManagement.AppStatus.UserRole)))
+            {
+                <option value="@role">@role.ToString().Replace("_", " ")</option>
+            }
+        </select>
+        <select class="fms-select" id="statusFilter" style="width:150px;" onchange="filterTable()">
+            <option value="">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+        </select>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div>
+            <div class="fms-card-title">Active Employees</div>
+            <div class="fms-card-subtitle">@Model.Count() total records</div>
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="employeeTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>2FA</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var emp in Model)
+                {
+                    <tr data-name="@emp.FullName" data-role="@emp.Role" data-status="@emp.Status">
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:34px; height:34px; border-radius:50%;
+                                                background:linear-gradient(135deg,var(--navy-4),var(--ice));
+                                                display:flex; align-items:center; justify-content:center;
+                                                font-weight:700; font-size:12px; flex-shrink:0;">
+                                    @(string.Concat(emp.FullName.Split(' ').Take(2).Select(s => s.Length > 0 ? s[0].ToString().ToUpper() : "")))
+                                </div>
+                                <div style="font-weight:500; color:var(--white);">@emp.FullName</div>
+                            </div>
+                        </td>
+                        <td style="font-family:monospace; color:var(--muted);">@emp.Username</td>
+                        <td style="color:var(--muted);">@emp.Email</td>
+                        <td>
+                            <span class="fms-badge @(emp.Role == FridgeManagement.AppStatus.UserRole.ADMINISTRATOR ? "red" : "blue")">
+                                @emp.Role.ToString().Replace("_", " ")
+                            </span>
+                        </td>
+                        <td>
+                            @if (emp.IsTwoFactorEnabled)
+                            {
+                                <span class="fms-badge green"><i class="fa-solid fa-shield-halved"></i> On</span>
+                            }
+                            else
+                            {
+                                <span class="fms-badge gray">Off</span>
+                            }
+                        </td>
+                        <td style="text-align:right;">
+                            <div style="display:flex; gap:6px; justify-content:flex-end;">
+                                <button class="btn-fms btn-ghost-fms btn-sm-fms"
+                                        onclick="openEditModal(@emp.Id, '@emp.FullName.Replace("'", "\\'")', '@emp.Email', '@emp.PhoneNumber', '@emp.Role', '@emp.Gender', '@emp.Username')">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="btn-fms btn-danger-fms btn-sm-fms"
+                                        onclick="openDeleteModal(@emp.Id, '@emp.FullName.Replace("'", "\\'")')">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════ ADD EMPLOYEE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="addEmployeeModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-user-plus" style="color:var(--ice); margin-right:10px;"></i>Add Employee</div>
+            <button class="fms-modal-close" onclick="closeModal('addEmployeeModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="CreateEmployee" method="post">
+            @Html.AntiForgeryToken()
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Full Name</label>
+                    <input type="text" name="FullName" class="fms-input" placeholder="Full name" required />
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Username</label>
+                    <input type="text" name="Username" class="fms-input" placeholder="username" required />
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Email</label>
+                    <input type="email" name="Email" class="fms-input" placeholder="email@company.com" required />
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Phone</label>
+                    <input type="text" name="PhoneNumber" class="fms-input" placeholder="Phone number" />
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Role</label>
+                    <select name="Role" class="fms-select" required>
+                        @foreach (var role in Enum.GetValues(typeof(FridgeManagement.AppStatus.UserRole)))
+                        {
+                            <option value="@role">@role.ToString().Replace("_", " ")</option>
+                        }
+                    </select>
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Gender</label>
+                    <select name="Gender" class="fms-select">
+                        @foreach (var g in Enum.GetValues(typeof(FridgeManagement.AppStatus.GenderType)))
+                        {
+                            <option value="@g">@g</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Password</label>
+                <input type="password" name="PasswordHash" class="fms-input" placeholder="Temporary password" required />
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; padding-top:8px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('addEmployeeModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ EDIT EMPLOYEE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="editEmployeeModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-pen" style="color:var(--ice); margin-right:10px;"></i>Edit Employee</div>
+            <button class="fms-modal-close" onclick="closeModal('editEmployeeModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="EditEmployee" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="editId" />
+            <div class="fms-form-group">
+                <label class="fms-label">Full Name</label>
+                <input type="text" name="FullName" id="editName" class="fms-input" required />
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Email</label>
+                    <input type="email" name="Email" id="editEmail" class="fms-input" required />
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Phone</label>
+                    <input type="text" name="PhoneNumber" id="editPhone" class="fms-input" />
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Role</label>
+                    <select name="Role" id="editRole" class="fms-select" required>
+                        @foreach (var role in Enum.GetValues(typeof(FridgeManagement.AppStatus.UserRole)))
+                        {
+                            <option value="@role">@role.ToString().Replace("_", " ")</option>
+                        }
+                    </select>
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Gender</label>
+                    <select name="Gender" id="editGender" class="fms-select">
+                        @foreach (var g in Enum.GetValues(typeof(FridgeManagement.AppStatus.GenderType)))
+                        {
+                            <option value="@g">@g</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Username</label>
+                <input type="text" name="Username" id="editUsername" class="fms-input" readonly />
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; padding-top:8px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('editEmployeeModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ DELETE EMPLOYEE MODAL ═══════ -->
+<div class="fms-modal-overlay" id="deleteEmployeeModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning); margin-right:10px;"></i>Deactivate Employee</div>
+            <button class="fms-modal-close" onclick="closeModal('deleteEmployeeModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p style="color:var(--muted);">Are you sure you want to deactivate <strong id="delEmpName"></strong>?</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('deleteEmployeeModal')">Cancel</button>
+                <form asp-action="DeleteEmployee" method="post" id="delEmployeeForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="delEmpId" />
+                    <button type="submit" class="btn-fms btn-danger-fms">Deactivate</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id)  { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const search = document.getElementById('employeeSearch').value.toLowerCase();
+            const role   = document.getElementById('roleFilter').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value.toLowerCase();
+            document.querySelectorAll('#employeeTable tbody tr').forEach(row => {
+                const name   = (row.dataset.name   || '').toLowerCase();
+                const rRole  = (row.dataset.role   || '').toLowerCase();
+                const rStat  = (row.dataset.status || '').toLowerCase();
+                const ok = (!search || name.includes(search)) &&
+                           (!role   || rRole === role) &&
+                           (!status || rStat === status);
+                row.style.display = ok ? '' : 'none';
+            });
+        }
+
+        function openAddModal() { openModal('addEmployeeModal'); }
+
+        function openEditModal(id, name, email, phone, role, gender, username) {
+            document.getElementById('editId').value       = id;
+            document.getElementById('editName').value     = name;
+            document.getElementById('editEmail').value    = email;
+            document.getElementById('editPhone').value    = phone;
+            document.getElementById('editRole').value     = role;
+            document.getElementById('editGender').value   = gender;
+            document.getElementById('editUsername').value = username;
+            openModal('editEmployeeModal');
+        }
+
+        function openDeleteModal(id, name) {
+            document.getElementById('delEmpId').value   = id;
+            document.getElementById('delEmpName').textContent = name;
+            openModal('deleteEmployeeModal');
+        }
+    </script>
+}

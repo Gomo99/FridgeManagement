@@ -1,0 +1,72 @@
+﻿@model IEnumerable<FridgeManagement.Models.MaintenanceLog>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Maintenance History";
+    ViewData["ActivePage"] = "History";
+    var fridges = ViewBag.Fridges as SelectList;
+    var selectedFridgeId = (int?)ViewBag.Fridges?.SelectedValue ?? null;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Maintenance History</h1>
+        <p>Completed service logs</p>
+    </div>
+    <a asp-action="Dashboard" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+</div>
+
+<div class="fms-card" style="margin-bottom:20px; padding:16px 20px;">
+    <form asp-action="History" method="get" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <label class="fms-label" style="margin:0;">Filter by Fridge:</label>
+        <select name="fridgeId" class="fms-select" style="width:250px;" asp-items="fridges">
+            <option value="">-- All Fridges --</option>
+        </select>
+        <button type="submit" class="btn-fms btn-sm-fms btn-primary-fms">Apply</button>
+    </form>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Service Records</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="historySearch" placeholder="Search..." oninput="filterTable()" />
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="historyTable">
+            <thead>
+                <tr>
+                    <th>Date Completed</th>
+                    <th>Fridge</th>
+                    <th>Technician</th>
+                    <th>Checklist Results</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model)
+                {
+                    <tr data-search="@log.MaintenanceSchedule?.Fridge?.SerialNumber @log.Technician?.FullName">
+                        <td>@log.CompletedDate?.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@log.MaintenanceSchedule?.Fridge?.SerialNumber</td>
+                        <td>@log.Technician?.FullName</td>
+                        <td>@log.ChecklistResults?.Replace(";", "<br>")</td>
+                        <td>@log.ServiceNotes</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterTable() {
+            const q = document.getElementById('historySearch').value.toLowerCase();
+            document.querySelectorAll('#historyTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+    </script>
+}

@@ -1,0 +1,40 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Customer Dashboard";
+    var customer = ViewBag.Customer as FridgeManagement.Models.Customer;
+    var allocatedFridges = ViewBag.AllocatedFridges as List<FridgeManagement.Models.FridgeAllocation>;
+}
+<div class="page-header">
+    <div>
+        <h1>Welcome, @customer?.Name</h1>
+        <p>Your fridge management portal</p>
+    </div>
+</div>
+
+<div class="grid-4" style="margin-bottom:28px;">
+    <div class="stat-card">
+        <div class="stat-icon teal"><i class="fa-solid fa-snowflake"></i></div>
+        <div>
+            <div class="stat-value">@allocatedFridges?.Count</div>
+            <div class="stat-label">Allocated Fridges</div>
+        </div>
+    </div>
+    <!-- Add other stats as needed -->
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Quick Actions</div>
+    </div>
+    <div class="grid-2" style="gap:12px; padding:16px;">
+        <a asp-action="MyFridges" class="btn-fms btn-primary-fms w-100">My Fridges</a>
+        <a asp-action="MyFaults" class="btn-fms btn-warning-fms w-100">My Fault Reports</a>
+        <a asp-action="MyFridgeRequests" class="btn-fms btn-info-fms w-100">My Fridge Requests</a>
+        <button onclick="openReportFaultModal()" class="btn-fms btn-danger-fms">Report a Fault</button>
+        <button onclick="openRequestFridgeModal()" class="btn-fms btn-success-fms">Request a Fridge</button>
+        <a asp-action="UpcomingMaintenance" class="btn-fms btn-ghost-fms">Upcoming Maintenance</a>
+    </div>
+</div>
+
+<!-- Include the modal shells for ReportFault and RequestFridge here (they will be shown when buttons are clicked) -->
+<!-- We'll reuse the same modal logic as before: hidden divs with class fms-modal-overlay -->

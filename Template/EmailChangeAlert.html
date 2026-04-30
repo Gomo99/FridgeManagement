@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Email Updated</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f8fa;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 8px rgba(0,0,0,0.05);
+            max-width: 600px;
+            margin: auto;
+        }
+
+        h2 {
+            color: #2c3e50;
+        }
+
+        .info {
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        .footer {
+            margin-top: 25px;
+            font-size: 0.9em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Hello {{Name}},</h2>
+        <p>Welcome! Your email address has been successfully updated in your profile. Here are your updated account details:</p>
+
+        <div class="info">
+            <strong>Full Name:</strong> {{Title}} {{Name}} {{Surname}}<br />
+            <strong>Previous Email:</strong> {{OldEmail}}<br />
+            <strong>New Email:</strong> {{NewEmail}}<br />
+            <strong>Role:</strong> {{Role}}<br />
+            <strong>Status:</strong> {{Status}}<br />
+            <strong>Date of Change:</strong> {{ChangeDate}}
+        </div>
+
+        <p>If you did not make this change, please <strong>contact support immediately</strong>.</p>
+
+        <div class="footer">
+            Fridge Management Project Support Team
+        </div>
+    </div>
+</body>
+</html>

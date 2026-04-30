@@ -1,0 +1,17 @@
+﻿@model FridgeManagement.Models.MaintenanceSchedule
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Cancel Maintenance";
+}
+<div class="fms-card" style="max-width:400px; margin:40px auto;">
+    <div class="fms-card-header"><div class="fms-card-title">Cancel Schedule</div></div>
+    <div style="padding:20px; text-align:center;">
+        <p>Are you sure you want to cancel maintenance for <strong>@Model.Fridge?.SerialNumber</strong>?</p>
+        <form asp-action="CancelSchedule" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn-fms btn-danger-fms">Yes, Cancel</button>
+            <a asp-action="Index" class="btn-fms btn-ghost-fms">Back</a>
+        </form>
+    </div>
+</div>

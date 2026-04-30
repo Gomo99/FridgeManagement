@@ -1,0 +1,46 @@
+﻿@model FridgeManagement.Models.Fridge
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Receive New Fridge";
+}
+
+<div class="page-header">
+    <h1>Receive New Fridge</h1>
+    <a asp-action="Inventory" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back to Inventory</a>
+</div>
+
+<div class="fms-card" style="max-width:600px; margin:auto;">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-plus-circle" style="color:var(--ice);"></i> New Fridge Details</div>
+    </div>
+    <form asp-action="ReceiveFridge" method="post">
+        @Html.AntiForgeryToken()
+        <div class="fms-form-group">
+            <label asp-for="SerialNumber" class="fms-label">Serial Number</label>
+            <input asp-for="SerialNumber" class="fms-input" placeholder="FRIDGE-XXXX" required />
+            <span asp-validation-for="SerialNumber" class="text-danger"></span>
+        </div>
+        <div class="grid-2">
+            <div class="fms-form-group">
+                <label asp-for="Model" class="fms-label">Model</label>
+                <input asp-for="Model" class="fms-input" placeholder="e.g. Cooler X100" />
+            </div>
+            <div class="fms-form-group">
+                <label asp-for="Brand" class="fms-label">Brand</label>
+                <input asp-for="Brand" class="fms-input" placeholder="e.g. Frosty" />
+            </div>
+        </div>
+        <div class="fms-form-group">
+            <label asp-for="PurchaseDate" class="fms-label">Purchase Date</label>
+            <input asp-for="PurchaseDate" class="fms-input" type="date" />
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+            <a asp-action="Inventory" class="btn-fms btn-ghost-fms">Cancel</a>
+            <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-save"></i> Add to Inventory</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

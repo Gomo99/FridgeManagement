@@ -1,0 +1,51 @@
+﻿@using FridgeManagement.AppStatus
+@model FridgeManagement.Models.PurchaseOrder
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "PO Details";
+    var deliveryNotes = ViewBag.DeliveryNotes as List<FridgeManagement.Models.DeliveryNote>;
+}
+<div class="page-header">
+    <h1>Purchase Order #@Model.Id</h1>
+    <a asp-action="PurchaseOrders" class="btn-fms btn-ghost-fms">Back</a>
+</div>
+<div class="grid-2">
+    <div class="fms-card">
+        <div class="fms-card-header"><div class="fms-card-title">Order Info</div></div>
+        <dl class="row" style="padding:16px;">
+            <dt class="col-sm-4">Supplier</dt>
+            <dd class="col-sm-8">@Model.Quotation?.Supplier?.Name</dd>
+            <dt class="col-sm-4">Total Amount</dt>
+            <dd class="col-sm-8">@Model.Quotation?.TotalAmount.ToString("C")</dd>
+            <dt class="col-sm-4">Order Date</dt>
+            <dd class="col-sm-8">@Model.OrderDate.ToString("yyyy-MM-dd")</dd>
+            <dt class="col-sm-4">Expected Delivery</dt>
+            <dd class="col-sm-8">@Model.ExpectedDeliveryDate?.ToString("yyyy-MM-dd")</dd>
+            <dt class="col-sm-4">Status</dt>
+            <dd class="col-sm-8"><span class="fms-badge @(Model.Status == PurchaseOrderStatus.Delivered ? "green" : "amber")">@Model.Status</span></dd>
+        </dl>
+        @if (Model.Status == PurchaseOrderStatus.Ordered || Model.Status == PurchaseOrderStatus.Shipped)
+        {
+            <button onclick="openDeliveryModal(@Model.Id)" class="btn-fms btn-success-fms w-100">Create Delivery Note</button>
+        }
+    </div>
+    <div class="fms-card">
+        <div class="fms-card-header"><div class="fms-card-title">Delivery Notes</div></div>
+        @if (deliveryNotes != null && deliveryNotes.Any())
+        {
+            <table class="fms-table">
+                <thead><tr><th>Date</th><th>Qty</th><th>Notes</th></tr></thead>
+                @foreach (var d in deliveryNotes)
+                {
+                    <tr><td>@d.DeliveryDate.ToString("yyyy-MM-dd")</td><td>@d.QuantityDelivered</td><td>@d.Notes</td></tr>
+                }
+            </table>
+        }
+        else
+        {
+            <p class="text-muted" style="padding:20px;">No deliveries yet.</p>
+        }
+    </div>
+</div>
+
+@await Html.PartialAsync("_DeliveryNoteModal")

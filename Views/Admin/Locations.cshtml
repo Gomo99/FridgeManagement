@@ -1,0 +1,174 @@
+﻿@model IEnumerable<FridgeManagement.Models.Location>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Manage Locations";
+    ViewData["ActivePage"] = "Locations";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Locations</h1>
+        <p>All active locations</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="InactiveLocations" class="btn-fms btn-ghost-fms btn-sm-fms">
+            <i class="fa-solid fa-trash"></i> View Inactive
+        </a>
+        <button class="btn-fms btn-primary-fms" onclick="openAddModal()">
+            <i class="fa-solid fa-plus"></i> Add Location
+        </button>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Location List</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="locSearch" placeholder="Search locations..." oninput="filterTable()" />
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="locTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>City</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var loc in Model)
+                {
+                    <tr data-search="@loc.Name @loc.Address @loc.City">
+                        <td style="font-weight:600; color:var(--white);">@loc.Name</td>
+                        <td style="color:var(--muted);">@loc.Address</td>
+                        <td style="color:var(--muted);">@loc.City</td>
+                        <td style="text-align:right;">
+                            <button class="btn-fms btn-ghost-fms btn-sm-fms"
+                                    onclick="openEditModal(@loc.Id, '@loc.Name.Replace("'", "\\'")', '@loc.Address.Replace("'", "\\'")', '@loc.City.Replace("'", "\\'")')">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="btn-fms btn-danger-fms btn-sm-fms"
+                                    onclick="openDeleteModal(@loc.Id, '@loc.Name.Replace("'", "\\'")')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════ ADD LOCATION MODAL ═══════ -->
+<div class="fms-modal-overlay" id="addLocationModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-location-dot" style="color:var(--ice); margin-right:10px;"></i>Add Location</div>
+            <button class="fms-modal-close" onclick="closeModal('addLocationModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="CreateLocation" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label class="fms-label">Location Name</label>
+                <input type="text" name="Name" class="fms-input" placeholder="e.g. Main Warehouse" required />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Address</label>
+                <input type="text" name="Address" class="fms-input" placeholder="Street address" />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">City</label>
+                <input type="text" name="City" class="fms-input" placeholder="City" />
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('addLocationModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-plus"></i> Add Location</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ EDIT LOCATION MODAL ═══════ -->
+<div class="fms-modal-overlay" id="editLocationModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-pen" style="color:var(--ice); margin-right:10px;"></i>Edit Location</div>
+            <button class="fms-modal-close" onclick="closeModal('editLocationModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="EditLocation" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="editLocId" />
+            <div class="fms-form-group">
+                <label class="fms-label">Location Name</label>
+                <input type="text" name="Name" id="editLocName" class="fms-input" required />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Address</label>
+                <input type="text" name="Address" id="editLocAddress" class="fms-input" />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">City</label>
+                <input type="text" name="City" id="editLocCity" class="fms-input" />
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('editLocationModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ DELETE LOCATION MODAL ═══════ -->
+<div class="fms-modal-overlay" id="deleteLocationModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning); margin-right:10px;"></i>Deactivate Location</div>
+            <button class="fms-modal-close" onclick="closeModal('deleteLocationModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p style="color:var(--muted);">Are you sure you want to deactivate <strong id="delLocName"></strong>?</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('deleteLocationModal')">Cancel</button>
+                <form asp-action="DeleteLocation" method="post" id="delLocationForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="delLocId" />
+                    <button type="submit" class="btn-fms btn-danger-fms">Deactivate</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const q = document.getElementById('locSearch').value.toLowerCase();
+            document.querySelectorAll('#locTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        function openAddModal() { openModal('addLocationModal'); }
+
+        function openEditModal(id, name, address, city) {
+            document.getElementById('editLocId').value      = id;
+            document.getElementById('editLocName').value    = name;
+            document.getElementById('editLocAddress').value = address;
+            document.getElementById('editLocCity').value    = city;
+            openModal('editLocationModal');
+        }
+
+        function openDeleteModal(id, name) {
+            document.getElementById('delLocId').value   = id;
+            document.getElementById('delLocName').textContent = name;
+            openModal('deleteLocationModal');
+        }
+    </script>
+}

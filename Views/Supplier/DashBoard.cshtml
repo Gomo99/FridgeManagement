@@ -1,0 +1,106 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Supplier Dashboard";
+    var supplier = ViewBag.Supplier as FridgeManagement.Models.Supplier;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Supplier Dashboard</h1>
+        <p>Welcome, @supplier?.Name</p>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="grid-4" style="margin-bottom:28px;">
+    <div class="stat-card">
+        <div class="stat-icon amber"><i class="fa-solid fa-file-invoice"></i></div>
+        <div>
+            <div class="stat-value">@ViewBag.PendingRFQs</div>
+            <div class="stat-label">Pending RFQs</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa-solid fa-file-signature"></i></div>
+        <div>
+            <div class="stat-value">@ViewBag.QuotationsSubmitted</div>
+            <div class="stat-label">Quotations Submitted</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon teal"><i class="fa-solid fa-truck-fast"></i></div>
+        <div>
+            <div class="stat-value">@ViewBag.TotalOrders</div>
+            <div class="stat-label">Total Orders</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-clock"></i></div>
+        <div>
+            <div class="stat-value">@ViewBag.AwaitingDelivery</div>
+            <div class="stat-label">Awaiting Delivery</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Quick Actions</div>
+    </div>
+    <div class="grid-2" style="gap:12px; padding:16px;">
+        <a asp-action="RFQs" class="btn-fms btn-primary-fms w-100"><i class="fa-solid fa-file-invoice"></i> View RFQs</a>
+        <a asp-action="PurchaseOrders" class="btn-fms btn-success-fms w-100"><i class="fa-solid fa-truck"></i> Purchase Orders</a>
+        <button onclick="openEditProfileModal()" class="btn-fms btn-warning-fms w-100"><i class="fa-solid fa-user-edit"></i> Edit Profile</button>
+        <a asp-action="Profile" class="btn-fms btn-ghost-fms w-100"><i class="fa-solid fa-address-card"></i> View Profile</a>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="fms-modal-overlay" id="editProfileModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-user-edit" style="color:var(--ice); margin-right:10px;"></i>Edit Profile</div>
+            <button class="fms-modal-close" onclick="closeModal('editProfileModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="Profile" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" value="@supplier?.Id" />
+            <div class="fms-form-group">
+                <label class="fms-label">Company Name</label>
+                <input name="Name" class="fms-input" value="@supplier?.Name" required />
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label class="fms-label">Contact Person</label>
+                    <input name="ContactPerson" class="fms-input" value="@supplier?.ContactPerson" />
+                </div>
+                <div class="fms-form-group">
+                    <label class="fms-label">Phone</label>
+                    <input name="PhoneNumber" class="fms-input" value="@supplier?.PhoneNumber" />
+                </div>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Email</label>
+                <input name="Email" class="fms-input" value="@supplier?.Email" />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Address</label>
+                <textarea name="Address" class="fms-textarea" rows="2">@supplier?.Address</textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('editProfileModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function openEditProfileModal() { openModal('editProfileModal'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+    </script>
+}

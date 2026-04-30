@@ -1,0 +1,149 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.RequestForQuotation>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "RFQs";
+    ViewData["ActivePage"] = "RFQs";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Requests for Quotation</h1>
+        <p>All RFQs</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="Dashboard" class="btn-fms btn-ghost-fms btn-sm-fms">
+            <i class="fa-solid fa-arrow-left"></i> Dashboard
+        </a>
+        <button class="btn-fms btn-primary-fms" onclick="openCreateRFQModal()">
+            <i class="fa-solid fa-plus"></i> New RFQ
+        </button>
+    </div>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title">RFQ List</div>
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="rfqSearch" placeholder="Search RFQs..." oninput="filterTable()" />
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="fms-table" id="rfqTable">
+            <thead>
+                <tr>
+                    <th>RFQ #</th>
+                    <th>Purchase Request</th>
+                    <th>Created Date</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var rfq in Model)
+                {
+                    <tr data-search="@rfq.PurchaseRequest?.Reason @rfq.Id">
+                        <td style="font-weight:600; color:var(--white);">#@rfq.Id</td>
+                        <td>@rfq.PurchaseRequest?.Reason</td>
+                        <td>@rfq.CreatedDate.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            <span class="fms-badge @(rfq.Status == RFQStatus.Sent ? "blue" : rfq.Status == RFQStatus.Closed ? "gray" : "amber")">
+                                @rfq.Status
+                            </span>
+
+                            <a asp-action="AcceptQuotation" asp-route-id="@rfq.Id" class="btn-fms btn-sm-fms btn-success-fms">Accept</a>
+                            <a asp-action="ReceiveQuotation" asp-route-rfqId="@rfq.Id" class="btn-fms btn-sm-fms btn-primary-fms">Add Quotation</a>
+                        </td>
+                        <td style="text-align:right;">
+                            <a asp-action="RFQDetails" asp-route-id="@rfq.Id" class="btn-fms btn-sm-fms btn-ghost-fms">
+                                <i class="fa-solid fa-eye"></i> Details
+                            </a>
+                            @if (rfq.Status == RFQStatus.Draft)
+                            {
+                                <!-- Optionally add a send/close action here -->
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════ CREATE RFQ MODAL ═══════ -->
+<div class="fms-modal-overlay" id="createRFQModal">
+    <div class="fms-modal" style="max-width:600px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-file-invoice" style="color:var(--ice); margin-right:10px;"></i>Create New RFQ</div>
+            <button class="fms-modal-close" onclick="closeModal('createRFQModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="CreateRFQ" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label class="fms-label">Purchase Request</label>
+                <select name="purchaseRequestId" class="fms-select" required>
+                    <option value="">-- Select Request --</option>
+                    @* Populate via ViewBag in the action if needed; for modal, we'll use a dynamic list *@
+                    @* Better: we can load the available requests via a service or just keep a link to the Purchase Requests page *@
+                </select>
+                <small class="text-muted">First approve a purchase request, then create an RFQ from it.</small>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Notes</label>
+                <textarea name="Notes" class="fms-textarea" rows="2"></textarea>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Select Suppliers</label>
+                <select name="selectedSuppliers" id="supplierMultiSelect" class="fms-select" multiple style="height:150px;">
+                    @* This will be loaded via JavaScript after fetching the list *@
+                </select>
+                <small>Hold Ctrl to select multiple.</small>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('createRFQModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms">Create RFQ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function filterTable() {
+            const q = document.getElementById('rfqSearch').value.toLowerCase();
+            document.querySelectorAll('#rfqTable tbody tr').forEach(row => {
+                row.style.display = (row.dataset.search || '').toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        // Open Create RFQ Modal – pre-load the purchase request dropdown and supplier list
+        function openCreateRFQModal() {
+            // Fetch pending purchase requests and populate the dropdown
+            fetch('/Purchasing/GetPendingPurchaseRequests')   // you need to add this action or embed data
+                .then(res => res.json())
+                .then(data => {
+                    var select = document.querySelector('select[name="purchaseRequestId"]');
+                    select.innerHTML = '<option value="">-- Select Request --</option>';
+                    data.forEach(req => {
+                        select.innerHTML += `<option value="${req.id}">#${req.id} - ${req.reason} (${req.quantity} fridges)</option>`;
+                    });
+                });
+            // Similarly, fetch active suppliers
+            fetch('/Purchasing/GetActiveSuppliers')   // you need to add this action or embed data
+                .then(res => res.json())
+                .then(data => {
+                    var select = document.getElementById('supplierMultiSelect');
+                    select.innerHTML = '';
+                    data.forEach(s => {
+                        select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                    });
+                });
+            openModal('createRFQModal');
+        }
+    </script>
+}
