@@ -733,19 +733,91 @@
 
     @if (User.IsInRole("ADMINISTRATOR"))
     {
-        <!-- Admin Sidebar -->
         <div class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-heading">Administration</div>
             <ul class="sidebar-nav">
-                <li><a asp-controller="Admin" asp-action="Dashboard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
-                <li><a asp-controller="Admin" asp-action="Customers" class="@(ViewData["ActivePage"]?.ToString() == "Customers" ? "active" : "")"><i class="fa-solid fa-store"></i> Customers</a></li>
-                <li><a asp-controller="Admin" asp-action="Employees" class="@(ViewData["ActivePage"]?.ToString() == "Employees" ? "active" : "")"><i class="fa-solid fa-users-gear"></i> Employees</a></li>
-                <li><a asp-controller="Admin" asp-action="Fridges" class="@(ViewData["ActivePage"]?.ToString() == "Fridges" ? "active" : "")"><i class="fa-solid fa-snowflake"></i> Fridges</a></li>
-                <li><a asp-controller="Admin" asp-action="Suppliers" class="@(ViewData["ActivePage"]?.ToString() == "Suppliers" ? "active" : "")"><i class="fa-solid fa-truck"></i> Suppliers</a></li>
-                <li><a asp-controller="Admin" asp-action="Locations" class="@(ViewData["ActivePage"]?.ToString() == "Locations" ? "active" : "")"><i class="fa-solid fa-location-dot"></i> Locations</a></li>
+                <li>
+                    <a asp-controller="Admin" asp-action="DashBoard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")">
+                        <i class="fa-solid fa-gauge-high"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Admin" asp-action="Customers" class="@(ViewData["ActivePage"]?.ToString() == "Customers" ? "active" : "")">
+                        <i class="fa-solid fa-store"></i> Customers
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Admin" asp-action="Employees" class="@(ViewData["ActivePage"]?.ToString() == "Employees" ? "active" : "")">
+                        <i class="fa-solid fa-users-gear"></i> Employees
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Admin" asp-action="Fridges" class="@(ViewData["ActivePage"]?.ToString() == "Fridges" ? "active" : "")">
+                        <i class="fa-solid fa-snowflake"></i> Fridges
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Admin" asp-action="Suppliers" class="@(ViewData["ActivePage"]?.ToString() == "Suppliers" ? "active" : "")">
+                        <i class="fa-solid fa-truck"></i> Suppliers
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Admin" asp-action="Locations" class="@(ViewData["ActivePage"]?.ToString() == "Locations" ? "active" : "")">
+                        <i class="fa-solid fa-location-dot"></i> Locations
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-heading" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
+                 onclick="toggleAccountMenu()">
+                <span>My Account</span>
+                <i id="accountMenuCaret" class="fa-solid fa-chevron-down" style="font-size:12px; transition: transform 0.3s;"></i>
+            </div>
+            <ul class="sidebar-nav" id="accountMenu" style="display:block;">
+                <li>
+                    <a asp-controller="Account" asp-action="ViewProfile" class="@(ViewData["ActivePage"]?.ToString() == "Profile" ? "active" : "")">
+                        <i class="fa-solid fa-id-card"></i> View Profile
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Account" asp-action="ChangePassword" class="@(ViewData["ActivePage"]?.ToString() == "ChangePassword" ? "active" : "")">
+                        <i class="fa-solid fa-lock"></i> Change Password
+                    </a>
+                </li>
+                <li>
+                    @if (User.FindFirstValue("IsTwoFactorEnabled") == "True")
+                    {
+                        <a asp-controller="Account" asp-action="DisableTwoFactor" class="text-danger">
+                            <i class="fa-solid fa-shield-halved"></i> Disable 2FA
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="SetupTwoFactor" class="@(ViewData["ActivePage"]?.ToString() == "SetupTwoFactor" ? "active" : "")">
+                            <i class="fa-solid fa-shield-halved"></i> Set Up 2FA
+                        </a>
+                    }
+                </li>
+                <li>
+                    <a asp-controller="Account" asp-action="ManageDevices" class="@(ViewData["ActivePage"]?.ToString() == "Devices" ? "active" : "")">
+                        <i class="fa-solid fa-mobile-screen"></i> Remembered Devices
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Account" asp-action="DeleteAccount" class="@(ViewData["ActivePage"]?.ToString() == "DeleteAccount" ? "active" : "")">
+                        <i class="fa-solid fa-user-slash"></i> Deactivate Account
+                    </a>
+                </li>
+                <li>
+                    <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" style="background:none;border:none;color:var(--muted);padding:12px 20px;width:100%;text-align:left;font-size:14px;font-weight:500;display:flex;align-items:center;gap:12px;cursor:pointer;">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout
+                        </button>
+                    </form>
+                </li>
             </ul>
         </div>
-        <!-- Sidebar overlay for mobile -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
     }
 
@@ -830,6 +902,23 @@
     }
     });
     })();
+
+
+            function toggleAccountMenu() {
+            var menu = document.getElementById('accountMenu');
+            var caret = document.getElementById('accountMenuCaret');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+                caret.style.transform = 'rotate(0deg)';
+            } else {
+                menu.style.display = 'none';
+                caret.style.transform = 'rotate(-90deg)';
+            }
+        }
+
+
+
+
     </script>
 
 
