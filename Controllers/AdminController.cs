@@ -19,7 +19,7 @@ namespace FridgeManagement.Controllers
         }
 
         // ==================== DASHBOARD ====================
-        public IActionResult Dashboard()
+        public IActionResult DashBoard()
         {
             return View();
         }

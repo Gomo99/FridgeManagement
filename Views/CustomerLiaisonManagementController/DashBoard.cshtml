@@ -1,97 +1,126 @@
-@* CustomerLiaisonManagementController/DashBoard.cshtml *@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Customer Liaison Dashboard";
-    ViewData["ActivePage"] = "Dashboard";
-    var totalCustomers  = ViewBag.TotalCustomers  ?? 0;
-    var totalAllocations= ViewBag.TotalAllocations?? 0;
-    var pendingRequests = ViewBag.PendingRequests ?? 0;
-    var activeCustomers = ViewBag.ActiveCustomers ?? 0;
+    ViewData["Title"] = "Customer Dashboard";
+    var customer = ViewBag.Customer as FridgeManagement.Models.Customer;
+    var allocatedFridges = ViewBag.AllocatedFridges as List<FridgeManagement.Models.FridgeAllocation>;
+    var recentFaults = ViewBag.RecentFaults as List<FridgeManagement.Models.FaultReport>;
+    // Serialized list of { id = FridgeId, serial = SerialNumber } for the fault report modal
+    var fridgeListJson = ViewBag.FridgeListJson as string ?? "[]";
 }
 
-<!-- Stats Row -->
+<div class="page-header">
+    <div>
+        <h1>Welcome, @customer?.Name</h1>
+        <p>Your fridge management portal</p>
+    </div>
+</div>
+
+<!-- Quick Stats -->
 <div class="grid-4" style="margin-bottom:28px;">
     <div class="stat-card">
-        <div class="stat-icon blue"><i class="fa-solid fa-store"></i></div>
-        <div><div class="stat-value">@totalCustomers</div><div class="stat-label">Total Customers</div></div>
+        <div class="stat-icon teal"><i class="fa-solid fa-snowflake"></i></div>
+        <div>
+            <div class="stat-value">@(allocatedFridges?.Count ?? 0)</div>
+            <div class="stat-label">Allocated Fridges</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
-        <div><div class="stat-value">@activeCustomers</div><div class="stat-label">Active Customers</div></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon teal"><i class="fa-solid fa-link"></i></div>
-        <div><div class="stat-value">@totalAllocations</div><div class="stat-label">Active Allocations</div></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon amber"><i class="fa-solid fa-clock"></i></div>
-        <div><div class="stat-value">@pendingRequests</div><div class="stat-label">Pending Requests</div></div>
+        <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+            <div class="stat-value">@(recentFaults?.Count ?? 0)</div>
+            <div class="stat-label">Recent Faults</div>
+        </div>
     </div>
 </div>
 
-<div class="grid-2">
-    <!-- Quick Actions -->
-    <div class="fms-card">
-        <div class="fms-card-header"><div class="fms-card-title">Quick Actions</div></div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-            @{
-                var actions = new[]{
-                    ("fa-user-plus","Add New Customer","CustomerLiaisonManagementController","ManageCustomers","btn-primary-fms","Register a new spaza shop or shebeen"),
-                    ("fa-link","Create Fridge Allocation","CustomerLiaisonManagementController","ManageAllocations","btn-ghost-fms","Allocate a fridge to a customer"),
-                };
-                foreach (var (icon, label, ctrl, action, btnClass, desc) in actions)
-                {
-                    <a asp-controller="@ctrl" asp-action="@action"
-                       style="display:flex;align-items:center;gap:14px;padding:16px;
-                              background:var(--navy);border:1px solid rgba(14,165,233,.1);border-radius:10px;
-                              text-decoration:none;transition:var(--transition);"
-                       onmouseover="this.style.borderColor='rgba(14,165,233,.35)'"
-                       onmouseout="this.style.borderColor='rgba(14,165,233,.1)'">
-                        <div class="stat-icon blue" style="width:42px;height:42px;border-radius:10px;flex-shrink:0;">
-                            <i class="fa-solid @icon"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight:700;font-size:14px;color:var(--white);">@label</div>
-                            <div style="font-size:12.5px;color:var(--muted);margin-top:2px;">@desc</div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right" style="color:var(--muted);margin-left:auto;"></i>
-                    </a>
-                }
-            }
-        </div>
+<!-- Quick Actions -->
+<div class="fms-card">
+    <div class="fms-card-header"><div class="fms-card-title">Quick Actions</div></div>
+    <div class="grid-2" style="gap:12px; padding:16px;">
+        <a asp-action="MyFridges" class="btn-fms btn-primary-fms w-100">My Fridges</a>
+        <a asp-action="MyFaults" class="btn-fms btn-warning-fms w-100">My Fault Reports</a>
+        <a asp-action="MyFridgeRequests" class="btn-fms btn-info-fms w-100">My Fridge Requests</a>
+        <button onclick="openReportFaultModal()" class="btn-fms btn-danger-fms">Report a Fault</button>
+        <button onclick="openRequestFridgeModal()" class="btn-fms btn-success-fms">Request a Fridge</button>
+        <a asp-action="UpcomingMaintenance" class="btn-fms btn-ghost-fms">Upcoming Maintenance</a>
     </div>
+</div>
 
-    <!-- Recent Customers -->
-    <div class="fms-card">
-        <div class="fms-card-header">
-            <div class="fms-card-title">Recent Customers</div>
-            <a asp-action="ManageCustomers" class="btn-fms btn-ghost-fms btn-sm-fms">View All</a>
+<!-- MODALS -->
+@* Report Fault Modal *@
+<div class="fms-modal-overlay" id="reportFaultModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i> Report Fault</div>
+            <button class="fms-modal-close" onclick="closeModal('reportFaultModal')"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        @if (ViewBag.RecentCustomers != null)
-        {
-            <div style="display:flex;flex-direction:column;gap:10px;">
-                @foreach (dynamic c in ViewBag.RecentCustomers)
-                {
-                    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;
-                                border-bottom:1px solid rgba(255,255,255,.04);">
-                        <div style="width:34px;height:34px;border-radius:50%;
-                                    background:linear-gradient(135deg,var(--navy-4),var(--ice));
-                                    display:flex;align-items:center;justify-content:center;
-                                    font-weight:700;font-size:12px;color:#fff;flex-shrink:0;">
-                            @((c.BusinessName ?? "?")[0])
-                        </div>
-                        <div style="flex:1;">
-                            <div style="font-weight:600;font-size:14px;">@c.BusinessName</div>
-                            <div style="font-size:12px;color:var(--muted);">@c.ContactPerson</div>
-                        </div>
-                        <span class="fms-badge green" style="font-size:11px;">Active</span>
-                    </div>
-                }
+        <form asp-action="ReportFault" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label for="FridgeId">Fridge</label>
+                <select name="FridgeId" id="faultFridgeSelect" class="fms-select" required></select>
             </div>
-        }
-        else
-        {
-            <div style="text-align:center;padding:28px 0;color:var(--muted);">No customers yet.</div>
-        }
+            <div class="fms-form-group">
+                <label for="Description">Description</label>
+                <textarea name="Description" class="fms-textarea" rows="3" required></textarea>
+            </div>
+            <div class="fms-form-group">
+                <label for="Priority">Priority</label>
+                <select name="Priority" class="fms-select" asp-items="Html.GetEnumSelectList<FridgeManagement.AppStatus.FaultPriority>()"></select>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('reportFaultModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-danger-fms">Submit Fault</button>
+            </div>
+        </form>
     </div>
 </div>
+
+@* Request Fridge Modal *@
+<div class="fms-modal-overlay" id="requestFridgeModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-plus" style="color:var(--success);"></i> Request a Fridge</div>
+            <button class="fms-modal-close" onclick="closeModal('requestFridgeModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="RequestFridge" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label for="Reason">Reason</label>
+                <input type="text" name="Reason" class="fms-input" placeholder="Why do you need a new fridge?" required />
+            </div>
+            <div class="fms-form-group">
+                <label for="QuantityRequested">Quantity</label>
+                <input type="number" name="QuantityRequested" class="fms-input" min="1" value="1" />
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('requestFridgeModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-success-fms">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Fridge list data for the fault modal (from ViewBag)
+        var customerFridges = @Html.Raw(fridgeListJson);
+
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function openReportFaultModal(selectedFridgeId = null) {
+            var select = document.getElementById('faultFridgeSelect');
+            select.innerHTML = '<option value="">-- Select fridge --</option>';
+            customerFridges.forEach(f => {
+                select.innerHTML += `<option value="${f.id}" ${selectedFridgeId == f.id ? 'selected' : ''}>${f.serial}</option>`;
+            });
+            openModal('reportFaultModal');
+        }
+
+        function openRequestFridgeModal() {
+            openModal('requestFridgeModal');
+        }
+    </script>
+}

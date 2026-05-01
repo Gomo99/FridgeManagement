@@ -5,7 +5,6 @@ using FridgeManagement.Service;
 using FridgeManagement.ViewModel;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
-using iTextSharp.text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -102,14 +101,14 @@ namespace FridgeManagement.Controllers
         {
             return role switch
             {
-                UserRole.ADMINISTRATOR => RedirectToAction("DashBoard", "AdminController", new { area = "" }),
-                UserRole.CUSTOMERLIAISON => RedirectToAction("DashBoard", "CustomerLiaisonManagementController", new { area = "" }),
-                UserRole.INVENTORYLIAISON => RedirectToAction("DashBoard", "InventoryLiaisonManagementController", new { area = "" }),
-                UserRole.CUSTOMER => RedirectToAction("DashBoard", "CustomerController", new { area = "" }),
-                UserRole.FAULTTECHNICIAN => RedirectToAction("DashBoard", "FaultTechnicianController", new { area = "" }),
-                UserRole.MAINTENANCETECHNICIAN => RedirectToAction("DashBoard", "MaintenanceController", new { area = "" }),
-                UserRole.PURCHASINGMANAGER => RedirectToAction("DashBoard", "PurchasingController", new { area = "" }),
-                UserRole.SUPPLIER => RedirectToAction("DashBoard", "SupplierController", new { area = "" }),
+                UserRole.ADMINISTRATOR => RedirectToAction("DashBoard", "Admin"),
+                UserRole.CUSTOMERLIAISON => RedirectToAction("Dashboard", "CustomerLiaisonManagement"),
+                UserRole.INVENTORYLIAISON => RedirectToAction("Dashboard", "InventoryLiaisonManagement"),
+                UserRole.CUSTOMER => RedirectToAction("Dashboard", "Customer"),
+                UserRole.FAULTTECHNICIAN => RedirectToAction("Dashboard", "FaultTechnician"),
+                UserRole.MAINTENANCETECHNICIAN => RedirectToAction("Dashboard", "Maintenance"),
+                UserRole.PURCHASINGMANAGER => RedirectToAction("Dashboard", "Purchasing"),
+                UserRole.SUPPLIER => RedirectToAction("Dashboard", "Supplier"),
                 _ => RedirectToAction("Index", "Home")
             };
         }
@@ -881,16 +880,17 @@ namespace FridgeManagement.Controllers
 
         private IActionResult RedirectBasedOnRole(UserRole role)
         {
+            // (Same as above – used in other places like ChangePassword)
             return role switch
             {
-                UserRole.ADMINISTRATOR => RedirectToAction("DashBoard", "AdminController", new { area = "" }),
-                UserRole.CUSTOMERLIAISON => RedirectToAction("DashBoard", "CustomerLiaisonManagementController", new { area = "" }),
-                UserRole.INVENTORYLIAISON => RedirectToAction("DashBoard", "InventoryLiaisonManagementController", new { area = "" }),
-                UserRole.CUSTOMER => RedirectToAction("DashBoard", "CustomerController", new { area = "" }),
-                UserRole.FAULTTECHNICIAN => RedirectToAction("DashBoard", "FaultTechnicianController", new { area = "" }),
-                UserRole.MAINTENANCETECHNICIAN => RedirectToAction("DashBoard", "MaintenanceController", new { area = "" }),
-                UserRole.PURCHASINGMANAGER => RedirectToAction("DashBoard", "PurchasingController", new { area = "" }),
-                UserRole.SUPPLIER => RedirectToAction("DashBoard", "SupplierController", new { area = "" }),
+                UserRole.ADMINISTRATOR => RedirectToAction("DashBoard", "Admin"),
+                UserRole.CUSTOMERLIAISON => RedirectToAction("Dashboard", "CustomerLiaisonManagement"),
+                UserRole.INVENTORYLIAISON => RedirectToAction("Dashboard", "InventoryLiaisonManagement"),
+                UserRole.CUSTOMER => RedirectToAction("Dashboard", "Customer"),
+                UserRole.FAULTTECHNICIAN => RedirectToAction("Dashboard", "FaultTechnician"),
+                UserRole.MAINTENANCETECHNICIAN => RedirectToAction("Dashboard", "Maintenance"),
+                UserRole.PURCHASINGMANAGER => RedirectToAction("Dashboard", "Purchasing"),
+                UserRole.SUPPLIER => RedirectToAction("Dashboard", "Supplier"),
             };
         }
 
@@ -959,8 +959,6 @@ namespace FridgeManagement.Controllers
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
         }
-
-
 
 
 

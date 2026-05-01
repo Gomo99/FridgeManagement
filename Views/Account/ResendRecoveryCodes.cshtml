@@ -1,0 +1,20 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Resend Recovery Codes";
+}
+
+<div class="page-header">
+    <h1>Recovery Codes</h1>
+</div>
+
+<div class="fms-card" style="max-width:500px; margin:auto;">
+    <div style="padding:20px; text-align:center;">
+        <p>If you've lost your recovery codes, you can generate a new set. Old codes will be invalidated.</p>
+        <form asp-action="ResendRecoveryCodesPost" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-fms btn-primary-fms">
+                <i class="fa-solid fa-rotate-right"></i> Generate & Send New Recovery Codes
+            </button>
+        </form>
+    </div>
+</div>

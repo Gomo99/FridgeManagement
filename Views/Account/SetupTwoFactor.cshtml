@@ -1,0 +1,46 @@
+﻿@model FridgeManagement.ViewModel.TwoFactorSetupViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Set Up Two‑Factor Authentication";
+}
+
+<div class="page-header">
+    <h1>Two‑Factor Setup</h1>
+    <a asp-action="ViewProfile" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+    <div class="fms-card">
+        <div class="fms-card-header"><div class="fms-card-title">Scan QR Code</div></div>
+        <div style="padding:20px; text-align:center;">
+            @if (!string.IsNullOrEmpty(Model.QrCodeImageUrl))
+            {
+                <img src="@Model.QrCodeImageUrl" alt="QR Code" style="max-width:100%; border-radius:12px;" />
+            }
+            else
+            {
+                <p style="color:var(--muted);">QR code not available.</p>
+            }
+        </div>
+    </div>
+    <div>
+        <div class="fms-card" style="margin-bottom:18px;">
+            <div class="fms-card-header"><div class="fms-card-title">Manual Entry Key</div></div>
+            <div style="padding:20px; text-align:center; font-family:monospace; font-size:1.2rem; color:var(--ice);">
+                @Model.ManualEntryKey
+            </div>
+        </div>
+        <div class="fms-card">
+            <div class="fms-card-header"><div class="fms-card-title">Verify Code</div></div>
+            <form asp-action="SetupTwoFactor" method="post" style="padding:16px;">
+                @Html.AntiForgeryToken()
+                <div class="fms-form-group">
+                    <label asp-for="VerificationCode" class="fms-label">Enter code from app</label>
+                    <input asp-for="VerificationCode" class="fms-input" placeholder="000000" />
+                    <span asp-validation-for="VerificationCode" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn-fms btn-primary-fms">Verify &amp; Enable</button>
+            </form>
+        </div>
+    </div>
+</div>

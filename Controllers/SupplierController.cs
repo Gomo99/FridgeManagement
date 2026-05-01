@@ -27,7 +27,7 @@ namespace FridgeManagement.Controllers
         }
 
         // ==================== DASHBOARD ====================
-        public async Task<IActionResult> Dashboard()
+        public async Task<IActionResult> DashBoard()
         {
             var supplier = await GetCurrentSupplierAsync();
             if (supplier == null) return RedirectToAction("AccessDenied", "Account");

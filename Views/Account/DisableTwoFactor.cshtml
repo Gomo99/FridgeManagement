@@ -1,0 +1,32 @@
+﻿@model FridgeManagement.ViewModel.DisableTwoFactorViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Disable Two‑Factor";
+}
+
+<div class="page-header">
+    <h1>Disable Two‑Factor</h1>
+    <a asp-action="ViewProfile" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="fms-card" style="max-width:500px; margin:auto;">
+    <div class="fms-card-header"><div class="fms-card-title">Confirmation</div></div>
+    <form asp-action="DisableTwoFactor" method="post" style="padding:16px;">
+        @Html.AntiForgeryToken()
+        <div class="fms-form-group">
+            <label asp-for="CurrentPassword" class="fms-label">Current Password</label>
+            <input asp-for="CurrentPassword" class="fms-input" type="password" required />
+            <span asp-validation-for="CurrentPassword" class="text-danger"></span>
+        </div>
+        <div class="fms-form-group">
+            <label asp-for="VerificationCode" class="fms-label">Verification Code</label>
+            <input asp-for="VerificationCode" class="fms-input" placeholder="000000" />
+            <span asp-validation-for="VerificationCode" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn-fms btn-danger-fms">Disable Two‑Factor</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

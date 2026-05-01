@@ -1,0 +1,32 @@
+﻿@model IEnumerable<FridgeManagement.Models.FridgeAllocation>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Inactive Allocations";
+}
+
+<div class="page-header">
+    <h1>Inactive Fridges</h1>
+    <a asp-action="MyFridges" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back to Active</a>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead>
+            <tr>
+                <th>Serial Number</th>
+                <th>Model</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alloc in Model)
+            {
+                <tr>
+                    <td>@alloc.Fridge?.SerialNumber</td>
+                    <td>@alloc.Fridge?.Model</td>
+                    <td><span class="fms-badge gray">@alloc.Status</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

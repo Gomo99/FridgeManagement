@@ -1,50 +1,839 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - FridgeManagement</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/FridgeManagement.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - Fridge Management System</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Font Awesome 6 Free (solid & brands) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Google Fonts: Outfit (used in stat-cards and headings) -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- ==================== FMS CUSTOM DESIGN SYSTEM ==================== -->
+    <style>
+        :root {
+            --bg: #0a0f1c;
+            --navy: #0f172a;
+            --navy-4: #1e293b;
+            --ice: #0ea5e9;
+            --ice-dim: rgba(14,165,233,0.08);
+            --white: #f1f5f9;
+            --muted: #94a3b8;
+            --warning: #f59e0b;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --danger-dim: rgba(239,68,68,0.1);
+            --amber: #f59e0b;
+            --teal: #14b8a6;
+            --purple: #a855f7;
+            --red: #ef4444;
+            --green: #22c55e;
+            --blue: #3b82f6;
+            --gray: #64748b;
+            --border: rgba(14,165,233,0.08);
+            --transition: all 0.2s ease;
+            --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-heading: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--white);
+            font-family: var(--font-body);
+        }
+
+        /* Navbar */
+        .navbar-dark.bg-dark {
+            background: var(--navy) !important;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Grid helpers */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 18px;
+        }
+
+        @@media (max-width: 992px) {
+            .grid-4 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Stat cards */
+        .stat-card {
+            background: var(--navy);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: var(--transition);
+        }
+
+            .stat-card:hover {
+                border-color: rgba(14,165,233,0.25);
+                transform: translateY(-1px);
+            }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+            .stat-icon.blue {
+                background: rgba(59,130,246,0.12);
+                color: #3b82f6;
+            }
+
+            .stat-icon.green {
+                background: rgba(34,197,94,0.12);
+                color: #22c55e;
+            }
+
+            .stat-icon.teal {
+                background: rgba(20,184,166,0.12);
+                color: #14b8a6;
+            }
+
+            .stat-icon.amber {
+                background: rgba(245,158,11,0.12);
+                color: #f59e0b;
+            }
+
+            .stat-icon.red {
+                background: rgba(239,68,68,0.12);
+                color: #ef4444;
+            }
+
+            .stat-icon.purple {
+                background: rgba(168,85,247,0.12);
+                color: #a855f7;
+            }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            font-family: 'Outfit',sans-serif;
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .stat-change {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+            .stat-change.up {
+                color: #22c55e;
+            }
+
+        /* FMS Card */
+        .fms-card {
+            background: var(--navy);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .fms-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .fms-card-title {
+            font-family: 'Outfit',sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--white);
+        }
+
+        .fms-card-subtitle {
+            font-size: 12.5px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        /* Tables */
+        .fms-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .fms-table th {
+                text-align: left;
+                padding: 12px 16px;
+                font-size: 12.5px;
+                font-weight: 600;
+                color: var(--muted);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .fms-table td {
+                padding: 14px 16px;
+                font-size: 14px;
+                border-bottom: 1px solid rgba(255,255,255,0.03);
+                color: var(--white);
+            }
+
+            .fms-table tbody tr:hover {
+                background: rgba(14,165,233,0.04);
+            }
+
+        /* Badges */
+        .fms-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            font-family: 'Outfit',sans-serif;
+        }
+
+            .fms-badge.green {
+                background: rgba(34,197,94,0.12);
+                color: #22c55e;
+            }
+
+            .fms-badge.red {
+                background: rgba(239,68,68,0.12);
+                color: #ef4444;
+            }
+
+            .fms-badge.blue {
+                background: rgba(59,130,246,0.12);
+                color: #3b82f6;
+            }
+
+            .fms-badge.amber {
+                background: rgba(245,158,11,0.12);
+                color: #f59e0b;
+            }
+
+            .fms-badge.gray {
+                background: rgba(148,163,184,0.12);
+                color: #94a3b8;
+            }
+
+            .fms-badge.teal {
+                background: rgba(20,184,166,0.12);
+                color: #14b8a6;
+            }
+
+            .fms-badge.purple {
+                background: rgba(168,85,247,0.12);
+                color: #a855f7;
+            }
+
+        /* Progress Bar */
+        .fms-progress {
+            height: 6px;
+            border-radius: 3px;
+            background: var(--navy-4);
+            overflow: hidden;
+        }
+
+        .fms-progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--ice), #38bdf8);
+            transition: width 0.4s ease;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--navy-4);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px 14px;
+            max-width: 300px;
+        }
+
+            .search-bar input {
+                background: transparent;
+                border: none;
+                outline: none;
+                color: var(--white);
+                font-size: 13.5px;
+                width: 100%;
+            }
+
+            .search-bar i {
+                color: var(--muted);
+                font-size: 14px;
+            }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+            .page-header h1 {
+                font-family: 'Outfit',sans-serif;
+                font-weight: 700;
+                font-size: 26px;
+                color: var(--white);
+                margin: 0 0 4px 0;
+            }
+
+            .page-header p {
+                color: var(--muted);
+                margin: 0;
+                font-size: 14px;
+            }
+
+        /* Buttons */
+        .btn-fms {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Outfit',sans-serif;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+            .btn-fms.btn-sm-fms {
+                padding: 6px 14px;
+                font-size: 12.5px;
+            }
+
+            .btn-fms.btn-lg-fms {
+                padding: 14px 28px;
+                font-size: 16px;
+            }
+
+        .btn-primary-fms {
+            background: var(--ice);
+            color: #fff;
+        }
+
+            .btn-primary-fms:hover {
+                background: #0284c7;
+            }
+
+        .btn-success-fms {
+            background: var(--success);
+            color: #fff;
+        }
+
+            .btn-success-fms:hover {
+                background: #16a34a;
+            }
+
+        .btn-warning-fms {
+            background: var(--warning);
+            color: #000;
+        }
+
+            .btn-warning-fms:hover {
+                background: #d97706;
+            }
+
+        .btn-danger-fms {
+            background: var(--danger);
+            color: #fff;
+        }
+
+            .btn-danger-fms:hover {
+                background: #dc2626;
+            }
+
+        .btn-ghost-fms {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+
+            .btn-ghost-fms:hover {
+                background: var(--ice-dim);
+                color: var(--white);
+            }
+
+        .btn-info-fms {
+            background: var(--teal);
+            color: #fff;
+        }
+
+            .btn-info-fms:hover {
+                background: #0d9488;
+            }
+
+        /* Forms */
+        .fms-form-group {
+            margin-bottom: 16px;
+        }
+
+        .fms-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .fms-input, .fms-select, .fms-textarea {
+            background: var(--navy-4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 14px;
+            color: var(--white);
+            width: 100%;
+            outline: none;
+            transition: var(--transition);
+        }
+
+            .fms-input:focus, .fms-select:focus, .fms-textarea:focus {
+                border-color: var(--ice);
+            }
+
+        .fms-textarea {
+            resize: vertical;
+        }
+
+        .fms-input-group {
+            position: relative;
+        }
+
+            .fms-input-group .input-icon {
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--muted);
+                font-size: 14px;
+            }
+
+            .fms-input-group .fms-input {
+                padding-left: 36px;
+            }
+
+        /* Modals */
+        .fms-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .fms-modal-overlay.show {
+                display: flex;
+            }
+
+        .fms-modal {
+            background: var(--navy);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 0;
+            width: 100%;
+            max-width: 540px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.2s ease;
+        }
+
+        @@keyframes modalSlideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .fms-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .fms-modal-title {
+            font-family: 'Outfit',sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .fms-modal-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+            .fms-modal-close:hover {
+                color: var(--white);
+            }
+
+        /* Alerts */
+        .fms-alert {
+            padding: 12px 18px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13.5px;
+        }
+
+            .fms-alert.info {
+                background: rgba(14,165,233,0.1);
+                color: #38bdf8;
+            }
+
+        /* Links */
+        .w-100 {
+            width: 100%;
+        }
+
+
+        /* ---------- SIDEBAR STYLES ---------- */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .admin-sidebar {
+            width: 260px;
+            background: var(--navy);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            top: 56px; /* height of navbar */
+            bottom: 0;
+            left: 0;
+            z-index: 1040;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+            .admin-sidebar.collapsed {
+                transform: translateX(-100%);
+                opacity: 0;
+                pointer-events: none;
+            }
+
+        .sidebar-heading {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            padding: 12px 20px 8px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            .sidebar-nav li a {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 20px;
+                color: var(--muted);
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s;
+                border-left: 3px solid transparent;
+            }
+
+                .sidebar-nav li a:hover,
+                .sidebar-nav li a.active {
+                    background: var(--ice-dim);
+                    color: var(--white);
+                    border-left-color: var(--ice);
+                }
+
+                .sidebar-nav li a i {
+                    width: 20px;
+                    text-align: center;
+                    font-size: 16px;
+                }
+
+        /* Content area adjusts when sidebar is open */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: margin-left 0.3s ease;
+            width: 100%;
+        }
+
+            .main-content.expanded {
+                margin-left: 0;
+            }
+
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1035;
+        }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+        @@media (max-width: 768px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+                top: 0;
+                z-index: 1045;
+            }
+
+                .admin-sidebar.mobile-open {
+                    transform: translateX(0);
+                }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+
+
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-dark bg-dark fixed-top">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">FridgeManagement</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                @if (User.IsInRole("ADMINISTRATOR"))
+                {
+                    <button class="btn btn-outline-light me-2 sidebar-toggle-btn" type="button">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                }
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <i class="fa-solid fa-snowflake me-2"></i>Fridge Management
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "";
+                            <!-- Show role‑based links only if NOT admin (admin uses sidebar) -->
+                            @if (role != "ADMINISTRATOR")
+                            {
+                                <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Home</a></li>
+                                @switch (role)
+                                {
+                                    case "CUSTOMERLIAISON":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="CustomerLiaisonManagement" asp-action="Dashboard">Dashboard</a></li>
+                                        break;
+                                    case "INVENTORYLIAISON":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="InventoryLiaisonManagement" asp-action="Dashboard">Inventory</a></li>
+                                        break;
+                                    case "CUSTOMER":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="Customer" asp-action="Dashboard">My Dashboard</a></li>
+                                        break;
+                                    case "FAULTTECHNICIAN":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="FaultTechnician" asp-action="Dashboard">Faults</a></li>
+                                        break;
+                                    case "MAINTENANCETECHNICIAN":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="Maintenance" asp-action="Dashboard">Maintenance</a></li>
+                                        break;
+                                    case "PURCHASINGMANAGER":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="Purchasing" asp-action="Dashboard">Purchasing</a></li>
+                                        break;
+                                    case "SUPPLIER":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="Supplier" asp-action="Dashboard">Supplier</a></li>
+                                        break;
+                                }
+                            }
+                            <li class="nav-item">
+                                <span class="navbar-text text-white me-3">Hello, @User.Identity.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="form-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link text-white" asp-controller="Account" asp-action="Login">Login</a></li>
+                        }
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - FridgeManagement - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    @if (User.IsInRole("ADMINISTRATOR"))
+    {
+        <!-- Admin Sidebar -->
+        <div class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-heading">Administration</div>
+            <ul class="sidebar-nav">
+                <li><a asp-controller="Admin" asp-action="Dashboard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                <li><a asp-controller="Admin" asp-action="Customers" class="@(ViewData["ActivePage"]?.ToString() == "Customers" ? "active" : "")"><i class="fa-solid fa-store"></i> Customers</a></li>
+                <li><a asp-controller="Admin" asp-action="Employees" class="@(ViewData["ActivePage"]?.ToString() == "Employees" ? "active" : "")"><i class="fa-solid fa-users-gear"></i> Employees</a></li>
+                <li><a asp-controller="Admin" asp-action="Fridges" class="@(ViewData["ActivePage"]?.ToString() == "Fridges" ? "active" : "")"><i class="fa-solid fa-snowflake"></i> Fridges</a></li>
+                <li><a asp-controller="Admin" asp-action="Suppliers" class="@(ViewData["ActivePage"]?.ToString() == "Suppliers" ? "active" : "")"><i class="fa-solid fa-truck"></i> Suppliers</a></li>
+                <li><a asp-controller="Admin" asp-action="Locations" class="@(ViewData["ActivePage"]?.ToString() == "Locations" ? "active" : "")"><i class="fa-solid fa-location-dot"></i> Locations</a></li>
+            </ul>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    }
+
+
+    <div class="main-content @(User.IsInRole("ADMINISTRATOR") ? "" : "expanded")" id="mainContent">
+        <div class="container pt-4" style="padding-top: 80px !important;">
+            <!-- extra top padding for fixed navbar -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            }
+            @RenderBody()
+        </div>
+    </div>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Global modal helper (used by all views) -->
+    <script>
+        // Basic modal open/close (if not already defined in a specific view)
+        if (typeof openModal === 'undefined') {
+            function openModal(id) { document.getElementById(id).classList.add('show'); }
+            function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+            // Close modal when clicking on overlay
+            document.querySelectorAll('.fms-modal-overlay').forEach(o => {
+                o.addEventListener('click', function(e) {
+                    if (e.target === this) this.classList.remove('show');
+                });
+            });
+        }
+    </script>
+
+    <script>
+    (function() {
+    const sidebar = document.getElementById('adminSidebar');
+    const mainContent = document.getElementById('mainContent');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+
+    if (!sidebar || !toggleBtn) return;
+
+    // Desktop: toggle collapse (translateX)
+    toggleBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (window.innerWidth > 768) {
+    sidebar.classList.toggle('collapsed');
+    mainContent.classList.toggle('expanded');
+    } else {
+    // Mobile: toggle overlay and translate
+    sidebar.classList.toggle('mobile-open');
+    overlay.classList.toggle('show');
+    }
+    });
+
+    // Close mobile sidebar when clicking overlay
+    if (overlay) {
+    overlay.addEventListener('click', function() {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('show');
+    });
+    }
+
+    // Close mobile sidebar when a link is clicked
+    sidebar.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', function() {
+    if (window.innerWidth <= 768) {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('show');
+    }
+    });
+    });
+
+    // On window resize, reset mobile classes
+    window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('show');
+    }
+    });
+    })();
+    </script>
+
+
+
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

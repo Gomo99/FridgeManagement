@@ -1,0 +1,25 @@
+﻿@model FridgeManagement.ViewModel.TwoFactorSetupViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Recovery Codes";
+}
+
+<div class="page-header">
+    <h1>Recovery Codes</h1>
+    <p>Keep these in a safe place. They are shown only once.</p>
+    <a asp-action="ViewProfile" class="btn-fms btn-ghost-fms">Done</a>
+</div>
+
+<div class="fms-card" style="max-width:500px; margin:auto;">
+    <div style="padding:20px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            @if (Model.RecoveryCodes != null)
+            {
+                foreach (var code in Model.RecoveryCodes)
+                {
+                    <code style="background:var(--navy-4); color:var(--accent); padding:8px; border-radius:6px; text-align:center;">@code</code>
+                }
+            }
+        </div>
+    </div>
+</div>

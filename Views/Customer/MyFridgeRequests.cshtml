@@ -1,0 +1,201 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.FridgeRequest>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "My Fridge Requests";
+}
+
+<div class="page-header">
+    <div>
+        <h1>My Fridge Requests</h1>
+        <p>All requests you have submitted</p>
+    </div>
+    <button class="btn-fms btn-success-fms" onclick="openRequestModal()">
+        <i class="fa-solid fa-plus"></i> Request New Fridge
+    </button>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table" id="requestsTable">
+        <thead>
+            <tr>
+                <th>Request #</th>
+                <th>Reason</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th style="text-align:right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var req in Model)
+            {
+                <tr data-id="@req.Id"
+                    data-reason="@req.Reason"
+                    data-quantity="@req.QuantityRequested"
+                    data-status="@req.Status"
+                    data-date="@req.RequestDate.ToString("dd MMM yyyy HH:mm")"
+                    data-notes="@(req.AdminNotes ?? "—")"
+                    data-deleted="@req.IsDeleted.ToString().ToLower()">
+                    <td>#@req.Id</td>
+                    <td>@req.Reason</td>
+                    <td>@req.QuantityRequested</td>
+                    <td><span class="fms-badge @(req.Status == FridgeRequestStatus.Pending ? "amber" : req.Status == FridgeRequestStatus.Approved ? "green" : req.Status == FridgeRequestStatus.Cancelled ? "red" : "gray")">@req.Status</span></td>
+                    <td>@req.RequestDate.ToString("dd MMM yy")</td>
+                    <td style="text-align:right;">
+                        <button class="btn-fms btn-sm-fms btn-ghost-fms"
+                                onclick="openDetailsModal(this)">
+                            <i class="fa-solid fa-eye"></i> View
+                        </button>
+                        @if (req.Status == FridgeRequestStatus.Pending)
+                        {
+                            <button class="btn-fms btn-sm-fms btn-danger-fms"
+                                    onclick="confirmCancelRequest(@req.Id)">
+                                <i class="fa-solid fa-xmark"></i> Cancel
+                            </button>
+                        }
+                        @if (req.IsDeleted)
+                        {
+                            <button class="btn-fms btn-sm-fms btn-success-fms"
+                                    onclick="confirmRestoreRequest(@req.Id)">
+                                <i class="fa-solid fa-rotate-left"></i> Restore
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════ MODALS ═══════ -->
+@* REQUEST NEW FRIDGE MODAL *@
+<div class="fms-modal-overlay" id="requestFridgeModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-plus" style="color:var(--success);"></i> Request a Fridge</div>
+            <button class="fms-modal-close" onclick="closeModal('requestFridgeModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="RequestFridge" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label class="fms-label" for="Reason">Reason</label>
+                <input type="text" name="Reason" class="fms-input" placeholder="Why do you need a fridge?" required />
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label" for="QuantityRequested">Quantity</label>
+                <input type="number" name="QuantityRequested" class="fms-input" min="1" value="1" />
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('requestFridgeModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-success-fms">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* REQUEST DETAILS MODAL *@
+<div class="fms-modal-overlay" id="requestDetailsModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-info-circle" style="color:var(--ice);"></i> Request Details</div>
+            <button class="fms-modal-close" onclick="closeModal('requestDetailsModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px;">
+            <dl class="row">
+                <dt class="col-sm-4">Request ID</dt>
+                <dd class="col-sm-8" id="dtReqId"></dd>
+                <dt class="col-sm-4">Reason</dt>
+                <dd class="col-sm-8" id="dtReqReason"></dd>
+                <dt class="col-sm-4">Quantity</dt>
+                <dd class="col-sm-8" id="dtReqQty"></dd>
+                <dt class="col-sm-4">Status</dt>
+                <dd class="col-sm-8" id="dtReqStatus"></dd>
+                <dt class="col-sm-4">Request Date</dt>
+                <dd class="col-sm-8" id="dtReqDate"></dd>
+                <dt class="col-sm-4">Admin Notes</dt>
+                <dd class="col-sm-8" id="dtReqNotes"></dd>
+            </dl>
+            <div style="text-align:right;">
+                <button onclick="closeModal('requestDetailsModal')" class="btn-fms btn-ghost-fms">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* CANCEL REQUEST MODAL *@
+<div class="fms-modal-overlay" id="cancelRequestModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning);"></i> Cancel Request</div>
+            <button class="fms-modal-close" onclick="closeModal('cancelRequestModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Are you sure you want to cancel this request?</p>
+            <form asp-action="CancelFridgeRequest" method="post" id="cancelRequestForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="cancelReqId" />
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:16px;">
+                    <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('cancelRequestModal')">No</button>
+                    <button type="submit" class="btn-fms btn-danger-fms">Yes, Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* RESTORE REQUEST MODAL *@
+<div class="fms-modal-overlay" id="restoreRequestModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-rotate-left" style="color:var(--success);"></i> Restore Request</div>
+            <button class="fms-modal-close" onclick="closeModal('restoreRequestModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Reactivate this request?</p>
+            <form asp-action="RestoreFridgeRequest" method="post" id="restoreRequestForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="restoreReqId" />
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:16px;">
+                    <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('restoreRequestModal')">Cancel</button>
+                    <button type="submit" class="btn-fms btn-success-fms">Yes, Restore</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        // Open New Request modal
+        function openRequestModal() { openModal('requestFridgeModal'); }
+
+        // Details modal – populates from data attributes of the button's parent <tr>
+        function openDetailsModal(btn) {
+            var row = btn.closest('tr');
+            document.getElementById('dtReqId').innerText = '#' + row.dataset.id;
+            document.getElementById('dtReqReason').innerText = row.dataset.reason;
+            document.getElementById('dtReqQty').innerText = row.dataset.quantity;
+            document.getElementById('dtReqStatus').innerText = row.dataset.status;
+            document.getElementById('dtReqDate').innerText = row.dataset.date;
+            document.getElementById('dtReqNotes').innerText = row.dataset.notes;
+            openModal('requestDetailsModal');
+        }
+
+        // Cancel confirmation modal
+        function confirmCancelRequest(requestId) {
+            document.getElementById('cancelReqId').value = requestId;
+            openModal('cancelRequestModal');
+        }
+
+        // Restore confirmation modal
+        function confirmRestoreRequest(requestId) {
+            document.getElementById('restoreReqId').value = requestId;
+            openModal('restoreRequestModal');
+        }
+    </script>
+}

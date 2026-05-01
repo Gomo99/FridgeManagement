@@ -1,5 +1,94 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<FridgeManagement.Models.FridgeAllocation>
 @{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "My Fridges";
+    // Serialize the allocated fridges for the fault modal (same as Dashboard)
+    var fridgeListJson = ViewBag.FridgeListJson as string ?? "[]";
+}
+
+<div class="page-header">
+    <h1>My Fridges</h1>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="InactiveMyFridges" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-trash"></i> Inactive</a>
+        <button onclick="openReportFaultModal()" class="btn-fms btn-danger-fms"><i class="fa-solid fa-exclamation-triangle"></i> Report Fault</button>
+    </div>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead>
+            <tr>
+                <th>Serial Number</th>
+                <th>Model</th>
+                <th>Allocated Since</th>
+                <th style="text-align:right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alloc in Model)
+            {
+                <tr>
+                    <td>@alloc.Fridge?.SerialNumber</td>
+                    <td>@alloc.Fridge?.Model</td>
+                    <td>@alloc.AllocationDate.ToString("dd MMM yyyy")</td>
+                    <td style="text-align:right;">
+                        <button onclick="openReportFaultModal(@alloc.FridgeId)" class="btn-fms btn-sm-fms btn-warning-fms">
+                            <i class="fa-solid fa-bug"></i> Report Fault
+                        </button>
+                        <a asp-action="FridgeMaintenanceHistory" asp-route-fridgeId="@alloc.FridgeId" class="btn-fms btn-sm-fms btn-info-fms">
+                            <i class="fa-solid fa-clock-rotate-left"></i> History
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@* Embed Report Fault Modal (same as Dashboard) *@
+<div class="fms-modal-overlay" id="reportFaultModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i> Report Fault</div>
+            <button class="fms-modal-close" onclick="closeModal('reportFaultModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="ReportFault" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label for="FridgeId">Fridge</label>
+                <select name="FridgeId" id="faultFridgeSelect" class="fms-select" required></select>
+            </div>
+            <div class="fms-form-group">
+                <label for="Description">Description</label>
+                <textarea name="Description" class="fms-textarea" rows="3" required></textarea>
+            </div>
+            <div class="fms-form-group">
+                <label for="Priority">Priority</label>
+                <select name="Priority" class="fms-select" asp-items="Html.GetEnumSelectList<FridgeManagement.AppStatus.FaultPriority>()"></select>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('reportFaultModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-danger-fms">Submit Fault</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var customerFridges = @Html.Raw(fridgeListJson);
+
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        function openReportFaultModal(selectedFridgeId = null) {
+            var select = document.getElementById('faultFridgeSelect');
+            select.innerHTML = '<option value="">-- Select fridge --</option>';
+            customerFridges.forEach(f => {
+                select.innerHTML += `<option value="${f.id}" ${selectedFridgeId == f.id ? 'selected' : ''}>${f.serial}</option>`;
+            });
+            openModal('reportFaultModal');
+        }
+    </script>
 }

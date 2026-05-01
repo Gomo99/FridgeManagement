@@ -20,7 +20,7 @@ namespace FridgeManagement.Controllers
         }
 
         // ==================== DASHBOARD ====================
-        public async Task<IActionResult> Dashboard()
+        public async Task<IActionResult> DashBoard()
         {
             // Stock statistics
             int totalFridges = await _context.Fridges.CountAsync(f => f.Status == Status.Active);

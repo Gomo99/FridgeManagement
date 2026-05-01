@@ -1,0 +1,23 @@
+﻿@model FridgeManagement.Models.FridgeRequest
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Request Details";
+}
+<div class="page-header">
+    <h1>Fridge Request #@Model.Id</h1>
+    <a asp-action="MyFridgeRequests" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+<div class="fms-card" style="max-width:600px;">
+    <dl class="row" style="padding:16px;">
+        <dt class="col-sm-4">Reason</dt>
+        <dd class="col-sm-8">@Model.Reason</dd>
+        <dt class="col-sm-4">Quantity</dt>
+        <dd class="col-sm-8">@Model.QuantityRequested</dd>
+        <dt class="col-sm-4">Status</dt>
+        <dd class="col-sm-8">@Model.Status</dd>
+        <dt class="col-sm-4">Request Date</dt>
+        <dd class="col-sm-8">@Model.RequestDate.ToString("g")</dd>
+        <dt class="col-sm-4">Admin Notes</dt>
+        <dd class="col-sm-8">@Model.AdminNotes</dd>
+    </dl>
+</div>

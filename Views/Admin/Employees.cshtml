@@ -123,9 +123,16 @@
             @Html.AntiForgeryToken()
             <div class="grid-2">
                 <div class="fms-form-group">
-                    <label class="fms-label">Full Name</label>
-                    <input type="text" name="FullName" class="fms-input" placeholder="Full name" required />
+                    <label class="fms-label">Name</label>
+                    <input type="text" name="Name" class="fms-input" placeholder="Name" required />
                 </div>
+
+                <div class="fms-form-group">
+                    <label class="fms-label">Surname</label>
+                    <input type="text" name="Surname" class="fms-input" placeholder="Surname" required />
+                </div>
+
+
                 <div class="fms-form-group">
                     <label class="fms-label">Username</label>
                     <input type="text" name="Username" class="fms-input" placeholder="username" required />
@@ -184,8 +191,13 @@
             @Html.AntiForgeryToken()
             <input type="hidden" name="Id" id="editId" />
             <div class="fms-form-group">
-                <label class="fms-label">Full Name</label>
-                <input type="text" name="FullName" id="editName" class="fms-input" required />
+                <label class="fms-label">Name</label>
+                <input type="text" name="Name" class="fms-input" placeholder="Name" required />
+            </div>
+
+            <div class="fms-form-group">
+                <label class="fms-label">Surname</label>
+                <input type="text" name="Surname" class="fms-input" placeholder="Surname" required />
             </div>
             <div class="grid-2">
                 <div class="fms-form-group">

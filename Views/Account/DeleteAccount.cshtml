@@ -1,0 +1,24 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Delete Account";
+}
+
+<div class="page-header">
+    <h1>Delete Account</h1>
+</div>
+
+<div class="fms-card" style="max-width:400px; margin: 40px auto;">
+    <div style="padding: 40px; text-align: center;">
+        <div style="font-size: 3rem; color: var(--danger); margin-bottom: 20px;">
+            <i class="fa-solid fa-user-slash"></i>
+        </div>
+        <h2 style="color: var(--white);">Deactivate Account</h2>
+        <p style="color: var(--muted);">This will soft‑delete your account. You can be reactivated by an administrator.</p>
+        <form asp-action="DeleteAccountConfirmed" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-fms btn-danger-fms" onclick="return confirm('Are you sure?')">
+                <i class="fa-solid fa-trash"></i> Deactivate My Account
+            </button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,50 @@
+﻿@model IEnumerable<FridgeManagement.Models.RememberedDevice>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Remembered Devices";
+}
+
+<div class="page-header">
+    <h1>Remembered Devices</h1>
+    <p>Devices that bypass two‑factor for 30 days.</p>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead>
+            <tr>
+                <th>Device Name / IP</th>
+                <th>User Agent</th>
+                <th>Created</th>
+                <th style="text-align:right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var dev in Model)
+            {
+                <tr>
+                    <td>@dev.DeviceName</td>
+                    <td style="font-size:12px;color:var(--muted);">@dev.UserAgent</td>
+                    <td>@dev.CreatedAt.ToString("g")</td>
+                    <td style="text-align:right;">
+                        <form asp-action="RevokeDevice" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@dev.Id" />
+                            <button type="submit" class="btn-fms btn-danger-fms btn-sm-fms">Revoke</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (!Model.Any())
+    {
+        <p style="color:var(--muted); padding:16px;">No remembered devices.</p>
+    }
+</div>
+<div style="margin-top:20px;">
+    <form asp-action="RevokeAllDevices" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn-fms btn-danger-fms">Revoke All Devices</button>
+    </form>
+</div>

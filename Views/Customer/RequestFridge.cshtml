@@ -1,0 +1,24 @@
+﻿@model FridgeManagement.Models.FridgeRequest
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Request Fridge";
+}
+<div class="page-header">
+    <h1>Request a Fridge</h1>
+    <a asp-action="MyFridgeRequests" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+<div class="fms-card" style="max-width:500px; margin:auto;">
+    <div class="fms-card-header"><div class="fms-card-title">New Fridge Request</div></div>
+    <form asp-action="RequestFridge" method="post">
+        @Html.AntiForgeryToken()
+        <div class="fms-form-group">
+            <label asp-for="Reason" class="fms-label">Reason</label>
+            <input asp-for="Reason" class="fms-input" placeholder="Why do you need a fridge?" required />
+        </div>
+        <div class="fms-form-group">
+            <label asp-for="QuantityRequested" class="fms-label">Quantity</label>
+            <input asp-for="QuantityRequested" class="fms-input" type="number" min="1" value="1" />
+        </div>
+        <button type="submit" class="btn-fms btn-success-fms">Submit Request</button>
+    </form>
+</div>

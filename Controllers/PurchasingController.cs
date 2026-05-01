@@ -19,7 +19,7 @@ namespace FridgeManagement.Controllers
         }
 
         // ==================== DASHBOARD ====================
-        public async Task<IActionResult> Dashboard()
+        public async Task<IActionResult> DashBoard()
         {
             ViewBag.PendingRequests = await _context.PurchaseRequests.CountAsync(r => r.Status == PurchaseRequestStatus.Pending);
             ViewBag.PendingRFQs = await _context.RequestForQuotations.CountAsync(r => r.Status == RFQStatus.Draft);

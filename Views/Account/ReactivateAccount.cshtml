@@ -1,0 +1,42 @@
+﻿@model IEnumerable<FridgeManagement.Models.User>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Reactivate Accounts";
+    ViewData["ActivePage"] = "Dashboard";  // So sidebar highlights Dashboard or we could add an "Account" page; but this is an admin action, so use Dashboard.
+}
+
+<div class="page-header">
+    <h1>Deactivated Accounts</h1>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th style="text-align:right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.FullName</td>
+                    <td>@user.Username</td>
+                    <td>@user.Role.ToString().Replace("_", " ")</td>
+                    <td style="text-align:right;">
+                        <form asp-action="ReactivateAccount" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@user.Id" />
+                            <button type="submit" class="btn-fms btn-success-fms btn-sm-fms">
+                                <i class="fa-solid fa-rotate-left"></i> Reactivate
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

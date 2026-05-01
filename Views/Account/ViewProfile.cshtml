@@ -1,0 +1,38 @@
+﻿@model FridgeManagement.ViewModel.ViewProfileViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="page-header">
+    <h1>My Profile</h1>
+    <a asp-action="ChangePassword" class="btn-fms btn-primary-fms"><i class="fa-solid fa-lock"></i> Change Password</a>
+</div>
+
+<div class="fms-card" style="max-width:600px;">
+    <dl class="row" style="padding:16px;">
+        <dt class="col-sm-4">Title</dt>
+        <dd class="col-sm-8">@Model.Title</dd>
+        <dt class="col-sm-4">Name</dt>
+        <dd class="col-sm-8">@Model.Name @Model.Surname</dd>
+        <dt class="col-sm-4">Email</dt>
+        <dd class="col-sm-8">@Model.Email</dd>
+        <dt class="col-sm-4">Role</dt>
+        <dd class="col-sm-8">@Model.Role</dd>
+        <dt class="col-sm-4">Account Status</dt>
+        <dd class="col-sm-8">@Model.UserStatus</dd>
+        <dt class="col-sm-4">Two‑Factor</dt>
+        <dd class="col-sm-8">
+            @if (Model.IsTwoFactorEnabled)
+            {
+                <span class="fms-badge green"><i class="fa-solid fa-shield-halved"></i> Enabled</span>
+                <a asp-action="DisableTwoFactor" class="btn-fms btn-sm-fms btn-danger-fms ms-2">Disable</a>
+            }
+            else
+            {
+                <span class="fms-badge gray">Not enabled</span>
+                <a asp-action="SetupTwoFactor" class="btn-fms btn-sm-fms btn-primary-fms ms-2">Set up</a>
+            }
+        </dd>
+    </dl>
+</div>

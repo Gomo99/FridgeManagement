@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — FridgeMS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg:        #050d1a;
+            --card:      #0c1929;
+            --input-bg:  #0f1f35;
+            --border:    rgba(56,189,248,.18);
+            --accent:    #38bdf8;
+            --accent2:   #0ea5e9;
+            --glow:      rgba(56,189,248,.12);
+            --success:   #22c55e;
+            --danger:    #ef4444;
+            --warning:   #f59e0b;
+            --text:      #e2e8f0;
+            --muted:     #64748b;
+            --sidebar-w: 420px;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ===== BRAND PANEL ===== */
+        .brand-panel {
+            width: var(--sidebar-w);
+            min-height: 100vh;
+            background: linear-gradient(160deg, #071428 0%, #050d1a 50%, #061220 100%);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2.5rem;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .brand-panel::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 60% 40% at 50% 30%, rgba(56,189,248,.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .frost-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(56,189,248,.06);
+        }
+        .frost-ring:nth-child(1){ width:300px;height:300px; top:-80px; left:-80px; }
+        .frost-ring:nth-child(2){ width:200px;height:200px; bottom:-50px; right:-50px; }
+        .frost-ring:nth-child(3){ width:150px;height:150px; top:40%; right:-40px; }
+
+        .brand-logo {
+            width: 72px; height: 72px;
+            background: linear-gradient(135deg, rgba(56,189,248,.2) 0%, rgba(14,165,233,.3) 100%);
+            border: 1px solid rgba(56,189,248,.4);
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0 30px rgba(56,189,248,.15);
+        }
+        .brand-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2rem; font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            margin-bottom: .25rem;
+        }
+        .brand-name span { color: var(--accent); }
+        .brand-tagline {
+            font-size: .85rem; color: var(--muted);
+            letter-spacing: 1px; text-transform: uppercase;
+            margin-bottom: 2.5rem;
+        }
+        .brand-features { width: 100%; }
+        .brand-feature {
+            display: flex; align-items: center; gap: .75rem;
+            padding: .65rem 0;
+            border-bottom: 1px solid rgba(255,255,255,.04);
+            font-size: .875rem; color: #94a3b8;
+        }
+        .brand-feature:last-child { border-bottom: none; }
+        .brand-feature i { color: var(--accent); width: 20px; text-align: center; font-size: .9rem; }
+        .brand-footer {
+            margin-top: auto; padding-top: 2rem;
+            font-size: .75rem; color: var(--muted); text-align: center;
+        }
+
+        /* ===== FORM PANEL ===== */
+        .form-panel {
+            flex: 1;
+            display: flex; align-items: center; justify-content: center;
+            padding: 2rem;
+            background: var(--bg);
+        }
+        .auth-card {
+            width: 100%; max-width: 460px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 0 40px rgba(0,0,0,.4);
+        }
+        .auth-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.6rem; font-weight: 700;
+            color: #fff; margin-bottom: .35rem;
+        }
+        .auth-subtitle { font-size: .875rem; color: var(--muted); margin-bottom: 1.75rem; }
+
+        /* ===== FORM CONTROLS ===== */
+        .form-label { font-size: .8rem; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: #94a3b8; margin-bottom: .4rem; }
+        .form-control, .form-select {
+            background: var(--input-bg) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text) !important;
+            border-radius: 8px !important;
+            padding: .65rem .9rem !important;
+            font-size: .9rem !important;
+            font-family: 'Nunito', sans-serif !important;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px var(--glow) !important;
+            outline: none !important;
+        }
+        .form-control::placeholder { color: var(--muted) !important; }
+        .input-group-text {
+            background: var(--input-bg) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--muted) !important;
+            border-radius: 8px 0 0 8px !important;
+        }
+        .input-group .form-control { border-radius: 0 8px 8px 0 !important; }
+
+        /* ===== BUTTONS ===== */
+        .btn-primary-ice {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none; color: #000; font-weight: 700;
+            font-family: 'Rajdhani', sans-serif; font-size: 1rem; letter-spacing: 1px;
+            padding: .7rem 1.5rem; border-radius: 8px;
+            width: 100%; transition: all .2s;
+            text-transform: uppercase;
+        }
+        .btn-primary-ice:hover { filter: brightness(1.1); box-shadow: 0 0 20px rgba(56,189,248,.35); transform: translateY(-1px); }
+        .btn-outline-ice {
+            background: transparent; border: 1px solid var(--accent);
+            color: var(--accent); font-weight: 600; border-radius: 8px;
+            padding: .6rem 1.2rem; font-size: .875rem;
+            transition: all .2s; font-family: 'Nunito', sans-serif;
+        }
+        .btn-outline-ice:hover { background: var(--glow); color: var(--accent); }
+        .btn-ghost { background: none; border: none; color: var(--muted); font-size: .875rem; padding: 0; cursor: pointer; }
+        .btn-ghost:hover { color: var(--text); }
+
+        /* ===== ALERTS ===== */
+        .alert-ice-success {
+            background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3);
+            color: #86efac; border-radius: 8px; padding: .8rem 1rem; font-size: .875rem;
+        }
+        .alert-ice-danger {
+            background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+            color: #fca5a5; border-radius: 8px; padding: .8rem 1rem; font-size: .875rem;
+        }
+        .alert-ice-warning {
+            background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3);
+            color: #fcd34d; border-radius: 8px; padding: .8rem 1rem; font-size: .875rem;
+        }
+        .text-danger { color: #fca5a5 !important; font-size: .8rem; margin-top: .25rem; }
+        .divider {
+            display: flex; align-items: center; gap: .75rem;
+            color: var(--muted); font-size: .8rem; margin: 1.25rem 0;
+        }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent2); text-decoration: underline; }
+        .form-check-input {
+            background-color: var(--input-bg) !important;
+            border-color: var(--border) !important;
+        }
+        .form-check-input:checked { background-color: var(--accent) !important; border-color: var(--accent) !important; }
+        .form-check-label { font-size: .875rem; color: #94a3b8; cursor: pointer; }
+        .password-toggle { position: relative; }
+        .password-toggle .toggle-btn {
+            position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; z-index: 5;
+            transition: color .2s;
+        }
+        .password-toggle .toggle-btn:hover { color: var(--accent); }
+
+        @@media (max-width: 768px) {
+            .brand-panel { display: none; }
+            .form-panel { padding: 1.5rem 1rem; }
+            .auth-card { padding: 1.75rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="brand-panel">
+        <div class="frost-ring"></div>
+        <div class="frost-ring"></div>
+        <div class="frost-ring"></div>
+        <div class="brand-logo"><i class="fa-solid fa-temperature-low" style="color:var(--accent)"></i></div>
+        <div class="brand-name">Fridge<span>MS</span></div>
+        <div class="brand-tagline">Fridge Management System</div>
+        <div class="brand-features">
+            <div class="brand-feature"><i class="fas fa-users"></i> Customer & Fridge Management</div>
+            <div class="brand-feature"><i class="fas fa-warehouse"></i> Real-time Inventory Control</div>
+            <div class="brand-feature"><i class="fas fa-triangle-exclamation"></i> Fault Reporting & Tracking</div>
+            <div class="brand-feature"><i class="fas fa-screwdriver-wrench"></i> Maintenance Scheduling</div>
+            <div class="brand-feature"><i class="fas fa-file-invoice-dollar"></i> Procurement & Purchasing</div>
+            <div class="brand-feature"><i class="fas fa-shield-halved"></i> Secure Role-Based Access</div>
+        </div>
+        <div class="brand-footer">&copy; @DateTime.Now.Year FridgeMS — All rights reserved</div>
+    </div>
+
+    <div class="form-panel">
+        @RenderBody()
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

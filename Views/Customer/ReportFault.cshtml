@@ -1,0 +1,39 @@
+﻿@using FridgeManagement.AppStatus
+@model FridgeManagement.Models.FaultReport
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Report Fault";
+    var fridges = ViewBag.Fridges as List<FridgeManagement.Models.Fridge>;
+}
+
+<div class="page-header">
+    <h1>Report Fault</h1>
+    <a asp-action="MyFaults" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="fms-card" style="max-width:600px; margin:auto;">
+    <div class="fms-card-header"><div class="fms-card-title">Fault Details</div></div>
+    <form asp-action="ReportFault" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ReportedByCustomerId" />
+        <div class="fms-form-group">
+            <label asp-for="FridgeId" class="fms-label">Select Fridge</label>
+            <select asp-for="FridgeId" class="fms-select" required>
+                <option value="">-- Select Fridge --</option>
+                @foreach (var f in fridges)
+                {
+                    <option value="@f.Id">@f.SerialNumber – @f.Model</option>
+                }
+            </select>
+        </div>
+        <div class="fms-form-group">
+            <label asp-for="Description" class="fms-label"></label>
+            <textarea asp-for="Description" class="fms-textarea" rows="3" required></textarea>
+        </div>
+        <div class="fms-form-group">
+            <label asp-for="Priority" class="fms-label"></label>
+            <select asp-for="Priority" class="fms-select" asp-items="Html.GetEnumSelectList<FaultPriority>()"></select>
+        </div>
+        <button type="submit" class="btn-fms btn-danger-fms">Report Fault</button>
+    </form>
+</div>

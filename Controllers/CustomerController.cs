@@ -27,7 +27,7 @@ namespace FridgeManagement.Controllers
         }
 
         // ==================== DASHBOARD ====================
-        public async Task<IActionResult> Dashboard()
+        public async Task<IActionResult> DashBoard()
         {
             var customer = await GetCurrentCustomerAsync();
             if (customer == null) return RedirectToAction("AccessDenied", "Account");
@@ -55,6 +55,9 @@ namespace FridgeManagement.Controllers
             ViewBag.AllocatedFridges = allocations;
             ViewBag.RecentFaults = recentFaults;
             ViewBag.PendingRequests = pendingRequests;
+            ViewBag.FridgeListJson = System.Text.Json.JsonSerializer.Serialize(
+    allocations.Select(a => new { id = a.FridgeId, serial = a.Fridge?.SerialNumber })
+);
 
             return View();
         }
@@ -100,6 +103,13 @@ namespace FridgeManagement.Controllers
                 .Where(f => f.ReportedByCustomerId == customer.Id && !f.IsDeleted)
                 .OrderByDescending(f => f.ReportedDate)
                 .ToListAsync();
+
+            var activeFridges = await _context.FridgeAllocations
+    .Where(a => a.CustomerId == customer.Id && a.Status == AllocationStatus.Active)
+    .Include(a => a.Fridge)
+    .Select(a => new { id = a.FridgeId, serial = a.Fridge!.SerialNumber })
+    .ToListAsync();
+            ViewBag.FridgeListJson = System.Text.Json.JsonSerializer.Serialize(activeFridges);
 
             return View(faults);
         }

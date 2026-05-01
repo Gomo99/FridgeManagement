@@ -1,8 +1,505 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    Layout = null;
+    ViewData["Title"] = "Welcome";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FridgePro — Fridge Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:      #0b1628;
+            --navy-2:    #0f1f3d;
+            --navy-3:    #162445;
+            --ice:       #0ea5e9;
+            --ice-light: #38bdf8;
+            --ice-dim:   rgba(14,165,233,.12);
+            --white:     #f8fafc;
+            --muted:     #94a3b8;
+            --success:   #10b981;
+            --warning:   #f59e0b;
+            --danger:    #ef4444;
+        }
+
+        html, body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--navy);
+            color: var(--white);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 60px;
+            background: rgba(11,22,40,.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(14,165,233,.12);
+            animation: fadeDown .6s ease both;
+        }
+        @@keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:none} }
+
+        .nav-brand {
+            display: flex; align-items: center; gap: 12px;
+            font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 20px;
+            text-decoration: none; color: var(--white);
+        }
+        .nav-brand .brand-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--ice), #0369a1);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 0 20px rgba(14,165,233,.4);
+        }
+        .nav-links { display: flex; align-items: center; gap: 8px; }
+        .nav-link {
+            color: var(--muted); text-decoration: none;
+            padding: 8px 16px; border-radius: 8px;
+            font-size: 14px; font-weight: 500;
+            transition: all .2s;
+        }
+        .nav-link:hover { color: var(--white); background: rgba(255,255,255,.06); }
+        .btn-nav {
+            background: linear-gradient(135deg, var(--ice), #0284c7);
+            color: #fff; text-decoration: none;
+            padding: 10px 22px; border-radius: 9px;
+            font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 14px;
+            transition: all .2s; box-shadow: 0 4px 14px rgba(14,165,233,.35);
+        }
+        .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(14,165,233,.5); }
+
+        /* ── HERO ── */
+        .hero {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center;
+            padding: 120px 24px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background blobs */
+        .blob {
+            position: absolute; border-radius: 50%;
+            pointer-events: none; animation: float 8s ease-in-out infinite;
+        }
+        .blob-1 {
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(14,165,233,.14) 0%, transparent 70%);
+            top: -200px; right: -200px;
+        }
+        .blob-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(14,165,233,.08) 0%, transparent 70%);
+            bottom: -150px; left: -150px;
+            animation-delay: -4s;
+        }
+        .blob-3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(56,189,248,.1) 0%, transparent 70%);
+            top: 40%; left: 15%;
+            animation-delay: -2s; animation-duration: 10s;
+        }
+        @@keyframes float {
+            0%,100% { transform: translateY(0) scale(1); }
+            50%      { transform: translateY(-30px) scale(1.05); }
+        }
+
+        /* Grid pattern */
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(14,165,233,.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(14,165,233,.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+        }
+
+        .hero-content { position: relative; z-index: 1; max-width: 860px; }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(14,165,233,.12);
+            border: 1px solid rgba(14,165,233,.3);
+            border-radius: 20px; padding: 7px 16px;
+            font-size: 13px; font-weight: 600; color: var(--ice-light);
+            margin-bottom: 28px;
+            animation: fadeUp .8s ease both .2s;
+        }
+        .hero-badge .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--ice); box-shadow: 0 0 8px var(--ice);
+            animation: pulse 2s ease infinite;
+        }
+        @@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+
+        .hero-title {
+            font-family: 'Outfit', sans-serif; font-weight: 900;
+            font-size: clamp(42px, 7vw, 78px);
+            line-height: 1.05; letter-spacing: -2px;
+            color: var(--white); margin-bottom: 22px;
+            animation: fadeUp .8s ease both .35s;
+        }
+        .hero-title .gradient-text {
+            background: linear-gradient(135deg, var(--ice), #7dd3fc, var(--ice));
+            background-size: 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+        @@keyframes shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+
+        .hero-sub {
+            font-size: clamp(16px, 2.5vw, 19px);
+            color: var(--muted); line-height: 1.7; max-width: 620px;
+            margin: 0 auto 40px;
+            animation: fadeUp .8s ease both .5s;
+        }
+
+        .hero-cta {
+            display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+            animation: fadeUp .8s ease both .65s;
+        }
+        .btn-hero-primary {
+            display: inline-flex; align-items: center; gap: 9px;
+            background: linear-gradient(135deg, var(--ice), #0284c7);
+            color: #fff; text-decoration: none;
+            padding: 15px 32px; border-radius: 12px;
+            font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px;
+            box-shadow: 0 6px 24px rgba(14,165,233,.4);
+            transition: all .25s;
+        }
+        .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(14,165,233,.55); }
+        .btn-hero-ghost {
+            display: inline-flex; align-items: center; gap: 9px;
+            background: rgba(255,255,255,.06);
+            color: var(--white); text-decoration: none;
+            padding: 15px 32px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.15);
+            font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 15px;
+            transition: all .25s;
+        }
+        .btn-hero-ghost:hover { background: rgba(255,255,255,.1); }
+
+        @@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+
+        /* Hero stats */
+        .hero-stats {
+            display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+            margin-top: 64px; padding-top: 48px;
+            border-top: 1px solid rgba(255,255,255,.07);
+            animation: fadeUp .8s ease both .8s;
+        }
+        .stat-item { text-align: center; }
+        .stat-item .num {
+            font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 32px;
+            color: var(--ice);
+        }
+        .stat-item .lbl { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+        /* ── FEATURES ── */
+        .features {
+            padding: 100px 60px;
+            background: var(--navy-2);
+            border-top: 1px solid rgba(14,165,233,.08);
+        }
+        .section-label {
+            text-align: center; font-family: 'Outfit', sans-serif;
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--ice); margin-bottom: 12px;
+        }
+        .section-title {
+            text-align: center; font-family: 'Outfit', sans-serif;
+            font-weight: 800; font-size: clamp(28px, 4vw, 44px);
+            color: var(--white); margin-bottom: 12px;
+        }
+        .section-sub {
+            text-align: center; color: var(--muted); font-size: 16px;
+            max-width: 520px; margin: 0 auto 60px; line-height: 1.7;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px; max-width: 1160px; margin: 0 auto;
+        }
+        .feature-card {
+            background: var(--navy);
+            border: 1px solid rgba(14,165,233,.1);
+            border-radius: 16px; padding: 28px 24px;
+            transition: all .25s;
+        }
+        .feature-card:hover {
+            border-color: rgba(14,165,233,.3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(14,165,233,.1);
+        }
+        .feature-icon {
+            width: 50px; height: 50px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; margin-bottom: 16px;
+        }
+        .feature-icon.blue   { background: rgba(14,165,233,.15);  color: var(--ice); }
+        .feature-icon.green  { background: rgba(16,185,129,.15);  color: #10b981; }
+        .feature-icon.amber  { background: rgba(245,158,11,.15);  color: #f59e0b; }
+        .feature-icon.purple { background: rgba(167,139,250,.15); color: #a78bfa; }
+        .feature-icon.teal   { background: rgba(20,184,166,.15);  color: #14b8a6; }
+        .feature-icon.red    { background: rgba(239,68,68,.15);   color: #ef4444; }
+
+        .feature-title {
+            font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 16px;
+            color: var(--white); margin-bottom: 8px;
+        }
+        .feature-desc { font-size: 13.5px; color: var(--muted); line-height: 1.65; }
+
+        /* ── ROLES ── */
+        .roles { padding: 100px 60px; background: var(--navy); }
+        .roles-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px; max-width: 1100px; margin: 0 auto;
+        }
+        .role-chip {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--navy-2);
+            border: 1px solid rgba(14,165,233,.1);
+            border-radius: 12px; padding: 16px 18px;
+            transition: all .2s;
+        }
+        .role-chip:hover { border-color: rgba(14,165,233,.3); background: var(--navy-3); }
+        .role-chip i { color: var(--ice); font-size: 18px; width: 20px; text-align: center; }
+        .role-chip span { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 14px; }
+
+        /* ── CTA SECTION ── */
+        .cta-section {
+            padding: 100px 60px; text-align: center;
+            background: var(--navy-2);
+            border-top: 1px solid rgba(14,165,233,.08);
+            position: relative; overflow: hidden;
+        }
+        .cta-section::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(14,165,233,.08), transparent);
+        }
+        .cta-title {
+            font-family: 'Outfit', sans-serif; font-weight: 800;
+            font-size: clamp(28px, 4vw, 48px);
+            color: var(--white); margin-bottom: 16px;
+            position: relative;
+        }
+        .cta-sub { color: var(--muted); font-size: 16px; margin-bottom: 36px; position: relative; }
+
+        /* ── FOOTER ── */
+        footer {
+            padding: 32px 60px;
+            border-top: 1px solid rgba(14,165,233,.08);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 12px;
+        }
+        footer .foot-brand {
+            font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; color: var(--white);
+            display: flex; align-items: center; gap: 8px;
+        }
+        footer .foot-copy { font-size: 13px; color: var(--muted); }
+
+        @@media (max-width: 768px) {
+            nav { padding: 14px 20px; }
+            .features, .roles, .cta-section, footer { padding: 60px 20px; }
+            .hero-stats { gap: 28px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ══════════ NAVIGATION ══════════ -->
+    <nav>
+        <a href="/" class="nav-brand">
+            <div class="brand-icon">❄️</div>
+            FridgePro
+        </a>
+        <div class="nav-links">
+            <a href="#features" class="nav-link">Features</a>
+            <a href="#roles"    class="nav-link">Users</a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-controller="Account" asp-action="ViewProfile" class="btn-nav">
+                    <i class="fa-solid fa-circle-user" style="margin-right:6px;"></i> My Account
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn-nav">
+                    <i class="fa-solid fa-right-to-bracket" style="margin-right:6px;"></i> Sign In
+                </a>
+            }
+        </div>
+    </nav>
+
+    <!-- ══════════ HERO ══════════ -->
+    <section class="hero">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+
+        <div class="hero-content">
+            <div class="hero-badge">
+                <div class="dot"></div>
+                Beverage Manufacturer · Fridge Management Platform
+            </div>
+
+            <h1 class="hero-title">
+                Keep Your Beverages<br />
+                <span class="gradient-text">Cool. Always.</span>
+            </h1>
+
+            <p class="hero-sub">
+                A modern, web-based system to manage fridge allocations, track faults,
+                schedule maintenance, and streamline procurement — all in one place.
+            </p>
+
+            <div class="hero-cta">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Account" asp-action="ViewProfile" class="btn-hero-primary">
+                        <i class="fa-solid fa-gauge-high"></i> Go to Dashboard
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="btn-hero-primary">
+                        <i class="fa-solid fa-right-to-bracket"></i> Sign In to FridgePro
+                    </a>
+                }
+                <a href="#features" class="btn-hero-ghost">
+                    <i class="fa-solid fa-circle-play"></i> See How It Works
+                </a>
+            </div>
+
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="num">5</div>
+                    <div class="lbl">Core Subsystems</div>
+                </div>
+                <div class="stat-item">
+                    <div class="num">8</div>
+                    <div class="lbl">User Roles</div>
+                </div>
+                <div class="stat-item">
+                    <div class="num">100%</div>
+                    <div class="lbl">Web-Based</div>
+                </div>
+                <div class="stat-item">
+                    <div class="num">Real-time</div>
+                    <div class="lbl">Stock Tracking</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ FEATURES ══════════ -->
+    <section class="features" id="features">
+        <div class="section-label">What We Offer</div>
+        <h2 class="section-title">Five Powerful Subsystems</h2>
+        <p class="section-sub">
+            Replacing paper-based workflows with a fully integrated digital platform
+            built for efficiency and transparency.
+        </p>
+
+        <div class="features-grid">
+            @{
+                var features = new[]{
+                    ("fa-users-gear","blue","Administration","Centralised control over employees, customers, locations, fridges, suppliers and all service check types."),
+                    ("fa-store","green","Customer Management","Customer Liaisons manage customer data and allocations. Inventory Liaisons track stock, scrap old units and raise purchase requests."),
+                    ("fa-triangle-exclamation","red","Fridge Fault Management","Customers log faults instantly. Fault Technicians prioritise, diagnose, schedule and resolve repairs — with automatic notifications."),
+                    ("fa-wrench","teal","Fridge Maintenance","Maintenance Technicians schedule and manage service visits. Customers see upcoming visits and full fridge service history."),
+                    ("fa-file-invoice-dollar","purple","Purchasing","RFQs sent to suppliers automatically. Managers process quotations, raise purchase orders and handle delivery notes."),
+                    ("fa-shield-halved","amber","Security & Audit","Role-based access control, 2FA, trusted device management, account lockout and full audit trails."),
+                };
+                foreach (var (icon, color, title, desc) in features)
+                {
+                    <div class="feature-card">
+                        <div class="feature-icon @color"><i class="fa-solid @icon"></i></div>
+                        <div class="feature-title">@title</div>
+                        <div class="feature-desc">@desc</div>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+
+    <!-- ══════════ ROLES ══════════ -->
+    <section class="roles" id="roles">
+        <div class="section-label">Who Uses FridgePro?</div>
+        <h2 class="section-title">8 Dedicated User Roles</h2>
+        <p class="section-sub">
+            Every role gets a tailored dashboard with exactly the tools they need — nothing more, nothing less.
+        </p>
+        <div class="roles-grid">
+            @{
+                var roles = new[]{
+                    ("fa-shield-halved","Administrator"),
+                    ("fa-handshake","Customer Liaison"),
+                    ("fa-warehouse","Inventory Liaison"),
+                    ("fa-store","Customer"),
+                    ("fa-triangle-exclamation","Fault Technician"),
+                    ("fa-wrench","Maintenance Technician"),
+                    ("fa-file-invoice","Purchasing Manager"),
+                    ("fa-truck","Supplier"),
+                };
+                foreach (var (icon, label) in roles)
+                {
+                    <div class="role-chip">
+                        <i class="fa-solid @icon"></i>
+                        <span>@label</span>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+
+    <!-- ══════════ CTA ══════════ -->
+    <section class="cta-section">
+        <h2 class="cta-title">Ready to go paperless?</h2>
+        <p class="cta-sub">Sign in with your credentials to access your personalised dashboard.</p>
+        @if (!User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-controller="Account" asp-action="Login" class="btn-hero-primary" style="display:inline-flex;position:relative;">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In Now
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="ViewProfile" class="btn-hero-primary" style="display:inline-flex;position:relative;">
+                <i class="fa-solid fa-gauge-high"></i> My Dashboard
+            </a>
+        }
+    </section>
+
+    <!-- ══════════ FOOTER ══════════ -->
+    <footer>
+        <div class="foot-brand">
+            ❄️ FridgePro
+        </div>
+        <div class="foot-copy">
+            © @DateTime.Now.Year FridgePro Fridge Management System · ONT3010 Project
+        </div>
+        <div style="display:flex;gap:16px;">
+            <a asp-controller="Home" asp-action="Privacy" style="font-size:13px;color:var(--muted);">Privacy Policy</a>
+        </div>
+    </footer>
+
+</body>
+</html>

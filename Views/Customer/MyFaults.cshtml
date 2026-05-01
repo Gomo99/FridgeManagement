@@ -1,0 +1,193 @@
+﻿@using FridgeManagement.AppStatus
+@model IEnumerable<FridgeManagement.Models.FaultReport>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "My Fault Reports";
+    // JSON list of active fridges (set in controller, see note below)
+    var fridgeListJson = ViewBag.FridgeListJson as string ?? "[]";
+}
+
+<div class="page-header">
+    <div>
+        <h1>My Fault Reports</h1>
+        <p>All faults you have reported</p>
+    </div>
+    <button onclick="openReportFaultModal()" class="btn-fms btn-danger-fms">
+        <i class="fa-solid fa-triangle-exclamation"></i> Report New Fault
+    </button>
+</div>
+
+<div class="fms-card">
+    <table class="fms-table">
+        <thead>
+            <tr>
+                <th>Fridge</th>
+                <th>Description</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th style="text-align:right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fault in Model)
+            {
+                <tr data-id="@fault.Id"
+                    data-fridge="@fault.Fridge?.SerialNumber"
+                    data-description="@fault.Description"
+                    data-priority="@fault.Priority"
+                    data-status="@fault.Status"
+                    data-date="@fault.ReportedDate.ToString("dd MMM yyyy HH:mm")"
+                    data-technician="@(fault.AssignedTechnician?.FullName ?? "—")"
+                    data-diagnosis="@(fault.DiagnosisNotes ?? "—")"
+                    data-resolution="@(fault.ResolutionNotes ?? "—")"
+                    data-scheduled="@(fault.ScheduledRepairDate?.ToString("dd MMM yyyy HH:mm") ?? "—")">
+                    <td>@fault.Fridge?.SerialNumber</td>
+                    <td>@fault.Description</td>
+                    <td><span class="fms-badge @(fault.Priority >= FaultPriority.High ? "red" : "amber")">@fault.Priority</span></td>
+                    <td><span class="fms-badge @(fault.Status == FaultStatus.Closed ? "gray" : fault.Status == FaultStatus.Repaired ? "green" : "blue")">@fault.Status</span></td>
+                    <td>@fault.ReportedDate.ToString("dd MMM yy")</td>
+                    <td style="text-align:right;">
+                        <button class="btn-fms btn-sm-fms btn-ghost-fms"
+                                onclick="openDetailsModal(this)">
+                            <i class="fa-solid fa-eye"></i> View
+                        </button>
+                        @if (fault.Status == FaultStatus.Reported || fault.Status == FaultStatus.Assigned)
+                        {
+                            <button class="btn-fms btn-sm-fms btn-danger-fms"
+                                    onclick="confirmCancelFault(@fault.Id)">
+                                <i class="fa-solid fa-xmark"></i> Cancel
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════ REPORT FAULT MODAL ═══════ -->
+<div class="fms-modal-overlay" id="reportFaultModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i> Report Fault</div>
+            <button class="fms-modal-close" onclick="closeModal('reportFaultModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="ReportFault" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fms-form-group">
+                <label class="fms-label">Fridge</label>
+                <select name="FridgeId" id="faultFridgeSelect" class="fms-select" required></select>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Description</label>
+                <textarea name="Description" class="fms-textarea" rows="3" required></textarea>
+            </div>
+            <div class="fms-form-group">
+                <label class="fms-label">Priority</label>
+                <select name="Priority" class="fms-select" asp-items="Html.GetEnumSelectList<FaultPriority>()"></select>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('reportFaultModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-danger-fms">Submit Fault</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════ FAULT DETAILS MODAL ═══════ -->
+<div class="fms-modal-overlay" id="faultDetailsModal">
+    <div class="fms-modal">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-info-circle" style="color:var(--ice);"></i> Fault Details</div>
+            <button class="fms-modal-close" onclick="closeModal('faultDetailsModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px;">
+            <dl class="row">
+                <dt class="col-sm-4">Fridge</dt>
+                <dd class="col-sm-8" id="dtFridge"></dd>
+                <dt class="col-sm-4">Reported</dt>
+                <dd class="col-sm-8" id="dtDate"></dd>
+                <dt class="col-sm-4">Priority</dt>
+                <dd class="col-sm-8" id="dtPriority"></dd>
+                <dt class="col-sm-4">Status</dt>
+                <dd class="col-sm-8" id="dtStatus"></dd>
+                <dt class="col-sm-4">Description</dt>
+                <dd class="col-sm-8" id="dtDescription"></dd>
+                <dt class="col-sm-4">Technician</dt>
+                <dd class="col-sm-8" id="dtTechnician"></dd>
+                <dt class="col-sm-4">Diagnosis</dt>
+                <dd class="col-sm-8" id="dtDiagnosis"></dd>
+                <dt class="col-sm-4">Resolution</dt>
+                <dd class="col-sm-8" id="dtResolution"></dd>
+                <dt class="col-sm-4">Scheduled</dt>
+                <dd class="col-sm-8" id="dtScheduled"></dd>
+            </dl>
+            <div style="text-align:right;">
+                <button onclick="closeModal('faultDetailsModal')" class="btn-fms btn-ghost-fms">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════ CANCEL FAULT MODAL ═══════ -->
+<div class="fms-modal-overlay" id="cancelFaultModal">
+    <div class="fms-modal" style="max-width:400px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning);"></i> Cancel Fault</div>
+            <button class="fms-modal-close" onclick="closeModal('cancelFaultModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Are you sure you want to cancel this fault report?</p>
+            <form asp-action="CancelFault" method="post" id="cancelFaultForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="cancelFaultId" />
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:16px;">
+                    <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('cancelFaultModal')">No</button>
+                    <button type="submit" class="btn-fms btn-danger-fms">Yes, Cancel Fault</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var customerFridges = @Html.Raw(fridgeListJson);
+
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+        // --- REPORT FAULT MODAL ---
+        function openReportFaultModal() {
+            var select = document.getElementById('faultFridgeSelect');
+            select.innerHTML = '<option value="">-- Select fridge --</option>';
+            customerFridges.forEach(f => {
+                select.innerHTML += `<option value="${f.id}">${f.serial}</option>`;
+            });
+            openModal('reportFaultModal');
+        }
+
+        // --- FAULT DETAILS MODAL (from row data attributes) ---
+        function openDetailsModal(btn) {
+            var row = btn.closest('tr');
+            document.getElementById('dtFridge').innerText = row.dataset.fridge;
+            document.getElementById('dtDate').innerText = row.dataset.date;
+            document.getElementById('dtPriority').innerText = row.dataset.priority;
+            document.getElementById('dtStatus').innerText = row.dataset.status;
+            document.getElementById('dtDescription').innerText = row.dataset.description;
+            document.getElementById('dtTechnician').innerText = row.dataset.technician;
+            document.getElementById('dtDiagnosis').innerText = row.dataset.diagnosis;
+            document.getElementById('dtResolution').innerText = row.dataset.resolution;
+            document.getElementById('dtScheduled').innerText = row.dataset.scheduled;
+            openModal('faultDetailsModal');
+        }
+
+        // --- CANCEL FAULT MODAL ---
+        function confirmCancelFault(faultId) {
+            document.getElementById('cancelFaultId').value = faultId;
+            openModal('cancelFaultModal');
+        }
+    </script>
+}
