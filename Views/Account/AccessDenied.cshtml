@@ -1,19 +1,64 @@
-﻿@{
-    Layout = "~/Views/Shared/_Layout.cshtml";
+@{
     ViewData["Title"] = "Access Denied";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
-<div class="page-header">
-    <h1>Access Denied</h1>
-</div>
-<div class="fms-card" style="max-width:400px; margin: 40px auto;">
-    <div style="padding: 40px; text-align: center;">
-        <div style="font-size: 3rem; color: var(--danger); margin-bottom: 20px;">
-            <i class="fa-solid fa-lock"></i>
+
+<div style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:2rem">
+    <div style="text-align:center;max-width:480px">
+        <!-- Icon -->
+        <div style="position:relative;display:inline-block;margin-bottom:1.75rem">
+            <div style="width:120px;height:120px;border-radius:50%;background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;margin:0 auto;animation:pulse 2s infinite">
+                <i class="fas fa-shield-xmark" style="font-size:3.5rem;color:#ef4444"></i>
+            </div>
+            <div style="position:absolute;top:-8px;right:-8px;width:32px;height:32px;border-radius:50%;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);display:flex;align-items:center;justify-content:center">
+                <i class="fas fa-lock" style="font-size:.8rem;color:#ef4444"></i>
+            </div>
         </div>
-        <h2 style="color: var(--white);">403 Forbidden</h2>
-        <p style="color: var(--muted);">You do not have permission to view this page.</p>
-        <a asp-controller="Home" asp-action="Index" class="btn-fms btn-primary-fms mt-3">
-            <i class="fa-solid fa-house"></i> Go Home
-        </a>
+
+        <!-- Error Code -->
+        <div style="font-family:'Rajdhani',sans-serif;font-size:5rem;font-weight:700;line-height:1;background:linear-gradient(135deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem">403</div>
+
+        <!-- Heading -->
+        <div style="font-family:'Rajdhani',sans-serif;font-size:1.75rem;font-weight:700;color:#fff;margin-bottom:.75rem">Access Denied</div>
+
+        <!-- Description -->
+        <div style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:2rem">
+            You don't have permission to access this page. This area is restricted to authorized roles only. If you believe this is an error, please contact your system Administrator.
+        </div>
+
+        <!-- Role Info -->
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            <div style="display:inline-flex;align-items:center;gap:.6rem;padding:.6rem 1.2rem;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;margin-bottom:1.75rem;font-size:.82rem;color:#fca5a5">
+                <i class="fas fa-user-shield"></i>
+                Your current role: <strong>@role?.Replace("_", " ")</strong>
+            </div>
+        }
+
+        <!-- Actions -->
+        <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+            <a href="javascript:history.back()" class="btn-ice-outline">
+                <i class="fas fa-arrow-left" style="margin-right:.4rem"></i>Go Back
+            </a>
+            <a asp-controller="Account" asp-action="ViewProfile" class="btn-ice">
+                <i class="fas fa-gauge-high" style="margin-right:.4rem"></i>My Dashboard
+            </a>
+        </div>
+
+        <!-- Decorative elements -->
+        <div style="margin-top:3rem;display:flex;justify-content:center;gap:2rem;opacity:.15">
+            <i class="fas fa-snowflake" style="font-size:1.5rem;color:var(--accent);animation:spin 8s linear infinite"></i>
+            <i class="fas fa-temperature-low" style="font-size:1.5rem;color:var(--accent);animation:spin 12s linear infinite reverse"></i>
+            <i class="fas fa-snowflake" style="font-size:1.5rem;color:var(--accent);animation:spin 10s linear infinite"></i>
+        </div>
     </div>
 </div>
+
+<style>
+    @@keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.3); }
+        50%        { box-shadow: 0 0 0 16px rgba(239,68,68,0); }
+    }
+    @@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>

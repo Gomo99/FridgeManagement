@@ -1,38 +1,197 @@
-﻿@model FridgeManagement.ViewModel.ViewProfileViewModel
+@model FridgeManagement.ViewModel.ViewProfileViewModel
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "My Profile";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+    var initials = (!string.IsNullOrEmpty(Model.Name) && !string.IsNullOrEmpty(Model.Surname))
+        ? $"{Model.Name[0]}{Model.Surname[0]}".ToUpper() : "U";
+    var isActive = Model.UserStatus == "Active";
 }
 
 <div class="page-header">
-    <h1>My Profile</h1>
-    <a asp-action="ChangePassword" class="btn-fms btn-primary-fms"><i class="fa-solid fa-lock"></i> Change Password</a>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+            <li class="breadcrumb-item active">My Profile</li>
+        </ol>
+    </nav>
+    <h1><i class="fas fa-user-circle" style="color:var(--accent);margin-right:.5rem"></i>My Profile</h1>
+    <p>View and manage your personal account details</p>
 </div>
 
-<div class="fms-card" style="max-width:600px;">
-    <dl class="row" style="padding:16px;">
-        <dt class="col-sm-4">Title</dt>
-        <dd class="col-sm-8">@Model.Title</dd>
-        <dt class="col-sm-4">Name</dt>
-        <dd class="col-sm-8">@Model.Name @Model.Surname</dd>
-        <dt class="col-sm-4">Email</dt>
-        <dd class="col-sm-8">@Model.Email</dd>
-        <dt class="col-sm-4">Role</dt>
-        <dd class="col-sm-8">@Model.Role</dd>
-        <dt class="col-sm-4">Account Status</dt>
-        <dd class="col-sm-8">@Model.UserStatus</dd>
-        <dt class="col-sm-4">Two‑Factor</dt>
-        <dd class="col-sm-8">
+<div class="row g-4">
+
+    <!-- ===== LEFT COLUMN: Avatar card ===== -->
+    <div class="col-lg-4">
+
+        <!-- Avatar + summary -->
+        <div class="ice-card text-center mb-4">
+            <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:2.4rem;font-weight:700;color:#000;margin:0 auto 1rem;box-shadow:0 0 30px rgba(56,189,248,.25)">
+                @initials
+            </div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:1.35rem;font-weight:700;color:#fff">
+                @Model.Title @Model.Name
+            </div>
+            <div style="font-size:.85rem;color:var(--muted);margin-bottom:.85rem">@Model.Email</div>
+            <div style="display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem">
+                <span class="badge-ice @(isActive ? "active" : "inactive")">
+                    <i class="fas @(isActive ? "fa-circle-check" : "fa-circle-xmark")" style="margin-right:.25rem;font-size:.6rem"></i>@Model.UserStatus
+                </span>
+                <span class="badge-ice purple">@Model.Role?.Replace("_", " ")</span>
+            </div>
+
+            <hr style="border-color:var(--border);margin:0 0 1.25rem">
+
+            <!-- Quick actions -->
+            <div class="d-grid gap-2">
+                <a asp-action="ChangePassword" class="btn-ice-outline" style="display:block;text-align:center">
+                    <i class="fas fa-lock" style="margin-right:.4rem"></i>Change Password
+                </a>
+                <form asp-action="DownloadProfile" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-ice-outline w-100" style="cursor:pointer">
+                        <i class="fas fa-file-pdf" style="margin-right:.4rem;color:#ef4444"></i>Download Profile PDF
+                    </button>
+                </form>
+                <a asp-action="DeleteAccount" class="btn-danger-ice" style="display:block;text-align:center">
+                    <i class="fas fa-user-minus" style="margin-right:.4rem"></i>Deactivate Account
+                </a>
+            </div>
+        </div>
+
+        <!-- 2FA status mini-card -->
+        <div class="ice-card" style="border-color:@(Model.IsTwoFactorEnabled ? "rgba(34,197,94,.3)" : "rgba(245,158,11,.25)")">
+            <div style="display:flex;align-items:center;gap:.75rem">
+                <div style="width:40px;height:40px;border-radius:10px;background:@(Model.IsTwoFactorEnabled ? "rgba(34,197,94,.15)" : "rgba(245,158,11,.15)");display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:@(Model.IsTwoFactorEnabled ? "var(--success)" : "var(--warning)");flex-shrink:0">
+                    <i class="fas @(Model.IsTwoFactorEnabled ? "fa-shield-halved" : "fa-shield-exclamation")"></i>
+                </div>
+                <div style="flex:1">
+                    <div style="font-size:.8rem;font-weight:700;color:@(Model.IsTwoFactorEnabled ? "#86efac" : "#fcd34d")">
+                        2FA @(Model.IsTwoFactorEnabled ? "Enabled" : "Disabled")
+                    </div>
+                    <div style="font-size:.72rem;color:var(--muted)">
+                        @(Model.IsTwoFactorEnabled ? "Account is well protected" : "Enable for extra security")
+                    </div>
+                </div>
+                @if (Model.IsTwoFactorEnabled)
+                {
+                    <a asp-action="DisableTwoFactor" style="font-size:.72rem;color:var(--danger)">Disable</a>
+                }
+                else
+                {
+                    <a asp-action="SetupTwoFactor" style="font-size:.72rem;color:var(--accent)">Enable</a>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== RIGHT COLUMN ===== -->
+    <div class="col-lg-8">
+
+        <!-- Personal Information -->
+        <div class="ice-card mb-4">
+            <div class="ice-card-header">
+                <div class="ice-card-title"><i class="fas fa-id-card"></i>Personal Information</div>
+            </div>
+            <div class="row g-3">
+                @{
+                    var fields = new[]
+                    {
+                        ("Title",        "fa-address-card", Model.Title ?? "—"),
+                        ("First Name",   "fa-user",         Model.Name ?? "—"),
+                        ("Email",        "fa-envelope",     Model.Email ?? "—"),
+                        ("Role",         "fa-user-shield",  Model.Role?.Replace("_"," ") ?? "—"),
+                        ("Account Status","fa-toggle-on",   Model.UserStatus ?? "—"),
+                    };
+                }
+                @foreach (var (label, icon, val) in fields)
+                {
+                    <div class="col-sm-6">
+                        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin-bottom:.3rem">
+                            <i class="fas @icon" style="color:var(--accent);margin-right:.35rem;font-size:.65rem"></i>@label
+                        </div>
+                        <div style="color:var(--text);font-size:.9rem">@val</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Security Overview -->
+        <div class="ice-card mb-4">
+            <div class="ice-card-header">
+                <div class="ice-card-title"><i class="fas fa-shield-halved"></i>Security Settings</div>
+            </div>
+
+            <!-- 2FA full block -->
             @if (Model.IsTwoFactorEnabled)
             {
-                <span class="fms-badge green"><i class="fa-solid fa-shield-halved"></i> Enabled</span>
-                <a asp-action="DisableTwoFactor" class="btn-fms btn-sm-fms btn-danger-fms ms-2">Disable</a>
+                <div style="display:flex;align-items:center;gap:1rem;padding:.9rem 1rem;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:8px;margin-bottom:1rem">
+                    <i class="fas fa-shield-halved" style="color:var(--success);font-size:1.5rem;flex-shrink:0"></i>
+                    <div style="flex:1">
+                        <div style="font-weight:700;color:#86efac;font-size:.9rem">Two-Factor Authentication is Active</div>
+                        <div style="font-size:.78rem;color:var(--muted);margin-top:.1rem">
+                            Each sign-in requires a code from your authenticator app
+                        </div>
+                    </div>
+                    <span class="badge-ice active">ON</span>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a asp-action="ManageDevices" class="btn-ice-outline">
+                        <i class="fas fa-mobile-screen" style="margin-right:.4rem"></i>Trusted Devices
+                    </a>
+                    <a asp-action="DisableTwoFactor" class="btn-danger-ice">
+                        <i class="fas fa-shield-xmark" style="margin-right:.4rem"></i>Disable 2FA
+                    </a>
+                </div>
             }
             else
             {
-                <span class="fms-badge gray">Not enabled</span>
-                <a asp-action="SetupTwoFactor" class="btn-fms btn-sm-fms btn-primary-fms ms-2">Set up</a>
+                <div style="display:flex;align-items:center;gap:1rem;padding:.9rem 1rem;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:8px;margin-bottom:1rem">
+                    <i class="fas fa-triangle-exclamation" style="color:var(--warning);font-size:1.5rem;flex-shrink:0"></i>
+                    <div style="flex:1">
+                        <div style="font-weight:700;color:#fcd34d;font-size:.9rem">Two-Factor Authentication is Disabled</div>
+                        <div style="font-size:.78rem;color:var(--muted);margin-top:.1rem">
+                            Enabling 2FA adds a powerful extra layer of protection
+                        </div>
+                    </div>
+                    <span class="badge-ice inactive">OFF</span>
+                </div>
+                <a asp-action="SetupTwoFactor" class="btn-ice">
+                    <i class="fas fa-shield-halved" style="margin-right:.4rem"></i>Enable 2FA Now
+                </a>
             }
-        </dd>
-    </dl>
+        </div>
+
+        <!-- Account Activity -->
+        <div class="ice-card">
+            <div class="ice-card-header">
+                <div class="ice-card-title"><i class="fas fa-clock-rotate-left"></i>Account Actions</div>
+            </div>
+            <div class="row g-2">
+                <div class="col-sm-6">
+                    <a asp-action="ManageDevices" style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(56,189,248,.4)'" onmouseout="this.style.borderColor='var(--border)'">
+                        <div style="width:36px;height:36px;border-radius:8px;background:rgba(56,189,248,.12);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:.9rem;flex-shrink:0">
+                            <i class="fas fa-laptop-mobile"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:.82rem;font-weight:600;color:var(--text)">Trusted Devices</div>
+                            <div style="font-size:.72rem;color:var(--muted)">Manage remembered devices</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-6">
+                    <a asp-action="ChangePassword" style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(56,189,248,.4)'" onmouseout="this.style.borderColor='var(--border)'">
+                        <div style="width:36px;height:36px;border-radius:8px;background:rgba(56,189,248,.12);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:.9rem;flex-shrink:0">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:.82rem;font-weight:600;color:var(--text)">Change Password</div>
+                            <div style="font-size:.72rem;color:var(--muted)">Update your login password</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>

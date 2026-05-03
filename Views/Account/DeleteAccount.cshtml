@@ -1,24 +1,124 @@
-﻿@{
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Delete Account";
+@{
+    ViewData["Title"] = "Deactivate Account";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
 <div class="page-header">
-    <h1>Delete Account</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="ViewProfile">My Profile</a></li>
+            <li class="breadcrumb-item active">Deactivate Account</li>
+        </ol>
+    </nav>
+    <h1><i class="fas fa-user-minus" style="color:var(--danger);margin-right:.5rem"></i>Deactivate Account</h1>
+    <p>Permanently restrict access until an Administrator reactivates your account</p>
 </div>
 
-<div class="fms-card" style="max-width:400px; margin: 40px auto;">
-    <div style="padding: 40px; text-align: center;">
-        <div style="font-size: 3rem; color: var(--danger); margin-bottom: 20px;">
-            <i class="fa-solid fa-user-slash"></i>
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+
+        <!-- Danger banner -->
+        <div style="display:flex;align-items:flex-start;gap:1rem;padding:1rem 1.25rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);border-radius:10px;margin-bottom:1.5rem">
+            <i class="fas fa-triangle-exclamation" style="color:var(--danger);font-size:1.6rem;margin-top:.1rem;flex-shrink:0"></i>
+            <div>
+                <div style="font-weight:700;color:#fca5a5;margin-bottom:.3rem;font-size:.95rem">Warning — Destructive Action</div>
+                <div style="font-size:.82rem;color:#fca5a5;opacity:.85;line-height:1.55">
+                    Deactivating your account will immediately sign you out and revoke all access. You will need to contact an Administrator to regain entry.
+                </div>
+            </div>
         </div>
-        <h2 style="color: var(--white);">Deactivate Account</h2>
-        <p style="color: var(--muted);">This will soft‑delete your account. You can be reactivated by an administrator.</p>
-        <form asp-action="DeleteAccountConfirmed" method="post">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn-fms btn-danger-fms" onclick="return confirm('Are you sure?')">
-                <i class="fa-solid fa-trash"></i> Deactivate My Account
-            </button>
-        </form>
+
+        <div class="ice-card" style="border-color:rgba(239,68,68,.25)">
+
+            <!-- Icon -->
+            <div style="text-align:center;padding:1rem 0 1.25rem">
+                <div style="width:80px;height:80px;border-radius:50%;background:rgba(239,68,68,.12);border:2px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;animation:dangerPulse 2s infinite">
+                    <i class="fas fa-user-minus" style="font-size:2rem;color:#ef4444"></i>
+                </div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:.4rem">
+                    Are you absolutely sure?
+                </div>
+                <div style="font-size:.85rem;color:var(--muted);max-width:300px;margin:0 auto">
+                    This cannot be self-reversed. Only an Administrator can restore your account.
+                </div>
+            </div>
+
+            <!-- Consequences list -->
+            <div style="margin:0 0 1.5rem;padding:1rem 1.1rem;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);border-radius:8px">
+                <div style="font-size:.78rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fca5a5;margin-bottom:.65rem">
+                    What will happen:
+                </div>
+                @{
+                    var consequences = new[]
+                    {
+                        (false, "Immediate loss of all system access"),
+                        (false, "All active sessions terminated instantly"),
+                        (false, "All trusted devices revoked"),
+                        (false, "Pending actions may be affected"),
+                        (true,  "Your data is retained in the system"),
+                        (true,  "An Administrator can reactivate you"),
+                    };
+                }
+                @foreach (var (info, text) in consequences)
+                {
+                    <div style="display:flex;align-items:center;gap:.6rem;padding:.3rem 0;font-size:.82rem;color:var(--muted)">
+                        <i class="fas @(info ? "fa-circle-info" : "fa-circle-xmark")"
+                           style="color:@(info ? "var(--accent)" : "var(--danger)");width:14px;flex-shrink:0"></i>
+                        @text
+                    </div>
+                }
+            </div>
+
+            <!-- Confirm form -->
+            <form asp-action="DeleteAccountConfirmed" method="post" id="deactivateForm">
+                @Html.AntiForgeryToken()
+
+                <!-- Typed confirmation -->
+                <div class="mb-4">
+                    <label class="form-label">
+                        Type <strong style="color:var(--danger)">DEACTIVATE</strong> to confirm
+                    </label>
+                    <input type="text" id="confirmInput" class="form-control"
+                           placeholder="DEACTIVATE"
+                           oninput="checkConfirm()" autocomplete="off" />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" id="deactivateBtn" class="btn-danger-ice" disabled
+                            style="opacity:.5;cursor:not-allowed;transition:all .2s">
+                        <i class="fas fa-user-minus" style="margin-right:.4rem"></i>Deactivate My Account
+                    </button>
+                    <a asp-action="ViewProfile" class="btn-ice-outline">
+                        <i class="fas fa-arrow-left" style="margin-right:.4rem"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div style="text-align:center;margin-top:1rem;font-size:.78rem;color:var(--muted)">
+            <i class="fas fa-headset" style="margin-right:.3rem;color:var(--accent)"></i>
+            Need help? Contact your system Administrator to resolve account issues.
+        </div>
+
     </div>
 </div>
+
+<style>
+    @@keyframes dangerPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.3); }
+        50%        { box-shadow: 0 0 0 14px rgba(239,68,68,0); }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function checkConfirm() {
+            const val = document.getElementById('confirmInput').value;
+            const btn = document.getElementById('deactivateBtn');
+            const valid = val === 'DEACTIVATE';
+            btn.disabled = !valid;
+            btn.style.opacity = valid ? '1' : '.5';
+            btn.style.cursor = valid ? 'pointer' : 'not-allowed';
+        }
+    </script>
+}

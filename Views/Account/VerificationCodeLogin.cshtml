@@ -1,63 +1,149 @@
-﻿@model FridgeManagement.ViewModel.VerificationCodeLoginViewModel
+@model FridgeManagement.ViewModel.VerificationCodeLoginViewModel
 @{
+    ViewData["Title"] = "Two-Factor Verification";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
-    ViewData["Title"] = "Two‑Factor Authentication";
 }
 
 <div class="auth-card">
-    <div class="auth-title">Two‑Factor Code</div>
-    <div class="auth-subtitle">Enter the verification code from your authenticator app</div>
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert-ice-success mb-3">
-            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+    <!-- Header icon -->
+    <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(56,189,248,.18),rgba(14,165,233,.28));border:1px solid rgba(56,189,248,.4);display:flex;align-items:center;justify-content:center;margin:0 auto .85rem;font-size:2rem;color:var(--accent);box-shadow:0 0 25px rgba(56,189,248,.18)">
+            <i class="fas fa-mobile-screen-button"></i>
         </div>
-    }
+        <div class="auth-title">Two-Factor Verification</div>
+        <div class="auth-subtitle">Open your authenticator app and enter the 6-digit code shown</div>
+    </div>
+
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert-ice-danger mb-3">
             <i class="fas fa-circle-xmark"></i> @TempData["ErrorMessage"]
         </div>
     }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert-ice-success mb-3">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+        </div>
+    }
 
-    <form asp-action="VerificationCodeLogin" asp-controller="Account" method="post" novalidate>
+    <form asp-action="VerificationCodeLogin" method="post" id="tfaForm">
         @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert-ice-danger mb-3"></div>
 
-        <div class="mb-3">
-            <label asp-for="VerificationCode" class="form-label">
-                <i class="fas fa-shield-halved me-1"></i> Verification Code
-            </label>
-            <input asp-for="VerificationCode" class="form-control" placeholder="· · · · · ·"
-                   autocomplete="one-time-code" inputmode="numeric"
-                   style="letter-spacing:8px;font-size:1.4rem;text-align:center;font-family:'Rajdhani',sans-serif;font-weight:700" />
-            <span asp-validation-for="VerificationCode" class="text-danger d-block mt-1"></span>
-        </div>
-
+        <!-- Code input -->
         <div class="mb-4">
-            <div class="form-check">
-                <input asp-for="RememberThisDevice" class="form-check-input" id="rememberDevice" />
-                <label class="form-check-label" for="rememberDevice">Remember this device for 30 days</label>
+            <label class="form-label" style="display:block;text-align:center;margin-bottom:.65rem">
+                <i class="fas fa-shield-halved" style="color:var(--accent);margin-right:.35rem"></i>Verification Code
+            </label>
+
+            <!-- Individual digit boxes -->
+            <div style="display:flex;gap:.5rem;justify-content:center;margin-bottom:.5rem" id="digitBoxes">
+                @for (int i = 0; i < 6; i++)
+                {
+                    <div style="width:44px;height:54px;border:1.5px solid var(--border);border-radius:8px;background:var(--input-bg);display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:700;color:var(--accent);transition:border-color .2s" class="digit-box" id="box@i"></div>
+                }
             </div>
+
+            <!-- Hidden actual input -->
+            <input asp-for="VerificationCode"
+                   type="text"
+                   id="codeInput"
+                   maxlength="6"
+                   inputmode="numeric"
+                   autocomplete="one-time-code"
+                   style="opacity:0;position:absolute;width:1px;height:1px;pointer-events:none" />
+
+            <!-- Invisible tap overlay -->
+            <div id="tapOverlay"
+                 style="cursor:text;height:54px;margin-top:-54px;border-radius:8px"
+                 onclick="document.getElementById('codeInput').focus()"></div>
+
+            <span asp-validation-for="VerificationCode" class="text-danger d-block text-center mt-1"></span>
         </div>
 
-        <button type="submit" class="btn-primary-ice">
-            <i class="fas fa-check-circle me-2"></i>Verify
+        <!-- TOTP countdown ring -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1.25rem">
+            <svg width="28" height="28" viewBox="0 0 28 28">
+                <circle cx="14" cy="14" r="11" fill="none" stroke="var(--border)" stroke-width="2.5"/>
+                <circle cx="14" cy="14" r="11" fill="none" stroke="var(--accent)" stroke-width="2.5"
+                        stroke-dasharray="69.1" stroke-dashoffset="0"
+                        stroke-linecap="round" transform="rotate(-90 14 14)"
+                        id="timerRing" style="transition:stroke-dashoffset .9s linear,stroke .3s"/>
+            </svg>
+            <span style="font-size:.82rem;color:var(--muted)">
+                Code refreshes in <span id="timerLabel" style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--accent)">30</span>s
+            </span>
+        </div>
+
+        <!-- Remember device -->
+        <div class="mb-4 form-check">
+            <input asp-for="RememberThisDevice" class="form-check-input" type="checkbox" id="rememberDev" />
+            <label class="form-check-label" for="rememberDev" style="cursor:pointer">
+                Trust this device for 30 days
+                <span style="font-size:.75rem;color:var(--muted);display:block;margin-top:.1rem">
+                    You won't need 2FA on this device for the next 30 days
+                </span>
+            </label>
+        </div>
+
+        <button type="submit" class="btn-primary-ice mb-3" id="verifyBtn" disabled style="opacity:.5">
+            <i class="fas fa-shield-check" style="margin-right:.5rem"></i>Verify &amp; Sign In
         </button>
     </form>
 
-    <div class="divider">Help</div>
-    <div class="d-flex justify-content-between">
-        <a asp-action="Login" asp-controller="Account">Back to Login</a>
-        <a asp-action="ResendRecoveryCodes" asp-controller="Account">Use Recovery Code</a>
+    <div class="divider">Having trouble?</div>
+
+    <div style="text-align:center;font-size:.82rem;color:var(--muted)">
+        Lost access to your authenticator? &nbsp;
+        <a asp-action="Login" style="color:var(--accent)">Use a recovery code</a>
+    </div>
+
+    <div style="text-align:center;margin-top:.75rem">
+        <a asp-action="Login" style="font-size:.82rem">
+            <i class="fas fa-arrow-left" style="margin-right:.3rem"></i>Back to Login
+        </a>
     </div>
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        document.querySelector('[name="VerificationCode"]').addEventListener('input', function() {
+        const codeInput = document.getElementById('codeInput');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const boxes = Array.from({length: 6}, (_, i) => document.getElementById('box' + i));
+
+        // Focus input on page load
+        setTimeout(() => codeInput.focus(), 200);
+
+        // Sync hidden input -> digit boxes
+        codeInput.addEventListener('input', function () {
             this.value = this.value.replace(/\D/g, '').slice(0, 6);
+            const digits = this.value.split('');
+            boxes.forEach((box, i) => {
+                box.textContent = digits[i] || '';
+                box.style.borderColor = digits[i] ? 'var(--accent)' : 'var(--border)';
+            });
+            const ready = this.value.length === 6;
+            verifyBtn.disabled = !ready;
+            verifyBtn.style.opacity = ready ? '1' : '.5';
+            if (ready) setTimeout(() => document.getElementById('tfaForm').submit(), 300);
         });
+
+        // TOTP 30-second countdown
+        function updateTimer() {
+            const now = Math.floor(Date.now() / 1000);
+            const rem = 30 - (now % 30);
+            const pct = rem / 30;
+            const circumference = 69.1;
+            document.getElementById('timerLabel').textContent = rem;
+            document.getElementById('timerLabel').style.color = rem <= 5 ? 'var(--danger)' : 'var(--accent)';
+            const ring = document.getElementById('timerRing');
+            ring.setAttribute('stroke-dashoffset', circumference * (1 - pct));
+            ring.setAttribute('stroke', rem <= 5 ? '#ef4444' : 'var(--accent)');
+        }
+        updateTimer();
+        setInterval(updateTimer, 1000);
     </script>
 }

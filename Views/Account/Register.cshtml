@@ -1,0 +1,270 @@
+@{
+    ViewData["Title"] = "Create Account";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<div class="auth-card" style="max-width:520px">
+    <div class="auth-title">
+        <i class="fas fa-user-plus" style="color:var(--accent);font-size:1.3rem;margin-right:.5rem"></i>Create Account
+    </div>
+    <div class="auth-subtitle">Register a new FridgeMS user account</div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert-ice-success mb-3">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert-ice-danger mb-3">
+            <i class="fas fa-circle-xmark"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form asp-controller="Account" asp-action="Register" method="post" id="registerForm">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert-ice-danger mb-3" style="display:none" id="valSummary"></div>
+
+        <!-- ROW 1: Title + Role -->
+        <div class="row g-3 mb-3">
+            <div class="col-sm-4">
+                <label class="form-label">
+                    <i class="fas fa-address-card" style="color:var(--accent);margin-right:.3rem"></i>Title
+                </label>
+                <select name="Title" class="form-select">
+                    <option value="">— Select —</option>
+                    <option value="Mr">Mr</option>
+                    <option value="Ms">Ms</option>
+                    <option value="Mrs">Mrs</option>
+                    <option value="Dr">Dr</option>
+                    <option value="Prof">Prof</option>
+                </select>
+            </div>
+            <div class="col-sm-8">
+                <label class="form-label">
+                    <i class="fas fa-user-shield" style="color:var(--accent);margin-right:.3rem"></i>Role <span style="color:var(--danger)">*</span>
+                </label>
+                <select name="Role" class="form-select" id="roleSelect" required>
+                    <option value="">— Select Role —</option>
+                    <option value="ADMINISTRATOR">Administrator</option>
+                    <option value="CUSTOMERLIAISON">Customer Liaison</option>
+                    <option value="INVENTORYLIAISON">Inventory Liaison</option>
+                    <option value="CUSTOMER">Customer</option>
+                    <option value="FAULTTECHNICIAN">Fault Technician</option>
+                    <option value="MAINTENANCETECHNICIAN">Maintenance Technician</option>
+                    <option value="PURCHASINGMANAGER">Purchasing Manager</option>
+                    <option value="SUPPLIER">Supplier</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ROW 2: Name + Surname -->
+        <div class="row g-3 mb-3">
+            <div class="col-sm-6">
+                <label class="form-label">
+                    <i class="fas fa-user" style="color:var(--accent);margin-right:.3rem"></i>First Name <span style="color:var(--danger)">*</span>
+                </label>
+                <input type="text" name="Name" class="form-control"
+                       placeholder="e.g. Jane" required autocomplete="given-name"
+                       oninput="syncUsername()" />
+            </div>
+            <div class="col-sm-6">
+                <label class="form-label">
+                    <i class="fas fa-user" style="color:var(--accent);margin-right:.3rem"></i>Surname <span style="color:var(--danger)">*</span>
+                </label>
+                <input type="text" name="Surname" class="form-control"
+                       placeholder="e.g. Smith" required autocomplete="family-name"
+                       oninput="syncUsername()" />
+            </div>
+        </div>
+
+        <!-- Email -->
+        <div class="mb-3">
+            <label class="form-label">
+                <i class="fas fa-envelope" style="color:var(--accent);margin-right:.3rem"></i>Email Address <span style="color:var(--danger)">*</span>
+            </label>
+            <input type="email" name="Email" class="form-control"
+                   placeholder="jane.smith@example.com" required autocomplete="email" />
+        </div>
+
+        <!-- Username (auto-suggested) -->
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label mb-0">
+                    <i class="fas fa-at" style="color:var(--accent);margin-right:.3rem"></i>Username <span style="color:var(--danger)">*</span>
+                </label>
+                <span style="font-size:.72rem;color:var(--muted)">Auto-suggested · editable</span>
+            </div>
+            <div style="position:relative">
+                <input type="text" name="Username" id="usernameField" class="form-control"
+                       placeholder="username" required autocomplete="username"
+                       style="padding-right:2.5rem !important" />
+                <i class="fas fa-wand-magic-sparkles"
+                   style="position:absolute;right:.85rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.8rem;pointer-events:none"></i>
+            </div>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-3">
+            <label class="form-label">
+                <i class="fas fa-lock" style="color:var(--accent);margin-right:.3rem"></i>Password <span style="color:var(--danger)">*</span>
+            </label>
+            <div class="password-toggle">
+                <input type="password" name="Password" id="pwdField" class="form-control"
+                       placeholder="Create a strong password" required
+                       autocomplete="new-password"
+                       oninput="checkStrength(this.value); checkMatch()" />
+                <button type="button" class="toggle-btn" onclick="togglePwd('pwdField', this)">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <!-- Strength bars -->
+            <div style="display:flex;gap:.3rem;margin-top:.5rem">
+                <div class="sbar" id="sb1"></div>
+                <div class="sbar" id="sb2"></div>
+                <div class="sbar" id="sb3"></div>
+                <div class="sbar" id="sb4"></div>
+            </div>
+            <div id="strengthLabel" style="font-size:.72rem;margin-top:.2rem;min-height:1rem;color:var(--muted)"></div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="mb-4">
+            <label class="form-label">
+                <i class="fas fa-lock-open" style="color:var(--accent);margin-right:.3rem"></i>Confirm Password <span style="color:var(--danger)">*</span>
+            </label>
+            <div class="password-toggle">
+                <input type="password" name="ConfirmPassword" id="conField" class="form-control"
+                       placeholder="Repeat your password" required
+                       autocomplete="new-password"
+                       oninput="checkMatch()" />
+                <button type="button" class="toggle-btn" onclick="togglePwd('conField', this)">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <div id="matchMsg" style="font-size:.72rem;margin-top:.25rem;min-height:1rem"></div>
+        </div>
+
+        <!-- Role badge preview -->
+        <div id="roleBadge" style="display:none;margin-bottom:1rem;padding:.7rem 1rem;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.18);border-radius:8px;font-size:.82rem;color:var(--muted)">
+            <i class="fas fa-circle-info" style="color:var(--accent);margin-right:.4rem"></i>
+            Registering as: <strong id="roleName" style="color:var(--accent)"></strong>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-primary-ice mb-3" id="submitBtn">
+            <i class="fas fa-user-plus" style="margin-right:.5rem"></i>Create Account
+        </button>
+    </form>
+
+    <div class="divider">Already have an account?</div>
+
+    <div style="text-align:center">
+        <a asp-controller="Account" asp-action="Login" style="font-size:.875rem">
+            <i class="fas fa-right-to-bracket" style="margin-right:.35rem"></i>Sign In Instead
+        </a>
+    </div>
+</div>
+
+<style>
+    .sbar {
+        height: 4px;
+        flex: 1;
+        border-radius: 4px;
+        background: var(--border);
+        transition: background .3s;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        /* ── Toggle password visibility ── */
+        function togglePwd(id, btn) {
+            const f = document.getElementById(id);
+            const i = btn.querySelector('i');
+            f.type = f.type === 'password' ? 'text' : 'password';
+            i.classList.toggle('fa-eye');
+            i.classList.toggle('fa-eye-slash');
+        }
+
+        /* ── Auto-suggest username from Name + Surname ── */
+        function syncUsername() {
+            const name    = document.querySelector('[name="Name"]').value.trim().toLowerCase();
+            const surname = document.querySelector('[name="Surname"]').value.trim().toLowerCase();
+            if (name && surname) {
+                document.getElementById('usernameField').value =
+                    name.charAt(0) + surname.replace(/\s+/g, '');
+            } else if (surname) {
+                document.getElementById('usernameField').value = surname.replace(/\s+/g, '');
+            }
+        }
+
+        /* ── Password strength checker ── */
+        function checkStrength(v) {
+            let s = 0;
+            if (v.length >= 8)          s++;
+            if (/[A-Z]/.test(v))        s++;
+            if (/[0-9]/.test(v))        s++;
+            if (/[^A-Za-z0-9]/.test(v)) s++;
+
+            const colors = ['', '#ef4444', '#f59e0b', '#38bdf8', '#22c55e'];
+            const labels = ['', 'Weak — try adding numbers or symbols',
+                               'Fair — add uppercase or special chars',
+                               'Good — almost strong enough!',
+                               'Strong — great password!'];
+
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById('sb' + i).style.background =
+                    i <= s ? colors[s] : 'var(--border)';
+            }
+            const lbl = document.getElementById('strengthLabel');
+            lbl.textContent = v.length ? labels[s] : '';
+            lbl.style.color = colors[s];
+        }
+
+        /* ── Password match indicator ── */
+        function checkMatch() {
+            const p1 = document.getElementById('pwdField').value;
+            const p2 = document.getElementById('conField').value;
+            const m  = document.getElementById('matchMsg');
+            if (!p2) { m.textContent = ''; return; }
+            if (p1 === p2) {
+                m.textContent = '✓ Passwords match';
+                m.style.color = 'var(--success)';
+            } else {
+                m.textContent = '✗ Passwords do not match';
+                m.style.color = 'var(--danger)';
+            }
+        }
+
+        /* ── Role badge preview ── */
+        const roleLabels = {
+            'ADMINISTRATOR':        'Administrator',
+            'CUSTOMERLIAISON':      'Customer Liaison',
+            'INVENTORYLIAISON':     'Inventory Liaison',
+            'CUSTOMER':             'Customer',
+            'FAULTTECHNICIAN':      'Fault Technician',
+            'MAINTENANCETECHNICIAN':'Maintenance Technician',
+            'PURCHASINGMANAGER':    'Purchasing Manager',
+            'SUPPLIER':             'Supplier',
+        };
+        document.getElementById('roleSelect').addEventListener('change', function () {
+            const badge = document.getElementById('roleBadge');
+            const label = document.getElementById('roleName');
+            if (this.value) {
+                label.textContent = roleLabels[this.value] || this.value;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+
+        /* ── Prevent double-submit ── */
+        document.getElementById('registerForm').addEventListener('submit', function () {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:.5rem"></i>Creating Account…';
+        });
+    </script>
+}

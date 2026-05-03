@@ -1,32 +1,167 @@
-﻿@model FridgeManagement.ViewModel.DisableTwoFactorViewModel
+@model FridgeManagement.ViewModel.DisableTwoFactorViewModel
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Disable Two‑Factor";
+    ViewData["Title"] = "Disable Two-Factor Authentication";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
 <div class="page-header">
-    <h1>Disable Two‑Factor</h1>
-    <a asp-action="ViewProfile" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="ViewProfile">My Profile</a></li>
+            <li class="breadcrumb-item active">Disable 2FA</li>
+        </ol>
+    </nav>
+    <h1><i class="fas fa-shield-xmark" style="color:var(--danger);margin-right:.5rem"></i>Disable Two-Factor Authentication</h1>
+    <p>This will remove the extra layer of protection from your account</p>
 </div>
 
-<div class="fms-card" style="max-width:500px; margin:auto;">
-    <div class="fms-card-header"><div class="fms-card-title">Confirmation</div></div>
-    <form asp-action="DisableTwoFactor" method="post" style="padding:16px;">
-        @Html.AntiForgeryToken()
-        <div class="fms-form-group">
-            <label asp-for="CurrentPassword" class="fms-label">Current Password</label>
-            <input asp-for="CurrentPassword" class="fms-input" type="password" required />
-            <span asp-validation-for="CurrentPassword" class="text-danger"></span>
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert-ice-danger mb-4"><i class="fas fa-circle-xmark"></i> @TempData["ErrorMessage"]</div>
+        }
+
+        <!-- Security Warning -->
+        <div style="display:flex;align-items:flex-start;gap:1rem;padding:1.1rem 1.25rem;background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.3);border-radius:12px;margin-bottom:1.5rem">
+            <i class="fas fa-triangle-exclamation" style="color:var(--danger);font-size:1.5rem;flex-shrink:0;margin-top:.1rem"></i>
+            <div>
+                <div style="font-weight:700;color:#fca5a5;font-size:.95rem;margin-bottom:.3rem">Security Risk</div>
+                <div style="font-size:.82rem;color:#fca5a5;opacity:.9;line-height:1.55">
+                    Without 2FA, anyone who obtains your password can access your account. All trusted devices will also be revoked immediately.
+                </div>
+            </div>
         </div>
-        <div class="fms-form-group">
-            <label asp-for="VerificationCode" class="fms-label">Verification Code</label>
-            <input asp-for="VerificationCode" class="fms-input" placeholder="000000" />
-            <span asp-validation-for="VerificationCode" class="text-danger"></span>
+
+        <div class="ice-card" style="border-color:rgba(239,68,68,.22)">
+
+            <!-- Icon heading -->
+            <div style="text-align:center;padding:.75rem 0 1.25rem">
+                <div style="width:64px;height:64px;border-radius:50%;background:rgba(239,68,68,.12);border:2px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;margin:0 auto .85rem;font-size:1.7rem;color:#ef4444">
+                    <i class="fas fa-lock-open"></i>
+                </div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:700;color:#fff">Confirm Disable 2FA</div>
+                <div style="font-size:.8rem;color:var(--muted);margin-top:.25rem">
+                    Verify your identity to proceed
+                </div>
+            </div>
+
+            <form asp-action="DisableTwoFactor" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert-ice-danger mb-3"></div>
+
+                <!-- Current password -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-lock" style="color:var(--accent);margin-right:.35rem"></i>Current Password
+                    </label>
+                    <div class="password-toggle">
+                        <input asp-for="CurrentPassword"
+                               type="password"
+                               class="form-control"
+                               placeholder="Enter your current password"
+                               id="curPwd"
+                               required
+                               autocomplete="current-password" />
+                        <button type="button" class="toggle-btn" onclick="togglePwd('curPwd', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="CurrentPassword" class="text-danger"></span>
+                </div>
+
+                <!-- Authenticator code -->
+                <div class="mb-4">
+                    <label class="form-label">
+                        <i class="fas fa-mobile-screen-button" style="color:var(--accent);margin-right:.35rem"></i>Authenticator Code
+                    </label>
+
+                    <!-- Digit boxes -->
+                    <div style="display:flex;gap:.4rem;justify-content:center;margin-bottom:.5rem">
+                        @for (int i = 0; i < 6; i++)
+                        {
+                            <div id="dbox@i"
+                                 style="width:42px;height:50px;border:1.5px solid var(--border);border-radius:8px;background:var(--input-bg);display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;color:var(--accent);transition:border-color .2s;cursor:text"
+                                 onclick="document.getElementById('vcInput').focus()">
+                            </div>
+                        }
+                    </div>
+
+                    <input asp-for="VerificationCode"
+                           id="vcInput"
+                           type="text"
+                           maxlength="6"
+                           inputmode="numeric"
+                           autocomplete="one-time-code"
+                           style="opacity:0;position:absolute;width:1px;height:1px;pointer-events:none" />
+                    <span asp-validation-for="VerificationCode" class="text-danger d-block text-center mt-1"></span>
+                    <div style="font-size:.75rem;color:var(--muted);text-align:center;margin-top:.35rem">
+                        <i class="fas fa-mobile-screen" style="margin-right:.3rem"></i>
+                        Enter the 6-digit code from your authenticator app
+                    </div>
+                </div>
+
+                <!-- Confirmation checkbox -->
+                <div class="form-check mb-4">
+                    <input type="checkbox" class="form-check-input" id="confirmChk" onchange="updateSubmit()" />
+                    <label class="form-check-label" for="confirmChk" style="font-size:.82rem;cursor:pointer;color:var(--muted)">
+                        I understand this will reduce my account security and revoke all trusted devices
+                    </label>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" id="disableBtn" class="btn-danger-ice" disabled style="opacity:.45;cursor:not-allowed">
+                        <i class="fas fa-shield-xmark" style="margin-right:.4rem"></i>Disable 2FA
+                    </button>
+                    <a asp-action="ViewProfile" class="btn-ice-outline">
+                        <i class="fas fa-arrow-left" style="margin-right:.4rem"></i>Cancel
+                    </a>
+                </div>
+            </form>
         </div>
-        <button type="submit" class="btn-fms btn-danger-fms">Disable Two‑Factor</button>
-    </form>
+
+        <div style="text-align:center;margin-top:1rem;font-size:.78rem;color:var(--muted)">
+            <i class="fas fa-shield-halved" style="color:var(--accent);margin-right:.3rem"></i>
+            Reconsidering? <a asp-action="ViewProfile" style="color:var(--accent)">Keep 2FA enabled</a> — it's the safer choice.
+        </div>
+
+    </div>
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function togglePwd(id, btn) {
+            const f = document.getElementById(id);
+            const i = btn.querySelector('i');
+            f.type = f.type === 'password' ? 'text' : 'password';
+            i.classList.toggle('fa-eye');
+            i.classList.toggle('fa-eye-slash');
+        }
+
+        const vcInput = document.getElementById('vcInput');
+        const dboxes = Array.from({length: 6}, (_, i) => document.getElementById('dbox' + i));
+        setTimeout(() => vcInput.focus(), 200);
+
+        vcInput.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+            const digits = this.value.split('');
+            dboxes.forEach((box, i) => {
+                box.textContent = digits[i] || '';
+                box.style.borderColor = digits[i] ? 'rgba(239,68,68,.5)' : 'var(--border)';
+            });
+            updateSubmit();
+        });
+
+        function updateSubmit() {
+            const codeReady = vcInput.value.length === 6;
+            const checked = document.getElementById('confirmChk').checked;
+            const btn = document.getElementById('disableBtn');
+            const ok = codeReady && checked;
+            btn.disabled = !ok;
+            btn.style.opacity = ok ? '1' : '.45';
+            btn.style.cursor = ok ? 'pointer' : 'not-allowed';
+        }
+    </script>
 }

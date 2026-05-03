@@ -1,50 +1,130 @@
-﻿@model IEnumerable<FridgeManagement.Models.RememberedDevice>
+@model IEnumerable<FridgeManagement.Models.RememberedDevice>
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Remembered Devices";
+    ViewData["Title"] = "Trusted Devices";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
 <div class="page-header">
-    <h1>Remembered Devices</h1>
-    <p>Devices that bypass two‑factor for 30 days.</p>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="ViewProfile">My Profile</a></li><li class="breadcrumb-item active">Trusted Devices</li></ol></nav>
+    <h1><i class="fas fa-mobile-screen" style="color:var(--accent);margin-right:.5rem"></i>Trusted Devices</h1>
+    <p>Devices that are allowed to skip 2FA verification for 30 days</p>
 </div>
 
-<div class="fms-card">
-    <table class="fms-table">
-        <thead>
-            <tr>
-                <th>Device Name / IP</th>
-                <th>User Agent</th>
-                <th>Created</th>
-                <th style="text-align:right;">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var dev in Model)
-            {
-                <tr>
-                    <td>@dev.DeviceName</td>
-                    <td style="font-size:12px;color:var(--muted);">@dev.UserAgent</td>
-                    <td>@dev.CreatedAt.ToString("g")</td>
-                    <td style="text-align:right;">
-                        <form asp-action="RevokeDevice" method="post">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@dev.Id" />
-                            <button type="submit" class="btn-fms btn-danger-fms btn-sm-fms">Revoke</button>
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-ice-success mb-4"><i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-ice-danger mb-4"><i class="fas fa-circle-xmark"></i> @TempData["ErrorMessage"]</div>
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="ice-card">
+            <div class="ice-card-header">
+                <div class="ice-card-title"><i class="fas fa-laptop-mobile"></i>Remembered Devices <span style="font-size:.85rem;font-family:'Nunito',sans-serif;font-weight:400;color:var(--muted)">(@Model.Count() active)</span></div>
+                @if (Model.Any())
+                {
+                    <form asp-action="RevokeAllDevices" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-danger-ice" style="font-size:.78rem;padding:.4rem .85rem"
+                                onclick="return confirm('Revoke all trusted devices? You will need to complete 2FA on each device next time.')">
+                            <i class="fas fa-ban" style="margin-right:.3rem"></i>Revoke All
                         </form>
-                    </td>
-                </tr>
+                }
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+                    <i class="fas fa-laptop-mobile" style="font-size:3rem;color:var(--border);margin-bottom:1rem;display:block"></i>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:1.1rem;color:var(--text);margin-bottom:.4rem">No trusted devices</div>
+                    <div style="font-size:.875rem">Devices you trust during 2FA login will appear here</div>
+                </div>
             }
-        </tbody>
-    </table>
-    @if (!Model.Any())
-    {
-        <p style="color:var(--muted); padding:16px;">No remembered devices.</p>
-    }
-</div>
-<div style="margin-top:20px;">
-    <form asp-action="RevokeAllDevices" method="post">
-        @Html.AntiForgeryToken()
-        <button type="submit" class="btn-fms btn-danger-fms">Revoke All Devices</button>
-    </form>
+            else
+            {
+                <div style="display:flex;flex-direction:column;gap:.75rem">
+                    @foreach (var device in Model)
+                    {
+                        var isExpired = device.ExpiresAt < DateTime.UtcNow;
+                        var daysLeft = (device.ExpiresAt - DateTime.UtcNow).Days;
+                        var currentUserAgent = HttpContextAccessor.HttpContext?.Request.Headers["User-Agent"].ToString();
+                        var isCurrentDevice = currentUserAgent == device.UserAgent;
+
+                        <div style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--card2);border:1px solid @(isExpired ? "rgba(239,68,68,.25)" : "var(--border)");border-radius:10px">
+                            <!-- Device Icon -->
+                            <div style="width:44px;height:44px;border-radius:10px;background:@(isExpired ? "rgba(239,68,68,.1)" : "rgba(56,189,248,.1)");border:1px solid @(isExpired ? "rgba(239,68,68,.2)" : "var(--border)");display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:@(isExpired ? "var(--danger)" : "var(--accent)");flex-shrink:0">
+                                @{
+                                    var ua = device.UserAgent ?? "";
+                                    var devIcon = ua.Contains("Mobile") || ua.Contains("Android") || ua.Contains("iPhone") ? "fa-mobile-screen" :
+                                                  ua.Contains("Tablet") || ua.Contains("iPad") ? "fa-tablet-screen-button" : "fa-desktop";
+                                }
+                                <i class="fas @devIcon"></i>
+                            </div>
+
+                            <!-- Device Info -->
+                            <div style="flex:1;min-width:0">
+                                <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem">
+                                    <div style="font-weight:600;color:var(--text);font-size:.875rem">
+                                        @(string.IsNullOrEmpty(device.DeviceName) ? "Unknown Device" : device.DeviceName)
+                                    </div>
+                                    @if (isCurrentDevice)
+                                    {
+                                        <span class="badge-ice active" style="font-size:.65rem">Current</span>
+                                    }
+                                    @if (isExpired)
+                                    {
+                                        <span class="badge-ice inactive" style="font-size:.65rem">Expired</span>
+                                    }
+                                </div>
+                                <div style="font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                                    @(device.UserAgent?.Length > 60 ? device.UserAgent.Substring(0, 60) + "..." : device.UserAgent ?? "Unknown browser")
+                                </div>
+                                <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">
+                                    <i class="fas fa-calendar" style="margin-right:.3rem"></i>Added @device.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy HH:mm")
+                                    &nbsp;·&nbsp;
+                                    @if (isExpired)
+                                    {
+                                        <span style="color:var(--danger)"><i class="fas fa-clock"></i> Expired</span>
+                                    }
+                                    else
+                                    {
+                                        <span><i class="fas fa-clock"></i> Expires in @daysLeft day@(daysLeft == 1 ? "" : "s")</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Revoke -->
+                            <form asp-action="RevokeDevice" method="post" style="flex-shrink:0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@device.Id" />
+                                <button type="submit" class="btn-danger-ice" style="font-size:.78rem;padding:.4rem .85rem"
+                                        onclick="return confirm('Revoke this trusted device?')">
+                                    <i class="fas fa-times" style="margin-right:.3rem"></i>Revoke
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Security Note -->
+        <div class="ice-card mt-4" style="font-size:.82rem;color:var(--muted)">
+            <div style="font-weight:700;color:var(--accent);margin-bottom:.6rem;font-size:.85rem"><i class="fas fa-circle-info" style="margin-right:.35rem"></i>About Trusted Devices</div>
+            <div style="display:flex;flex-direction:column;gap:.4rem">
+                <div><i class="fas fa-check" style="color:var(--success);margin-right:.5rem;width:14px"></i>Trusted devices skip the 2FA code prompt for 30 days</div>
+                <div><i class="fas fa-check" style="color:var(--success);margin-right:.5rem;width:14px"></i>Revoking a device requires 2FA on next sign-in from that device</div>
+                <div><i class="fas fa-check" style="color:var(--success);margin-right:.5rem;width:14px"></i>Changing your password automatically revokes all devices</div>
+                <div><i class="fas fa-exclamation" style="color:var(--warning);margin-right:.5rem;width:14px"></i>Revoke all devices if you suspect unauthorized access</div>
+            </div>
+        </div>
+
+        <div style="margin-top:1rem">
+            <a asp-action="ViewProfile" class="btn-ice-outline"><i class="fas fa-arrow-left" style="margin-right:.4rem"></i>Back to Profile</a>
+        </div>
+    </div>
 </div>

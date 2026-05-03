@@ -1,25 +1,207 @@
-﻿@model FridgeManagement.ViewModel.TwoFactorSetupViewModel
+@model FridgeManagement.ViewModel.TwoFactorSetupViewModel
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Recovery Codes";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+    var codes = Model?.RecoveryCodes?.ToList() ?? new List<string>();
 }
 
 <div class="page-header">
-    <h1>Recovery Codes</h1>
-    <p>Keep these in a safe place. They are shown only once.</p>
-    <a asp-action="ViewProfile" class="btn-fms btn-ghost-fms">Done</a>
+    <h1><i class="fas fa-key" style="color:var(--warning);margin-right:.5rem"></i>Two-Factor Recovery Codes</h1>
+    <p>Store these codes somewhere safe — they are your backup access if you lose your authenticator</p>
 </div>
 
-<div class="fms-card" style="max-width:500px; margin:auto;">
-    <div style="padding:20px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            @if (Model.RecoveryCodes != null)
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-ice-success mb-4"><i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]</div>
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+
+        <!-- URGENT WARNING -->
+        <div style="display:flex;align-items:flex-start;gap:1rem;padding:1.1rem 1.25rem;background:rgba(245,158,11,.1);border:2px solid rgba(245,158,11,.35);border-radius:12px;margin-bottom:1.5rem;animation:warnPulse 2.5s ease-in-out 3">
+            <i class="fas fa-triangle-exclamation" style="color:var(--warning);font-size:1.6rem;flex-shrink:0;margin-top:.1rem"></i>
+            <div>
+                <div style="font-weight:700;color:#fcd34d;font-size:.95rem;margin-bottom:.35rem">
+                    Save these codes immediately — shown only once!
+                </div>
+                <div style="font-size:.82rem;color:#fbbf24;line-height:1.55">
+                    Each code can be used <strong>once</strong> to sign in if you lose access to your authenticator app.
+                    After this page, they cannot be retrieved — only regenerated (which invalidates all current codes).
+                </div>
+            </div>
+        </div>
+
+        <!-- CODES CARD -->
+        <div class="ice-card mb-4">
+            <div class="ice-card-header">
+                <div class="ice-card-title">
+                    <i class="fas fa-shield-halved"></i>Your Recovery Codes
+                    <span style="font-family:'Nunito',sans-serif;font-size:.8rem;font-weight:400;color:var(--muted)">
+                        (@codes.Count codes)
+                    </span>
+                </div>
+                <button onclick="copyAll()" class="btn-ice-outline" style="font-size:.78rem;padding:.38rem .85rem" type="button" id="copyAllBtn">
+                    <i class="fas fa-copy" style="margin-right:.35rem"></i>Copy All
+                </button>
+            </div>
+
+            @if (codes.Any())
             {
-                foreach (var code in Model.RecoveryCodes)
-                {
-                    <code style="background:var(--navy-4); color:var(--accent); padding:8px; border-radius:6px; text-align:center;">@code</code>
-                }
+                <div class="row g-2" id="codesGrid">
+                    @foreach (var code in codes)
+                    {
+                        <div class="col-sm-6">
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .9rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;transition:border-color .2s"
+                                 onmouseover="this.style.borderColor='rgba(56,189,248,.3)'" onmouseout="this.style.borderColor='var(--border)'">
+                                <code class="recovery-code"
+                                      style="font-family:monospace;font-size:.88rem;color:var(--accent);letter-spacing:.1rem">
+                                    @code
+                                </code>
+                                <button type="button" onclick="copySingle('@code', this)"
+                                        style="background:none;border:none;color:var(--muted);cursor:pointer;padding:.2rem .35rem;border-radius:4px;transition:color .15s;font-size:.78rem"
+                                        title="Copy code">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Info bar -->
+                <div style="margin-top:1.1rem;padding:.75rem 1rem;background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.14);border-radius:8px;font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:.6rem">
+                    <i class="fas fa-circle-info" style="color:var(--accent);flex-shrink:0"></i>
+                    You have <strong style="color:var(--accent)">@codes.Count</strong> single-use codes. Once a code is used during sign-in, it is permanently consumed.
+                </div>
+            }
+            else
+            {
+                <div style="text-align:center;color:var(--muted);padding:2.5rem">
+                    <i class="fas fa-key" style="font-size:2.5rem;opacity:.3;margin-bottom:.75rem;display:block"></i>
+                    No recovery codes available
+                </div>
             }
         </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="ice-card mb-4">
+            <div class="ice-card-header">
+                <div class="ice-card-title"><i class="fas fa-floppy-disk"></i>Save Your Codes</div>
+            </div>
+            <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">
+                Choose one or more methods to keep your codes safe:
+            </p>
+            <div class="row g-2">
+                <div class="col-sm-4">
+                    <button type="button" onclick="downloadCodes()"
+                            class="btn-ice-outline w-100" style="display:block;text-align:center">
+                        <i class="fas fa-download" style="margin-right:.4rem;color:var(--accent)"></i>Download .txt
+                    </button>
+                </div>
+                <div class="col-sm-4">
+                    <button type="button" onclick="window.print()"
+                            class="btn-ice-outline w-100" style="display:block;text-align:center">
+                        <i class="fas fa-print" style="margin-right:.4rem;color:var(--muted)"></i>Print
+                    </button>
+                </div>
+                <div class="col-sm-4">
+                    <button type="button" onclick="copyAll()"
+                            class="btn-ice-outline w-100" style="display:block;text-align:center">
+                        <i class="fas fa-copy" style="margin-right:.4rem;color:var(--muted)"></i>Copy All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checklist before continuing -->
+        <div class="ice-card mb-4" style="border-color:rgba(34,197,94,.25)">
+            <div style="font-weight:700;color:#86efac;margin-bottom:.75rem;font-size:.9rem">
+                <i class="fas fa-clipboard-check" style="margin-right:.4rem;color:var(--success)"></i>Before you continue, confirm:
+            </div>
+            @{
+                var checks = new[]
+                {
+                    ("saved", "I have saved my recovery codes in a safe place"),
+                    ("understand", "I understand each code can only be used once"),
+                    ("nomore", "I understand these codes won't be shown again"),
+                };
+            }
+            @foreach (var (id, label) in checks)
+            {
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem">
+                    <input type="checkbox" id="chk_@id" class="form-check-input confirm-chk" style="margin:0;flex-shrink:0" onchange="checkAll()" />
+                    <label for="chk_@id" style="font-size:.85rem;color:var(--muted);cursor:pointer">@label</label>
+                </div>
+            }
+        </div>
+
+        <div style="text-align:right">
+            <a asp-action="ViewProfile" id="doneBtn"
+               class="btn-ice"
+               style="opacity:.45;pointer-events:none;display:inline-block">
+                <i class="fas fa-check" style="margin-right:.4rem"></i>I've Saved My Codes — Continue
+            </a>
+        </div>
+
     </div>
 </div>
+
+<style>
+    @@keyframes warnPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,.3); }
+        50%        { box-shadow: 0 0 0 10px rgba(245,158,11,0); }
+    }
+    @@media print {
+        .ice-card:last-child, .ice-card:nth-last-child(2), .ice-card:nth-last-child(3),
+        .ice-card-header button, .page-header, nav { display: none !important; }
+        body { background: #fff !important; color: #000 !important; }
+        .recovery-code { color: #000 !important; }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function getCodesText() {
+            return Array.from(document.querySelectorAll('.recovery-code'))
+                .map(el => el.textContent.trim()).join('\n');
+        }
+
+        function copyAll() {
+            navigator.clipboard.writeText(getCodesText()).then(() => {
+                const btn = document.getElementById('copyAllBtn');
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check" style="margin-right:.35rem"></i>Copied!';
+                btn.style.color = 'var(--success)';
+                setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 2500);
+            });
+        }
+
+        function copySingle(code, btn) {
+            navigator.clipboard.writeText(code).then(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                btn.style.color = 'var(--success)';
+                setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i>'; btn.style.color = ''; }, 2000);
+            });
+        }
+
+        function downloadCodes() {
+            const header = 'FridgeMS — Two-Factor Authentication Recovery Codes\n' +
+                           'Generated: ' + new Date().toLocaleString() + '\n' +
+                           'Keep these codes secure. Each code is single-use.\n\n';
+            const text = header + getCodesText() + '\n\nSupport: Contact your system administrator.';
+            const a = document.createElement('a');
+            a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+            a.download = 'fridgems-2fa-recovery-codes.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function checkAll() {
+            const all = Array.from(document.querySelectorAll('.confirm-chk')).every(c => c.checked);
+            const btn = document.getElementById('doneBtn');
+            btn.style.opacity = all ? '1' : '.45';
+            btn.style.pointerEvents = all ? 'auto' : 'none';
+        }
+    </script>
+}
