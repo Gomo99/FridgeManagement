@@ -104,13 +104,13 @@ namespace FridgeManagement.Controllers
             return role switch
             {
                 UserRole.ADMINISTRATOR => RedirectToAction("DashBoard", "Admin"),
-                UserRole.CUSTOMERLIAISON => RedirectToAction("Dashboard", "CustomerLiaisonManagement"),
-                UserRole.INVENTORYLIAISON => RedirectToAction("Dashboard", "InventoryLiaisonManagement"),
-                UserRole.CUSTOMER => RedirectToAction("Dashboard", "Customer"),
-                UserRole.FAULTTECHNICIAN => RedirectToAction("Dashboard", "FaultTechnician"),
-                UserRole.MAINTENANCETECHNICIAN => RedirectToAction("Dashboard", "Maintenance"),
-                UserRole.PURCHASINGMANAGER => RedirectToAction("Dashboard", "Purchasing"),
-                UserRole.SUPPLIER => RedirectToAction("Dashboard", "Supplier"),
+                UserRole.CUSTOMERLIAISON => RedirectToAction("DashBoard", "CustomerLiaisonManagement"),
+                UserRole.INVENTORYLIAISON => RedirectToAction("DashBoard", "InventoryLiaisonManagement"),
+                UserRole.CUSTOMER => RedirectToAction("DashBoard", "Customer"),
+                UserRole.FAULTTECHNICIAN => RedirectToAction("DashBoard", "FaultTechnician"),
+                UserRole.MAINTENANCETECHNICIAN => RedirectToAction("DashBoard", "Maintenance"),
+                UserRole.PURCHASINGMANAGER => RedirectToAction("DashBoard", "Purchasing"),
+                UserRole.SUPPLIER => RedirectToAction("DashBoard", "Supplier"),
                 _ => RedirectToAction("Index", "Home")
             };
         }

@@ -86,21 +86,14 @@
 </div>
 
 @section Scripts {
-    <!-- Include JSON lists for customers and available fridges from ViewData (must be set in the Allocations action) -->
     <script>
-        // We'll load these from the controller by serializing the SelectList items (alternatively we can make AJAX calls)
-        // For simplicity, we'll embed the data as JSON strings in the page. Add these to the Allocations action:
-        // ViewBag.CustomerList = new SelectList(_context.Customers.Where(c => c.Status == Status.Active), "Id", "Name");
-        // ViewBag.AvailableFridgeList = new SelectList(availableFridges, "Id", "SerialNumber");
-        // Then serialize them here.
-
-        var customerList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.CustomerList as SelectList));
-        var fridgeList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.AvailableFridgeList as SelectList));
+        var customerList = @Html.Raw(ViewBag.CustomerJson ?? "[]");
+        var fridgeList = @Html.Raw(ViewBag.FridgeJson ?? "[]");
 
         function populateSelect(id, items, placeholder) {
             var select = document.getElementById(id);
             select.innerHTML = '<option value="">' + placeholder + '</option>';
-            items.forEach(item => {
+            items.forEach(function(item) {
                 select.innerHTML += `<option value="${item.value}">${item.text}</option>`;
             });
         }

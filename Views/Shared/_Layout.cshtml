@@ -1,425 +1,1161 @@
+@using System.Security.Claims
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] — FridgeMS</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <title>@ViewData["Title"] - Fridge Management System</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
     <style>
+        /* ==================== FMS CUSTOM DESIGN SYSTEM ==================== */
         :root {
-            --bg:        #050d1a;
-            --sidebar-bg:#071528;
-            --card:      #0c1929;
-            --card2:     #0f1f35;
-            --input-bg:  #0f1f35;
-            --border:    rgba(56,189,248,.15);
-            --accent:    #38bdf8;
-            --accent2:   #0ea5e9;
-            --glow:      rgba(56,189,248,.12);
-            --success:   #22c55e;
-            --danger:    #ef4444;
-            --warning:   #f59e0b;
-            --info:      #818cf8;
-            --text:      #e2e8f0;
-            --muted:     #64748b;
-            --sidebar-w: 260px;
-            --header-h:  60px;
+            --bg: #0a0f1c;
+            --navy: #0f172a;
+            --navy-4: #1e293b;
+            --ice: #0ea5e9;
+            --ice-dim: rgba(14,165,233,0.08);
+            --white: #f1f5f9;
+            --muted: #94a3b8;
+            --warning: #f59e0b;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --danger-dim: rgba(239,68,68,0.1);
+            --amber: #f59e0b;
+            --teal: #14b8a6;
+            --purple: #a855f7;
+            --red: #ef4444;
+            --green: #22c55e;
+            --blue: #3b82f6;
+            --gray: #64748b;
+            --border: rgba(14,165,233,0.08);
+            --transition: all 0.2s ease;
+            --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-heading: 'Outfit', sans-serif;
         }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
-        /* ===== SIDEBAR ===== */
-        .sidebar {
-            position: fixed; top: 0; left: 0; bottom: 0;
-            width: var(--sidebar-w);
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--border);
-            display: flex; flex-direction: column;
-            z-index: 100; overflow-y: auto;
-            transition: transform .3s;
+        body {
+            background: var(--bg);
+            color: var(--white);
+            font-family: var(--font-body);
         }
-        .sidebar-header {
-            padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; gap: .75rem; flex-shrink: 0;
-        }
-        .sidebar-logo-icon {
-            width: 36px; height: 36px;
-            background: linear-gradient(135deg, rgba(56,189,248,.25), rgba(14,165,233,.35));
-            border: 1px solid rgba(56,189,248,.4); border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; color: var(--accent); flex-shrink: 0;
-        }
-        .sidebar-brand { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: 1px; }
-        .sidebar-brand span { color: var(--accent); }
 
-        .sidebar-section-label {
-            padding: 1rem 1.5rem .4rem;
-            font-size: .65rem; font-weight: 700; letter-spacing: 1.5px;
-            text-transform: uppercase; color: var(--muted);
-        }
-        .nav-item-link {
-            display: flex; align-items: center; gap: .75rem;
-            padding: .6rem 1.5rem; font-size: .875rem; color: #94a3b8;
-            text-decoration: none; transition: all .15s; position: relative;
-            border-left: 2px solid transparent;
-        }
-        .nav-item-link i { width: 18px; text-align: center; font-size: .85rem; }
-        .nav-item-link:hover { color: var(--text); background: rgba(56,189,248,.06); }
-        .nav-item-link.active {
-            color: var(--accent); background: rgba(56,189,248,.1);
-            border-left-color: var(--accent); font-weight: 600;
-        }
-        .sidebar-footer {
-            margin-top: auto; padding: 1rem 1.5rem;
-            border-top: 1px solid var(--border);
-        }
-        .user-chip {
-            display: flex; align-items: center; gap: .65rem;
-            padding: .6rem .8rem; border-radius: 10px;
-            background: var(--card2); border: 1px solid var(--border);
-        }
-        .user-avatar {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            display: flex; align-items: center; justify-content: center;
-            font-size: .8rem; font-weight: 700; color: #000; flex-shrink: 0;
-        }
-        .user-chip-info { flex: 1; overflow: hidden; }
-        .user-chip-name { font-size: .8rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .user-chip-role { font-size: .7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* ===== MAIN CONTENT ===== */
-        .main-wrapper { margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
-        .topbar {
-            position: sticky; top: 0; z-index: 50;
-            height: var(--header-h);
-            background: rgba(5,13,26,.92); backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            display: flex; align-items: center;
-            padding: 0 2rem; gap: 1rem;
-        }
-        .topbar-title { font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--text); flex: 1; }
-        .topbar-actions { display: flex; align-items: center; gap: .75rem; }
-        .topbar-btn {
-            width: 36px; height: 36px; border-radius: 8px;
-            background: var(--card2); border: 1px solid var(--border);
-            color: var(--muted); display: flex; align-items: center; justify-content: center;
-            text-decoration: none; transition: all .15s; cursor: pointer;
-        }
-        .topbar-btn:hover { color: var(--accent); border-color: var(--accent); }
-        .topbar-user {
-            display: flex; align-items: center; gap: .5rem;
-            padding: .35rem .75rem; border-radius: 8px;
-            background: var(--card2); border: 1px solid var(--border);
-            font-size: .8rem; color: var(--text);
-        }
-        .topbar-user .avatar {
-            width: 26px; height: 26px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            display: flex; align-items: center; justify-content: center;
-            font-size: .7rem; font-weight: 700; color: #000;
-        }
-        .page-content { flex: 1; padding: 2rem; }
-
-        /* ===== CARDS ===== */
-        .ice-card {
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 1.5rem;
-            transition: border-color .2s;
-        }
-        .ice-card:hover { border-color: rgba(56,189,248,.3); }
-        .ice-card-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 1.25rem; padding-bottom: 1rem;
+        /* Navbar */
+        .navbar-dark.bg-dark {
+            background: var(--navy) !important;
             border-bottom: 1px solid var(--border);
         }
-        .ice-card-title {
-            font-family: 'Rajdhani', sans-serif; font-size: 1.1rem;
-            font-weight: 700; color: #fff; display: flex; align-items: center; gap: .5rem;
+
+        /* Grid helpers */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
         }
-        .ice-card-title i { color: var(--accent); }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 18px;
+        }
+
+        @@media (max-width: 992px) {
+            .grid-4 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Stat cards */
         .stat-card {
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 1.25rem;
-            display: flex; align-items: center; gap: 1rem;
-            transition: all .2s;
+            background: var(--navy);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: var(--transition);
         }
-        .stat-card:hover { border-color: rgba(56,189,248,.3); transform: translateY(-1px); }
+
+            .stat-card:hover {
+                border-color: rgba(14,165,233,0.25);
+                transform: translateY(-1px);
+            }
+
         .stat-icon {
-            width: 48px; height: 48px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.25rem; flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
         }
-        .stat-icon.blue { background: rgba(56,189,248,.15); color: var(--accent); }
-        .stat-icon.green { background: rgba(34,197,94,.15); color: var(--success); }
-        .stat-icon.red { background: rgba(239,68,68,.15); color: var(--danger); }
-        .stat-icon.yellow { background: rgba(245,158,11,.15); color: var(--warning); }
-        .stat-icon.purple { background: rgba(129,140,248,.15); color: var(--info); }
-        .stat-value { font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .stat-label { font-size: .75rem; color: var(--muted); margin-top: .1rem; }
 
-        /* ===== TABLES ===== */
-        .ice-table { width: 100%; border-collapse: separate; border-spacing: 0 .35rem; }
-        .ice-table thead th {
-            padding: .6rem 1rem; font-size: .7rem; font-weight: 700;
-            letter-spacing: 1px; text-transform: uppercase; color: var(--muted);
-            border-bottom: 1px solid var(--border); background: transparent;
+            .stat-icon.blue {
+                background: rgba(59,130,246,0.12);
+                color: #3b82f6;
+            }
+
+            .stat-icon.green {
+                background: rgba(34,197,94,0.12);
+                color: #22c55e;
+            }
+
+            .stat-icon.teal {
+                background: rgba(20,184,166,0.12);
+                color: #14b8a6;
+            }
+
+            .stat-icon.amber {
+                background: rgba(245,158,11,0.12);
+                color: #f59e0b;
+            }
+
+            .stat-icon.red {
+                background: rgba(239,68,68,0.12);
+                color: #ef4444;
+            }
+
+            .stat-icon.purple {
+                background: rgba(168,85,247,0.12);
+                color: #a855f7;
+            }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            font-family: 'Outfit',sans-serif;
+            line-height: 1.1;
         }
-        .ice-table tbody tr {
-            background: var(--card2); border-radius: 8px;
-            transition: background .15s;
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--muted);
         }
-        .ice-table tbody tr:hover { background: rgba(56,189,248,.07); }
-        .ice-table tbody td {
-            padding: .75rem 1rem; font-size: .875rem; color: var(--text);
-            border-bottom: 1px solid rgba(255,255,255,.03);
+
+        .stat-change {
+            font-size: 12px;
+            margin-top: 4px;
         }
-        .ice-table tbody td:first-child { border-radius: 8px 0 0 8px; }
-        .ice-table tbody td:last-child { border-radius: 0 8px 8px 0; }
 
-        /* ===== BADGES ===== */
-        .badge-ice { padding: .3rem .65rem; border-radius: 6px; font-size: .72rem; font-weight: 700; letter-spacing: .3px; }
-        .badge-ice.active   { background: rgba(34,197,94,.15);  color: #86efac; }
-        .badge-ice.inactive { background: rgba(239,68,68,.15);  color: #fca5a5; }
-        .badge-ice.pending  { background: rgba(245,158,11,.15); color: #fcd34d; }
-        .badge-ice.info     { background: rgba(56,189,248,.15); color: var(--accent); }
-        .badge-ice.purple   { background: rgba(129,140,248,.15);color: #a5b4fc; }
+            .stat-change.up {
+                color: #22c55e;
+            }
 
-        /* ===== FORMS ===== */
-        .form-label { font-size: .78rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: #94a3b8; margin-bottom: .4rem; }
-        .form-control, .form-select {
-            background: var(--input-bg) !important; border: 1px solid var(--border) !important;
-            color: var(--text) !important; border-radius: 8px !important;
-            padding: .65rem .9rem !important; font-size: .875rem !important;
-            font-family: 'Nunito', sans-serif !important; transition: border-color .2s, box-shadow .2s;
+        /* FMS Card */
+        .fms-card {
+            background: var(--navy);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
         }
-        .form-control:focus, .form-select:focus {
-            border-color: var(--accent) !important;
-            box-shadow: 0 0 0 3px var(--glow) !important; outline: none !important;
+
+        .fms-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
         }
-        .form-control::placeholder { color: var(--muted) !important; }
-        .form-select option { background: var(--input-bg); color: var(--text); }
 
-        /* ===== BUTTONS ===== */
-        .btn-ice { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #000; font-weight: 700; border-radius: 8px; padding: .55rem 1.2rem; font-size: .85rem; font-family: 'Rajdhani', sans-serif; letter-spacing: .5px; text-transform: uppercase; transition: all .2s; }
-        .btn-ice:hover { filter: brightness(1.1); box-shadow: 0 0 15px rgba(56,189,248,.3); color: #000; }
-        .btn-ice-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: .5rem 1.1rem; font-size: .85rem; font-family: 'Nunito', sans-serif; font-weight: 600; transition: all .2s; }
-        .btn-ice-outline:hover { background: var(--glow); color: var(--accent); }
-        .btn-danger-ice { background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3); color: #fca5a5; border-radius: 8px; padding: .5rem 1.1rem; font-size: .85rem; font-weight: 600; transition: all .2s; }
-        .btn-danger-ice:hover { background: rgba(239,68,68,.25); color: #fca5a5; }
-        .btn-success-ice { background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3); color: #86efac; border-radius: 8px; padding: .5rem 1.1rem; font-size: .85rem; font-weight: 600; transition: all .2s; }
-        .btn-success-ice:hover { background: rgba(34,197,94,.25); color: #86efac; }
+        .fms-card-title {
+            font-family: 'Outfit',sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--white);
+        }
 
-        /* ===== ALERTS ===== */
-        .alert-ice-success { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); color: #86efac; border-radius: 8px; padding: .8rem 1rem; font-size: .875rem; display: flex; align-items: center; gap: .5rem; }
-        .alert-ice-danger   { background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.3);  color: #fca5a5; border-radius: 8px; padding: .8rem 1rem; font-size: .875rem; display: flex; align-items: center; gap: .5rem; }
-        .alert-ice-warning  { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); color: #fcd34d; border-radius: 8px; padding: .8rem 1rem; font-size: .875rem; display: flex; align-items: center; gap: .5rem; }
-        .text-danger { color: #fca5a5 !important; font-size: .8rem; }
+        .fms-card-subtitle {
+            font-size: 12.5px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
 
-        /* ===== MISC ===== */
-        a { color: var(--accent); text-decoration: none; }
-        a:hover { color: var(--accent2); }
-        .page-header { margin-bottom: 1.75rem; }
-        .page-header h1 { font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; font-weight: 700; color: #fff; }
-        .page-header p { font-size: .875rem; color: var(--muted); margin-top: .2rem; }
-        .breadcrumb { background: none; padding: 0; font-size: .8rem; margin-bottom: .5rem; }
-        .breadcrumb-item { color: var(--muted); }
-        .breadcrumb-item a { color: var(--muted); }
-        .breadcrumb-item a:hover { color: var(--accent); }
-        .breadcrumb-item.active { color: var(--text); }
-        .breadcrumb-item + .breadcrumb-item::before { color: var(--muted); }
-        .password-toggle { position: relative; }
-        .password-toggle .toggle-btn { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; z-index: 5; transition: color .2s; }
-        .password-toggle .toggle-btn:hover { color: var(--accent); }
+        /* Tables */
+        .fms-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .fms-table th {
+                text-align: left;
+                padding: 12px 16px;
+                font-size: 12.5px;
+                font-weight: 600;
+                color: var(--muted);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .fms-table td {
+                padding: 14px 16px;
+                font-size: 14px;
+                border-bottom: 1px solid rgba(255,255,255,0.03);
+                color: var(--white);
+            }
+
+            .fms-table tbody tr:hover {
+                background: rgba(14,165,233,0.04);
+            }
+
+        /* Badges */
+        .fms-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            font-family: 'Outfit',sans-serif;
+        }
+
+            .fms-badge.green {
+                background: rgba(34,197,94,0.12);
+                color: #22c55e;
+            }
+
+            .fms-badge.red {
+                background: rgba(239,68,68,0.12);
+                color: #ef4444;
+            }
+
+            .fms-badge.blue {
+                background: rgba(59,130,246,0.12);
+                color: #3b82f6;
+            }
+
+            .fms-badge.amber {
+                background: rgba(245,158,11,0.12);
+                color: #f59e0b;
+            }
+
+            .fms-badge.gray {
+                background: rgba(148,163,184,0.12);
+                color: #94a3b8;
+            }
+
+            .fms-badge.teal {
+                background: rgba(20,184,166,0.12);
+                color: #14b8a6;
+            }
+
+            .fms-badge.purple {
+                background: rgba(168,85,247,0.12);
+                color: #a855f7;
+            }
+
+        /* Progress Bar */
+        .fms-progress {
+            height: 6px;
+            border-radius: 3px;
+            background: var(--navy-4);
+            overflow: hidden;
+        }
+
+        .fms-progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--ice), #38bdf8);
+            transition: width 0.4s ease;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--navy-4);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px 14px;
+            max-width: 300px;
+        }
+
+            .search-bar input {
+                background: transparent;
+                border: none;
+                outline: none;
+                color: var(--white);
+                font-size: 13.5px;
+                width: 100%;
+            }
+
+            .search-bar i {
+                color: var(--muted);
+                font-size: 14px;
+            }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+            .page-header h1 {
+                font-family: 'Outfit',sans-serif;
+                font-weight: 700;
+                font-size: 26px;
+                color: var(--white);
+                margin: 0 0 4px 0;
+            }
+
+            .page-header p {
+                color: var(--muted);
+                margin: 0;
+                font-size: 14px;
+            }
+
+        /* Buttons */
+        .btn-fms {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Outfit',sans-serif;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+            .btn-fms.btn-sm-fms {
+                padding: 6px 14px;
+                font-size: 12.5px;
+            }
+
+            .btn-fms.btn-lg-fms {
+                padding: 14px 28px;
+                font-size: 16px;
+            }
+
+        .btn-primary-fms {
+            background: var(--ice);
+            color: #fff;
+        }
+
+            .btn-primary-fms:hover {
+                background: #0284c7;
+            }
+
+        .btn-success-fms {
+            background: var(--success);
+            color: #fff;
+        }
+
+            .btn-success-fms:hover {
+                background: #16a34a;
+            }
+
+        .btn-warning-fms {
+            background: var(--warning);
+            color: #000;
+        }
+
+            .btn-warning-fms:hover {
+                background: #d97706;
+            }
+
+        .btn-danger-fms {
+            background: var(--danger);
+            color: #fff;
+        }
+
+            .btn-danger-fms:hover {
+                background: #dc2626;
+            }
+
+        .btn-ghost-fms {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+
+            .btn-ghost-fms:hover {
+                background: var(--ice-dim);
+                color: var(--white);
+            }
+
+        .btn-info-fms {
+            background: var(--teal);
+            color: #fff;
+        }
+
+            .btn-info-fms:hover {
+                background: #0d9488;
+            }
+
+        /* Forms */
+        .fms-form-group {
+            margin-bottom: 16px;
+        }
+
+        .fms-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .fms-input, .fms-select, .fms-textarea {
+            background: var(--navy-4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 14px;
+            color: var(--white);
+            width: 100%;
+            outline: none;
+            transition: var(--transition);
+        }
+
+            .fms-input:focus, .fms-select:focus, .fms-textarea:focus {
+                border-color: var(--ice);
+            }
+
+        .fms-textarea {
+            resize: vertical;
+        }
+
+        .fms-input-group {
+            position: relative;
+        }
+
+            .fms-input-group .input-icon {
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--muted);
+                font-size: 14px;
+            }
+
+            .fms-input-group .fms-input {
+                padding-left: 36px;
+            }
+
+        /* Modals */
+        .fms-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .fms-modal-overlay.show {
+                display: flex;
+            }
+
+        .fms-modal {
+            background: var(--navy);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 0;
+            width: 100%;
+            max-width: 540px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.2s ease;
+        }
+
+        @@keyframes modalSlideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .fms-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .fms-modal-title {
+            font-family: 'Outfit',sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .fms-modal-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+            .fms-modal-close:hover {
+                color: var(--white);
+            }
+
+        /* Alerts */
+        .fms-alert {
+            padding: 12px 18px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13.5px;
+        }
+
+            .fms-alert.info {
+                background: rgba(14,165,233,0.1);
+                color: #38bdf8;
+            }
+
+        /* Links */
+        .w-100 {
+            width: 100%;
+        }
+
+        /* SIDEBAR STYLES */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .admin-sidebar {
+            width: 260px;
+            background: var(--navy);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            top: 56px;
+            bottom: 0;
+            left: 0;
+            z-index: 1040;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+            .admin-sidebar.collapsed {
+                transform: translateX(-100%);
+                opacity: 0;
+                pointer-events: none;
+            }
+
+        .sidebar-heading {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            padding: 12px 20px 8px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            .sidebar-nav li a {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 20px;
+                color: var(--muted);
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s;
+                border-left: 3px solid transparent;
+            }
+
+                .sidebar-nav li a:hover, .sidebar-nav li a.active {
+                    background: var(--ice-dim);
+                    color: var(--white);
+                    border-left-color: var(--ice);
+                }
+
+                .sidebar-nav li a i {
+                    width: 20px;
+                    text-align: center;
+                    font-size: 16px;
+                }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: margin-left 0.3s ease;
+            width: 100%;
+        }
+
+            .main-content.expanded {
+                margin-left: 0;
+            }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1035;
+        }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
 
         @@media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .main-wrapper { margin-left: 0; }
+            .admin-sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+                top: 0;
+                z-index: 1045;
+            }
+
+                .admin-sidebar.mobile-open {
+                    transform: translateX(0);
+                }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+
+        /* NOTIFICATION DROPDOWN */
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 8px;
+            background: var(--navy);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 380px;
+            max-height: 480px;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 1060;
+        }
+
+            .notification-dropdown.show {
+                display: block;
+            }
+
+            .notification-dropdown .notif-header {
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+        .notification-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+            .notification-item:hover {
+                background: var(--ice-dim);
+            }
+
+            .notification-item.unread {
+                border-left: 3px solid var(--ice);
+            }
+
+            .notification-item .notif-title {
+                font-weight: 600;
+                color: var(--white);
+                font-size: 13.5px;
+            }
+
+            .notification-item .notif-msg {
+                font-size: 12.5px;
+                color: var(--muted);
+                margin-top: 3px;
+            }
+
+            .notification-item .notif-time {
+                font-size: 11px;
+                color: var(--gray);
+                margin-top: 4px;
+            }
+
+        .notif-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: #fff;
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 10px;
+            font-weight: 700;
         }
     </style>
 </head>
 <body>
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo-icon"><i class="fa-solid fa-temperature-low"></i></div>
-            <div class="sidebar-brand">Fridge<span>MS</span></div>
-        </div>
-
-        @{
-            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-            var fullName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "User";
-            var initials = fullName.Length > 0 ? string.Concat(fullName.Split(' ').Take(2).Select(n => n[0].ToString().ToUpper())) : "U";
-        }
-
-        <!-- ADMIN NAVIGATION -->
-        @if (role == "ADMINISTRATOR")
-        {
-            <div class="sidebar-section-label">Administration</div>
-            <a asp-controller="Admin" asp-action="DashBoard" class="nav-item-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "DashBoard" && ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" ? "active" : "")">
-                <i class="fas fa-gauge-high"></i> Dashboard
-            </a>
-            <a asp-controller="Admin" asp-action="ManageCustomers" class="nav-item-link"><i class="fas fa-users"></i> Customers</a>
-            <a asp-controller="Admin" asp-action="ManageEmployees" class="nav-item-link"><i class="fas fa-user-tie"></i> Employees</a>
-            <a asp-controller="Admin" asp-action="ManageLocations" class="nav-item-link"><i class="fas fa-location-dot"></i> Locations</a>
-            <a asp-controller="Admin" asp-action="ManageFridges" class="nav-item-link"><i class="fas fa-snowflake"></i> Fridges</a>
-            <a asp-controller="Admin" asp-action="ManageSuppliers" class="nav-item-link"><i class="fas fa-truck"></i> Suppliers</a>
-            <a asp-controller="Admin" asp-action="ServiceCheckTypes" class="nav-item-link"><i class="fas fa-list-check"></i> Service Checks</a>
-            <a asp-controller="Admin" asp-action="BusinessInfo" class="nav-item-link"><i class="fas fa-building"></i> Business Info</a>
-        }
-
-        <!-- CUSTOMER LIAISON NAVIGATION -->
-        @if (role == "CUSTOMERLIAISON")
-        {
-            <div class="sidebar-section-label">Customer Service</div>
-            <a asp-controller="CustomerLiaisonManagement" asp-action="DashBoard" class="nav-item-link"><i class="fas fa-gauge-high"></i> Dashboard</a>
-            <a asp-controller="CustomerLiaisonManagement" asp-action="ManageCustomers" class="nav-item-link"><i class="fas fa-users"></i> Manage Customers</a>
-            <a asp-controller="CustomerLiaisonManagement" asp-action="FridgeAllocations" class="nav-item-link"><i class="fas fa-snowflake"></i> Fridge Allocations</a>
-            <a asp-controller="CustomerLiaisonManagement" asp-action="CreateAllocation" class="nav-item-link"><i class="fas fa-plus-circle"></i> Create Allocation</a>
-        }
-
-        <!-- INVENTORY LIAISON NAVIGATION -->
-        @if (role == "INVENTORYLIAISON")
-        {
-            <div class="sidebar-section-label">Inventory Control</div>
-            <a asp-controller="InventoryLiaisonManagement" asp-action="DashBoard" class="nav-item-link"><i class="fas fa-gauge-high"></i> Dashboard</a>
-            <a asp-controller="InventoryLiaisonManagement" asp-action="FridgeInventory" class="nav-item-link"><i class="fas fa-warehouse"></i> Fridge Inventory</a>
-            <a asp-controller="InventoryLiaisonManagement" asp-action="ReceiveFridges" class="nav-item-link"><i class="fas fa-truck-ramp-box"></i> Receive Fridges</a>
-            <a asp-controller="InventoryLiaisonManagement" asp-action="ScrapFridges" class="nav-item-link"><i class="fas fa-trash-can"></i> Scrap Fridges</a>
-            <a asp-controller="InventoryLiaisonManagement" asp-action="ProcessAllocations" class="nav-item-link"><i class="fas fa-right-left"></i> Process Allocations</a>
-            <a asp-controller="InventoryLiaisonManagement" asp-action="CreatePurchaseRequest" class="nav-item-link"><i class="fas fa-file-circle-plus"></i> Purchase Requests</a>
-        }
-
-        <!-- CUSTOMER NAVIGATION -->
-        @if (role == "CUSTOMER")
-        {
-            <div class="sidebar-section-label">My Account</div>
-            <a asp-controller="Customer" asp-action="DashBoard" class="nav-item-link"><i class="fas fa-gauge-high"></i> Dashboard</a>
-            <a asp-controller="Customer" asp-action="MyFridges" class="nav-item-link"><i class="fas fa-snowflake"></i> My Fridges</a>
-            <a asp-controller="Customer" asp-action="ReportFault" class="nav-item-link"><i class="fas fa-triangle-exclamation"></i> Report Fault</a>
-            <a asp-controller="Customer" asp-action="MyFaults" class="nav-item-link"><i class="fas fa-clipboard-list"></i> My Fault Reports</a>
-            <a asp-controller="Customer" asp-action="RequestFridge" class="nav-item-link"><i class="fas fa-plus-circle"></i> Request Fridge</a>
-            <a asp-controller="Customer" asp-action="MyRequests" class="nav-item-link"><i class="fas fa-file-alt"></i> My Requests</a>
-            <a asp-controller="Customer" asp-action="MaintenanceVisits" class="nav-item-link"><i class="fas fa-calendar-check"></i> Maintenance Visits</a>
-        }
-
-        <!-- FAULT TECHNICIAN NAVIGATION -->
-        @if (role == "FAULTTECHNICIAN")
-        {
-            <div class="sidebar-section-label">Fault Management</div>
-            <a asp-controller="FaultTechnician" asp-action="DashBoard" class="nav-item-link"><i class="fas fa-gauge-high"></i> Dashboard</a>
-            <a asp-controller="FaultTechnician" asp-action="ViewFaults" class="nav-item-link"><i class="fas fa-triangle-exclamation"></i> All Faults</a>
-            <a asp-controller="FaultTechnician" asp-action="ProcessFault" class="nav-item-link"><i class="fas fa-wrench"></i> Process Fault</a>
-            <a asp-controller="FaultTechnician" asp-action="RepairHistory" class="nav-item-link"><i class="fas fa-history"></i> Repair History</a>
-        }
-
-        <!-- MAINTENANCE TECHNICIAN NAVIGATION -->
-        @if (role == "MAINTENANCETECHNICIAN")
-        {
-            <div class="sidebar-section-label">Maintenance</div>
-            <a asp-controller="Maintenance" asp-action="DashBoard" class="nav-item-link"><i class="fas fa-gauge-high"></i> Dashboard</a>
-            <a asp-controller="Maintenance" asp-action="CustomerFridges" class="nav-item-link"><i class="fas fa-snowflake"></i> Customer Fridges</a>
-            <a asp-controller="Maintenance" asp-action="ScheduleVisit" class="nav-item-link"><i class="fas fa-calendar-plus"></i> Schedule Visit</a>
-            <a asp-controller="Maintenance" asp-action="ManageVisits" class="nav-item-link"><i class="fas fa-calendar-check"></i> Manage Visits</a>
-            <a asp-controller="Maintenance" asp-action="ServiceFridge" class="nav-item-link"><i class="fas fa-screwdriver-wrench"></i> Service Fridge</a>
-            <a asp-controller="Maintenance" asp-action="CreateFaultReport" class="nav-item-link"><i class="fas fa-file-circle-exclamation"></i> Create Fault</a>
-        }
-
-        <!-- PURCHASING MANAGER NAVIGATION -->
-        @if (role == "PURCHASINGMANAGER")
-        {
-            <div class="sidebar-section-label">Procurement</div>
-            <a asp-controller="Purchasing" asp-action="DashBoard" class="nav-item-link"><i class="fas fa-gauge-high"></i> Dashboard</a>
-            <a asp-controller="Purchasing" asp-action="ManageSuppliers" class="nav-item-link"><i class="fas fa-truck"></i> Suppliers</a>
-            <a asp-controller="Purchasing" asp-action="PurchaseRequests" class="nav-item-link"><i class="fas fa-file-alt"></i> Purchase Requests</a>
-            <a asp-controller="Purchasing" asp-action="Rfqs" class="nav-item-link"><i class="fas fa-file-invoice"></i> RFQs</a>
-            <a asp-controller="Purchasing" asp-action="Quotations" class="nav-item-link"><i class="fas fa-file-invoice-dollar"></i> Quotations</a>
-            <a asp-controller="Purchasing" asp-action="PurchaseOrders" class="nav-item-link"><i class="fas fa-shopping-cart"></i> Purchase Orders</a>
-            <a asp-controller="Purchasing" asp-action="DeliveryNotes" class="nav-item-link"><i class="fas fa-clipboard-check"></i> Delivery Notes</a>
-        }
-
-        <!-- SUPPLIER NAVIGATION -->
-        @if (role == "SUPPLIER")
-        {
-            <div class="sidebar-section-label">Supplier Portal</div>
-            <a asp-controller="Supplier" asp-action="DashBoard" class="nav-item-link"><i class="fas fa-gauge-high"></i> Dashboard</a>
-            <a asp-controller="Supplier" asp-action="ViewRfqs" class="nav-item-link"><i class="fas fa-file-invoice"></i> View RFQs</a>
-            <a asp-controller="Supplier" asp-action="SubmitQuotation" class="nav-item-link"><i class="fas fa-file-invoice-dollar"></i> Submit Quotation</a>
-            <a asp-controller="Supplier" asp-action="DeliveryNotes" class="nav-item-link"><i class="fas fa-truck-ramp-box"></i> Delivery Notes</a>
-        }
-
-        <!-- SHARED ACCOUNT SECTION -->
-        <div class="sidebar-section-label" style="margin-top:auto">Account</div>
-        <a asp-controller="Account" asp-action="ViewProfile" class="nav-item-link"><i class="fas fa-user-circle"></i> My Profile</a>
-        <a asp-controller="Account" asp-action="ChangePassword" class="nav-item-link"><i class="fas fa-lock"></i> Change Password</a>
-        <a asp-controller="Account" asp-action="ManageDevices" class="nav-item-link"><i class="fas fa-mobile-screen"></i> Trusted Devices</a>
-        <form asp-controller="Account" asp-action="Logout" method="post" style="margin:.25rem 0">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="nav-item-link w-100 text-start border-0" style="background:none;cursor:pointer;color:#ef4444;"><i class="fas fa-right-from-bracket" style="color:#ef4444"></i> Sign Out</button>
-        </form>
-
-        <div class="sidebar-footer">
-            <div class="user-chip">
-                <div class="user-avatar">@initials</div>
-                <div class="user-chip-info">
-                    <div class="user-chip-name">@fullName</div>
-                    <div class="user-chip-role">@role?.Replace("_", " ")</div>
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- MAIN WRAPPER -->
-    <div class="main-wrapper">
-        <!-- TOPBAR -->
-        <header class="topbar">
-            <button class="topbar-btn d-md-none border-0" onclick="document.getElementById('sidebar').classList.toggle('open')">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="topbar-title">@(ViewData["Title"] ?? "Dashboard")</div>
-            <div class="topbar-actions">
-                @if (TempData["SuccessMessage"] != null)
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-dark bg-dark fixed-top">
+            <div class="container-fluid">
+                @if (User.IsInRole("ADMINISTRATOR"))
                 {
-                    <span style="font-size:.8rem;color:var(--success)"><i class="fas fa-check-circle"></i></span>
+                    <button class="btn btn-outline-light me-2 sidebar-toggle-btn" type="button">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
                 }
-                <a asp-controller="Account" asp-action="ViewProfile" class="topbar-btn" title="My Profile">
-                    <i class="fas fa-user-circle"></i>
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <i class="fa-solid fa-snowflake me-2"></i>Fridge Management
                 </a>
-                <div class="topbar-user">
-                    <div class="avatar">@initials</div>
-                    <span>@fullName</span>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "";
+                            @if (role != "ADMINISTRATOR")
+                            {
+                                <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Home</a></li>
+                                @switch (role)
+                                {
+                                    case "CUSTOMERLIAISON":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="CustomerLiaisonManagement" asp-action="Dashboard">Dashboard</a></li>
+                                        break;
+                                    case "INVENTORYLIAISON":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="InventoryLiaisonManagement" asp-action="Dashboard">Inventory</a></li>
+                                        break;
+                                    case "CUSTOMER":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="Customer" asp-action="Dashboard">My Dashboard</a></li>
+                                        break;
+                                    case "FAULTTECHNICIAN":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="FaultTechnician" asp-action="Dashboard">Faults</a></li>
+                                        break;
+                                    case "MAINTENANCETECHNICIAN":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="Maintenance" asp-action="Dashboard">Maintenance</a></li>
+                                        break;
+                                    case "PURCHASINGMANAGER":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="Purchasing" asp-action="Dashboard">Purchasing</a></li>
+                                        break;
+                                    case "SUPPLIER":
+                                        <li class="nav-item"><a class="nav-link" asp-controller="Supplier" asp-action="Dashboard">Supplier</a></li>
+                                        break;
+                                }
+                            }
+
+                            <!-- NOTIFICATION BELL -->
+                            <li class="nav-item dropdown" style="position:relative;">
+                                <a class="nav-link text-white" href="#" id="notificationBell" onclick="toggleNotificationDropdown()">
+                                    <i class="fa-solid fa-bell"></i>
+                                    <span id="notificationCountBadge" class="notif-badge" style="display:none;">0</span>
+                                </a>
+                                <div class="notification-dropdown" id="notificationDropdown">
+                                    <div class="notif-header">
+                                        <span style="font-weight:600;color:var(--white);">Notifications</span>
+                                        <button class="btn-fms btn-sm-fms btn-ghost-fms" onclick="markAllAsRead()">Mark all read</button>
+                                    </div>
+                                    <div id="notificationList">
+                                        <div style="padding:20px;text-align:center;color:var(--muted);">Loading...</div>
+                                    </div>
+                                    <div style="text-align:center; padding:10px;">
+                                        <a asp-controller="Notification" asp-action="Index" class="btn-fms btn-sm-fms btn-primary-fms w-100">View All</a>
+                                    </div>
+                                </div>
+                            </li>
+
+                            <li class="nav-item">
+                                <span class="navbar-text text-white me-3">Hello, @User.Identity.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="form-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link text-white" asp-controller="Account" asp-action="Login">Login</a></li>
+                        }
+                    </ul>
                 </div>
             </div>
-        </header>
+        </nav>
+    </header>
 
-        <!-- PAGE CONTENT -->
-        <main class="page-content">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+
+        <!-- Toggle button (visible for all authenticated users) -->
+        <button class="btn btn-outline-light me-2 sidebar-toggle-btn" type="button">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div class="admin-sidebar" id="adminSidebar">
+            @if (role == "ADMINISTRATOR")
+            {
+                <div class="sidebar-heading">Administration</div>
+                <ul class="sidebar-nav">
+                    <li><a asp-controller="Admin" asp-action="DashBoard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                    <li><a asp-controller="Admin" asp-action="Customers" class="@(ViewData["ActivePage"]?.ToString() == "Customers" ? "active" : "")"><i class="fa-solid fa-store"></i> Customers</a></li>
+                    <li><a asp-controller="Admin" asp-action="Employees" class="@(ViewData["ActivePage"]?.ToString() == "Employees" ? "active" : "")"><i class="fa-solid fa-users-gear"></i> Employees</a></li>
+                    <li><a asp-controller="Admin" asp-action="Fridges" class="@(ViewData["ActivePage"]?.ToString() == "Fridges" ? "active" : "")"><i class="fa-solid fa-snowflake"></i> Fridges</a></li>
+                    <li><a asp-controller="Admin" asp-action="Suppliers" class="@(ViewData["ActivePage"]?.ToString() == "Suppliers" ? "active" : "")"><i class="fa-solid fa-truck"></i> Suppliers</a></li>
+                    <li><a asp-controller="Admin" asp-action="Locations" class="@(ViewData["ActivePage"]?.ToString() == "Locations" ? "active" : "")"><i class="fa-solid fa-location-dot"></i> Locations</a></li>
+                </ul>
+            }
+            else if (role == "CUSTOMERLIAISON")
+            {
+                <div class="sidebar-heading">Customer Management</div>
+                <ul class="sidebar-nav">
+                    <li><a asp-controller="CustomerLiaisonManagement" asp-action="DashBoard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                    <li><a asp-controller="CustomerLiaisonManagement" asp-action="Customers" class="@(ViewData["ActivePage"]?.ToString() == "Customers" ? "active" : "")"><i class="fa-solid fa-store"></i> Customers</a></li>
+                    <li><a asp-controller="CustomerLiaisonManagement" asp-action="Allocations" class="@(ViewData["ActivePage"]?.ToString() == "Allocations" ? "active" : "")"><i class="fa-solid fa-link"></i> Allocations</a></li>
+                    <li><a asp-controller="CustomerLiaisonManagement" asp-action="CreateAllocation" class="@(ViewData["ActivePage"]?.ToString() == "CreateAllocation" ? "active" : "")"><i class="fa-solid fa-plus"></i> New Allocation</a></li>
+                    <li><a asp-controller="CustomerLiaisonManagement" asp-action="FridgeHistory" class="@(ViewData["ActivePage"]?.ToString() == "History" ? "active" : "")"><i class="fa-solid fa-clock-rotate-left"></i> Fridge History</a></li>
+                </ul>
+            }
+            else if (role == "INVENTORYLIAISON")
+            {
+                <div class="sidebar-heading">Inventory</div>
+                <ul class="sidebar-nav">
+                    <li><a asp-controller="InventoryLiaisonManagement" asp-action="DashBoard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                    <li><a asp-controller="InventoryLiaisonManagement" asp-action="Inventory" class="@(ViewData["ActivePage"]?.ToString() == "Inventory" ? "active" : "")"><i class="fa-solid fa-warehouse"></i> Fridge Inventory</a></li>
+                    <li><a asp-controller="InventoryLiaisonManagement" asp-action="ReceiveFridge" class="@(ViewData["ActivePage"]?.ToString() == "ReceiveFridge" ? "active" : "")"><i class="fa-solid fa-plus"></i> Receive Fridge</a></li>
+                    <li><a asp-controller="InventoryLiaisonManagement" asp-action="ProcessAllocations" class="@(ViewData["ActivePage"]?.ToString() == "ProcessAllocations" ? "active" : "")"><i class="fa-solid fa-people-arrows"></i> Process Allocations</a></li>
+                    <li><a asp-controller="InventoryLiaisonManagement" asp-action="PurchaseRequests" class="@(ViewData["ActivePage"]?.ToString() == "PurchaseRequests" ? "active" : "")"><i class="fa-solid fa-file-signature"></i> Purchase Requests</a></li>
+                    <li><a asp-controller="InventoryLiaisonManagement" asp-action="CreatePurchaseRequest" class="@(ViewData["ActivePage"]?.ToString() == "CreatePurchaseRequest" ? "active" : "")"><i class="fa-solid fa-cart-plus"></i> New Request</a></li>
+                </ul>
+            }
+            else if (role == "CUSTOMER")
+            {
+                <div class="sidebar-heading">My Account</div>
+                <ul class="sidebar-nav">
+                    <li><a asp-controller="Customer" asp-action="DashBoard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                    <li><a asp-controller="Customer" asp-action="MyFridges" class="@(ViewData["ActivePage"]?.ToString() == "MyFridges" ? "active" : "")"><i class="fa-solid fa-snowflake"></i> My Fridges</a></li>
+                    <li><a asp-controller="Customer" asp-action="MyFaults" class="@(ViewData["ActivePage"]?.ToString() == "MyFaults" ? "active" : "")"><i class="fa-solid fa-triangle-exclamation"></i> My Faults</a></li>
+                    <li><a asp-controller="Customer" asp-action="MyFridgeRequests" class="@(ViewData["ActivePage"]?.ToString() == "MyFridgeRequests" ? "active" : "")"><i class="fa-solid fa-clipboard-list"></i> My Requests</a></li>
+                    <li><a asp-controller="Customer" asp-action="UpcomingMaintenance" class="@(ViewData["ActivePage"]?.ToString() == "UpcomingMaintenance" ? "active" : "")"><i class="fa-solid fa-calendar-check"></i> Upcoming Maintenance</a></li>
+                </ul>
+            }
+            else if (role == "FAULTTECHNICIAN")
+            {
+                <div class="sidebar-heading">Faults</div>
+                <ul class="sidebar-nav">
+                    <li><a asp-controller="FaultTechnician" asp-action="DashBoard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                    <li><a asp-controller="FaultTechnician" asp-action="Index" class="@(ViewData["ActivePage"]?.ToString() == "AllFaults" ? "active" : "")"><i class="fa-solid fa-list"></i> All Faults</a></li>
+                    <li><a asp-controller="FaultTechnician" asp-action="MyAssignedFaults" class="@(ViewData["ActivePage"]?.ToString() == "Assigned" ? "active" : "")"><i class="fa-solid fa-user-check"></i> My Assigned</a></li>
+                    <li><a asp-controller="FaultTechnician" asp-action="Details" class="@(ViewData["ActivePage"]?.ToString() == "Details" ? "active" : "")"><i class="fa-solid fa-magnifying-glass"></i> Fault Details</a></li>
+                </ul>
+            }
+            else if (role == "MAINTENANCETECHNICIAN")
+            {
+                <div class="sidebar-heading">Maintenance</div>
+                <ul class="sidebar-nav">
+                    <li><a asp-controller="Maintenance" asp-action="DashBoard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                    <li><a asp-controller="Maintenance" asp-action="Index" class="@(ViewData["ActivePage"]?.ToString() == "Schedules" ? "active" : "")"><i class="fa-solid fa-calendar"></i> Schedules</a></li>
+                    <li><a asp-controller="Maintenance" asp-action="CustomerFridges" class="@(ViewData["ActivePage"]?.ToString() == "CustomerFridges" ? "active" : "")"><i class="fa-solid fa-store"></i> Customer Fridges</a></li>
+                    <li><a asp-controller="Maintenance" asp-action="History" class="@(ViewData["ActivePage"]?.ToString() == "History" ? "active" : "")"><i class="fa-solid fa-clock-rotate-left"></i> Service History</a></li>
+                </ul>
+            }
+            else if (role == "PURCHASINGMANAGER")
+            {
+                <div class="sidebar-heading">Purchasing</div>
+                <ul class="sidebar-nav">
+                    <li><a asp-controller="Purchasing" asp-action="DashBoard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                    <li><a asp-controller="Purchasing" asp-action="Suppliers" class="@(ViewData["ActivePage"]?.ToString() == "Suppliers" ? "active" : "")"><i class="fa-solid fa-truck"></i> Suppliers</a></li>
+                    <li><a asp-controller="Purchasing" asp-action="PurchaseRequests" class="@(ViewData["ActivePage"]?.ToString() == "PurchaseRequests" ? "active" : "")"><i class="fa-solid fa-file-invoice"></i> Requests</a></li>
+                    <li><a asp-controller="Purchasing" asp-action="RFQs" class="@(ViewData["ActivePage"]?.ToString() == "RFQs" ? "active" : "")"><i class="fa-solid fa-file-signature"></i> RFQs</a></li>
+                    <li><a asp-controller="Purchasing" asp-action="PurchaseOrders" class="@(ViewData["ActivePage"]?.ToString() == "PurchaseOrders" ? "active" : "")"><i class="fa-solid fa-truck-fast"></i> Purchase Orders</a></li>
+                </ul>
+            }
+            else if (role == "SUPPLIER")
+            {
+                <div class="sidebar-heading">Supplier Portal</div>
+                <ul class="sidebar-nav">
+                    <li><a asp-controller="Supplier" asp-action="DashBoard" class="@(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                    <li><a asp-controller="Supplier" asp-action="RFQs" class="@(ViewData["ActivePage"]?.ToString() == "RFQs" ? "active" : "")"><i class="fa-solid fa-file-invoice"></i> RFQs</a></li>
+                    <li><a asp-controller="Supplier" asp-action="PurchaseOrders" class="@(ViewData["ActivePage"]?.ToString() == "PurchaseOrders" ? "active" : "")"><i class="fa-solid fa-truck"></i> Purchase Orders</a></li>
+                    <li><a asp-controller="Supplier" asp-action="Profile" class="@(ViewData["ActivePage"]?.ToString() == "Profile" ? "active" : "")"><i class="fa-solid fa-building"></i> Company Profile</a></li>
+                </ul>
+            }
+
+            <!-- Common "My Account" section (collapsible) -->
+            <div class="sidebar-heading" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleAccountMenu()">
+                <span>My Account</span>
+                <i id="accountMenuCaret" class="fa-solid fa-chevron-down" style="font-size:12px; transition: transform 0.3s;"></i>
+            </div>
+            <ul class="sidebar-nav" id="accountMenu" style="display:block;">
+                <li><a asp-controller="Account" asp-action="ViewProfile" class="@(ViewData["ActivePage"]?.ToString() == "Profile" ? "active" : "")"><i class="fa-solid fa-id-card"></i> View Profile</a></li>
+                <li><a asp-controller="Account" asp-action="ChangePassword" class="@(ViewData["ActivePage"]?.ToString() == "ChangePassword" ? "active" : "")"><i class="fa-solid fa-lock"></i> Change Password</a></li>
+                <li>
+                    @if (User.FindFirstValue("IsTwoFactorEnabled") == "True")
+                    {
+                        <a asp-controller="Account" asp-action="DisableTwoFactor" class="text-danger"><i class="fa-solid fa-shield-halved"></i> Disable 2FA</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="SetupTwoFactor" class="@(ViewData["ActivePage"]?.ToString() == "SetupTwoFactor" ? "active" : "")"><i class="fa-solid fa-shield-halved"></i> Set Up 2FA</a>
+                    }
+                </li>
+                <li><a asp-controller="Account" asp-action="ManageDevices" class="@(ViewData["ActivePage"]?.ToString() == "Devices" ? "active" : "")"><i class="fa-solid fa-mobile-screen"></i> Remembered Devices</a></li>
+                <li><a asp-controller="Account" asp-action="DeleteAccount" class="@(ViewData["ActivePage"]?.ToString() == "DeleteAccount" ? "active" : "")"><i class="fa-solid fa-user-slash"></i> Deactivate Account</a></li>
+                <li>
+                    <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" style="background:none;border:none;color:var(--muted);padding:12px 20px;width:100%;text-align:left;font-size:14px;font-weight:500;display:flex;align-items:center;gap:12px;cursor:pointer;">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    }
+
+
+
+
+    <div class="main-content" id="mainContent">
+        <div class="container pt-4" style="padding-top: 80px !important;">
             @if (TempData["SuccessMessage"] != null)
             {
-                <div class="alert-ice-success mb-3" role="alert">
-                    <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
-                </div>
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
             }
             @if (TempData["ErrorMessage"] != null)
             {
-                <div class="alert-ice-danger mb-3" role="alert">
-                    <i class="fas fa-circle-xmark"></i> @TempData["ErrorMessage"]
-                </div>
-            }
-            @if (TempData["WarningMessage"] != null)
-            {
-                <div class="alert-ice-warning mb-3" role="alert">
-                    <i class="fas fa-triangle-exclamation"></i> @TempData["WarningMessage"]
-                </div>
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
             }
             @RenderBody()
-        </main>
+        </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Global modal helper -->
+    <script>
+        if (typeof openModal === 'undefined') {
+            function openModal(id) { document.getElementById(id).classList.add('show'); }
+            function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+            document.querySelectorAll('.fms-modal-overlay').forEach(o => {
+                o.addEventListener('click', function(e) {
+                    if (e.target === this) this.classList.remove('show');
+                });
+            });
+        }
+    </script>
+
+    <script>
+        (function() {
+            const sidebar = document.getElementById('adminSidebar');
+            const mainContent = document.getElementById('mainContent');
+            const overlay = document.getElementById('sidebarOverlay');
+            const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+
+            if (!sidebar || !toggleBtn) return;
+
+            toggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (window.innerWidth > 768) {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                } else {
+                    sidebar.classList.toggle('mobile-open');
+                    overlay.classList.toggle('show');
+                }
+            });
+
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    sidebar.classList.remove('mobile-open');
+                    overlay.classList.remove('show');
+                });
+            }
+
+            sidebar.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('mobile-open');
+                        overlay.classList.remove('show');
+                    }
+                });
+            });
+
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('mobile-open');
+                    overlay.classList.remove('show');
+                }
+            });
+        })();
+
+        function toggleAccountMenu() {
+            var menu = document.getElementById('accountMenu');
+            var caret = document.getElementById('accountMenuCaret');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+                caret.style.transform = 'rotate(0deg)';
+            } else {
+                menu.style.display = 'none';
+                caret.style.transform = 'rotate(-90deg)';
+            }
+        }
+    </script>
+
+    <!-- Notification Scripts -->
+    <script>
+        let notificationDropdownOpen = false;
+
+        async function fetchUnreadCount() {
+            try {
+                const response = await fetch('/Notification/GetUnreadCount');
+                const data = await response.json();
+                const count = data.count;
+                const badge = document.getElementById('notificationCountBadge');
+                if (count > 0) {
+                    badge.style.display = 'inline-block';
+                    badge.textContent = count;
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Error fetching unread count', err);
+            }
+        }
+
+        async function loadUnreadNotifications() {
+            const listDiv = document.getElementById('notificationList');
+            listDiv.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);">Loading...</div>';
+            try {
+                const response = await fetch('/Notification/Unread');
+                const data = await response.json();
+                if (data.success) {
+                    if (data.notifications.length === 0) {
+                        listDiv.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);">No new notifications</div>';
+                        return;
+                    }
+                    let html = '';
+                    data.notifications.forEach(n => {
+                        html += `
+                        <div class="notification-item unread" data-id="${n.id}" onclick="markAsRead(${n.id})">
+                            <div class="notif-title"><i class="fa-solid fa-circle-info me-2"></i>${n.title}</div>
+                            <div class="notif-msg">${n.message}</div>
+                            <div class="notif-time">${n.createdAt}</div>
+                        </div>`;
+                    });
+                    listDiv.innerHTML = html;
+                } else {
+                    listDiv.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);">Failed to load notifications</div>';
+                }
+            } catch (err) {
+                listDiv.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);">Error loading</div>';
+            }
+        }
+
+        async function markAsRead(id) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const formData = new FormData();
+            formData.append('id', id);
+            if (token) formData.append('__RequestVerificationToken', token);
+
+            try {
+                const response = await fetch('/Notification/MarkAsRead', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    fetchUnreadCount();
+                    loadUnreadNotifications();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function markAllAsRead() {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const formData = new FormData();
+            if (token) formData.append('__RequestVerificationToken', token);
+
+            try {
+                const response = await fetch('/Notification/MarkAllAsRead', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    fetchUnreadCount();
+                    loadUnreadNotifications();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notificationDropdown');
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            } else {
+                loadUnreadNotifications();
+                dropdown.classList.add('show');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const bell = document.getElementById('notificationBell');
+            const dropdown = document.getElementById('notificationDropdown');
+            if (!bell?.contains(event.target) && !dropdown?.contains(event.target)) {
+                dropdown?.classList.remove('show');
+            }
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchUnreadCount();
+            // Refresh count every 60 seconds
+            setInterval(fetchUnreadCount, 60000);
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -1,6 +1,7 @@
 ﻿using FridgeManagement.AppStatus;
 using FridgeManagement.Data;
 using FridgeManagement.Models;
+using FridgeManagement.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -12,10 +13,12 @@ namespace FridgeManagement.Controllers
     public class PurchasingController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly NotificationService _notificationService;   // new
 
-        public PurchasingController(ApplicationDbContext context)
+        public PurchasingController(ApplicationDbContext context, NotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;   // new
         }
 
         // ==================== DASHBOARD ====================
@@ -52,6 +55,7 @@ namespace FridgeManagement.Controllers
             return View();
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateSupplier(Supplier supplier)
@@ -60,8 +64,47 @@ namespace FridgeManagement.Controllers
             {
                 supplier.Status = Status.Active;
                 _context.Add(supplier);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Supplier added.";
+                await _context.SaveChangesAsync();   // 1) Save the Supplier entity
+
+                // 2) Create a matching User account if one doesn't already exist
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == supplier.Email &&
+                                              u.Role == UserRole.SUPPLIER &&
+                                              u.Status == Status.Active);
+
+                if (existingUser == null)
+                {
+                    var tempPassword = Guid.NewGuid().ToString().Substring(0, 8);
+                    var newUser = new User
+                    {
+                        Name = supplier.Name,
+                        Surname = "Supplier",
+                        Username = supplier.Email,
+                        Email = supplier.Email,
+                        PasswordHash = tempPassword,
+                        Role = UserRole.SUPPLIER,
+                        Gender = GenderType.Male,
+                        Status = Status.Active,
+                        Title = "Supplier"
+                    };
+
+                    _context.Users.Add(newUser);
+                    await _context.SaveChangesAsync();
+
+                    // 3) Send welcome notification
+                    var adminName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Administrator";
+                    await _notificationService.CreateNotificationAsync(
+                        userId: newUser.Id,
+                        title: "Welcome to Fridge Management – Supplier Portal",
+                        message: $"Your supplier account was created by {adminName}. " +
+                                 $"Your temporary password is: {tempPassword}. " +
+                                 "Please change it after logging in.",
+                        type: NotificationType.Success,
+                        actionUrl: "/Supplier/DashBoard"
+                    );
+                }
+
+                TempData["SuccessMessage"] = "Supplier added successfully.";
                 return RedirectToAction(nameof(Suppliers));
             }
             return View(supplier);

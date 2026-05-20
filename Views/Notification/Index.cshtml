@@ -1,0 +1,259 @@
+@model List<FridgeManagement.Models.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+    var unreadCount = ViewBag.UnreadCount ?? 0;
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-bell me-2"></i>Notifications
+                        @if (unreadCount > 0)
+                        {
+                            <span class="badge bg-danger ms-2">@unreadCount unread</span>
+                        }
+                    </h4>
+                    @if (unreadCount > 0)
+                    {
+                        <button type="button" class="btn btn-sm btn-primary" id="markAllReadBtn">
+                            <i class="fas fa-check-double me-1"></i>Mark All as Read
+                        </button>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    @if (Model == null || !Model.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No notifications yet</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush" id="notificationsList">
+                            @foreach (var notification in Model)
+                            {
+                                <div class="list-group-item notification-item @(notification.IsRead ? "read" : "unread")" data-id="@notification.Id">
+                                    <div class="d-flex w-100 justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <span class="notification-icon me-2">
+                                                    @switch (notification.Type)
+                                                    {
+                                                        case FridgeManagement.AppStatus.NotificationType.Success:
+                                                            <i class="fas fa-check-circle text-success fa-lg"></i>
+                                                            break;
+                                                        case FridgeManagement.AppStatus.NotificationType.Warning:
+                                                            <i class="fas fa-exclamation-triangle text-warning fa-lg"></i>
+                                                            break;
+                                                        case FridgeManagement.AppStatus.NotificationType.Error:
+                                                            <i class="fas fa-times-circle text-danger fa-lg"></i>
+                                                            break;
+                                                        case FridgeManagement.AppStatus.NotificationType.FaultAssigned:
+                                                        case FridgeManagement.AppStatus.NotificationType.FaultScheduled:
+                                                        case FridgeManagement.AppStatus.NotificationType.FaultResolved:
+                                                            <i class="fas fa-tools text-primary fa-lg"></i>
+                                                            break;
+                                                        case FridgeManagement.AppStatus.NotificationType.MaintenanceScheduled:
+                                                        case FridgeManagement.AppStatus.NotificationType.MaintenanceCompleted:
+                                                            <i class="fas fa-wrench text-info fa-lg"></i>
+                                                            break;
+                                                        case FridgeManagement.AppStatus.NotificationType.PurchaseRequestApproved:
+                                                        case FridgeManagement.AppStatus.NotificationType.QuotationReceived:
+                                                        case FridgeManagement.AppStatus.NotificationType.OrderPlaced:
+                                                            <i class="fas fa-shopping-cart text-success fa-lg"></i>
+                                                            break;
+                                                        default:
+                                                            <i class="fas fa-info-circle text-info fa-lg"></i>
+                                                            break;
+                                                    }
+                                                </span>
+                                                <h6 class="mb-0 fw-bold">@notification.Title</h6>
+                                            </div>
+                                            <p class="mb-2 text-muted">@notification.Message</p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                @notification.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                                            </small>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-end ms-3">
+                                            @if (!notification.IsRead)
+                                            {
+                                                <span class="badge bg-primary mb-2">New</span>
+                                            }
+                                            <div class="btn-group btn-group-sm">
+                                                @if (!string.IsNullOrEmpty(notification.ActionUrl))
+                                                {
+                                                    <a href="@notification.ActionUrl" class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                }
+                                                @if (!notification.IsRead)
+                                                {
+                                                    <button type="button" class="btn btn-outline-success btn-sm mark-read-btn" data-id="@notification.Id">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                }
+                                                <button type="button" class="btn btn-outline-danger btn-sm delete-btn" data-id="@notification.Id">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .notification-item {
+        transition: background-color 0.3s ease;
+    }
+
+    .notification-item.unread {
+        background-color: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .notification-item.read {
+        background-color: white;
+        opacity: 0.8;
+    }
+
+    .notification-item:hover {
+        background-color: #e9ecef;
+    }
+
+    .notification-icon {
+        min-width: 30px;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // CSRF token
+            function getAntiForgeryToken() {
+                return $('input[name="__RequestVerificationToken"]').val();
+            }
+
+            // Mark single notification as read
+            $('.mark-read-btn').on('click', function () {
+                const notificationId = $(this).data('id');
+                const $item = $(this).closest('.notification-item');
+
+                $.ajax({
+                    url: '@Url.Action("MarkAsRead", "Notification")',
+                    type: 'POST',
+                    data: {
+                        id: notificationId,
+                        __RequestVerificationToken: getAntiForgeryToken()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            $item.removeClass('unread').addClass('read');
+                            $item.find('.badge.bg-primary').remove();
+                            $item.find('.mark-read-btn').parent().remove();
+                            
+                            // Update unread count in header
+                            const newCount = response.unreadCount;
+                            if (newCount > 0) {
+                                $('.card-header .badge').text(newCount + ' unread');
+                            } else {
+                                $('.card-header .badge').remove();
+                                $('#markAllReadBtn').remove();
+                            }
+                            
+                            // Update bell icon count
+                            updateNotificationBell();
+                        }
+                    }
+                });
+            });
+
+            // Mark all as read
+            $('#markAllReadBtn').on('click', function () {
+                $.ajax({
+                    url: '@Url.Action("MarkAllAsRead", "Notification")',
+                    type: 'POST',
+                    data: {
+                        __RequestVerificationToken: getAntiForgeryToken()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            $('.notification-item.unread').removeClass('unread').addClass('read');
+                            $('.badge.bg-primary').remove();
+                            $('.mark-read-btn').parent().remove();
+                            $('.card-header .badge').remove();
+                            $('#markAllReadBtn').remove();
+                            
+                            // Update bell icon count
+                            updateNotificationBell();
+                        }
+                    }
+                });
+            });
+
+            // Delete notification
+            $('.delete-btn').on('click', function () {
+                if (!confirm('Are you sure you want to delete this notification?')) {
+                    return;
+                }
+
+                const notificationId = $(this).data('id');
+                const $item = $(this).closest('.notification-item');
+
+                $.ajax({
+                    url: '@Url.Action("Delete", "Notification")',
+                    type: 'POST',
+                    data: {
+                        id: notificationId,
+                        __RequestVerificationToken: getAntiForgeryToken()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            $item.fadeOut(300, function () {
+                                $(this).remove();
+                                
+                                if ($('#notificationsList .notification-item').length === 0) {
+                                    location.reload();
+                                }
+                            });
+                            
+                            // Update bell icon count
+                            updateNotificationBell();
+                        }
+                    }
+                });
+            });
+
+            // Update notification bell in navbar
+            function updateNotificationBell() {
+                $.ajax({
+                    url: '@Url.Action("GetUnreadCount", "Notification")',
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.count > 0) {
+                            $('#notificationBadge').text(response.count).show();
+                        } else {
+                            $('#notificationBadge').hide();
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+@* Add CSRF token for AJAX requests *@
+<form id="antiForgeryForm">
+    @Html.AntiForgeryToken()
+</form>

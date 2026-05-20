@@ -1,0 +1,201 @@
+@* Notification Bell for Navbar - Add this to your _Layout.cshtml or navigation partial *@
+
+<li class="nav-item dropdown" id="notificationDropdown">
+    <a class="nav-link position-relative" href="#" id="notificationBell" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-bell fa-lg"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+              id="notificationBadge" style="display: none;">
+            0
+        </span>
+    </a>
+    <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationBell" style="width: 400px; max-height: 500px; overflow-y: auto;">
+        <div class="dropdown-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Notifications</h6>
+            <a href="@Url.Action("Index", "Notification")" class="btn btn-sm btn-link">View All</a>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div id="notificationDropdownContent">
+            <div class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</li>
+
+<style>
+    .notification-dropdown {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .notification-dropdown-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s;
+        cursor: pointer;
+    }
+
+    .notification-dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .notification-dropdown-item.unread {
+        background-color: #e7f3ff;
+    }
+
+    .notification-icon-small {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+
+    .notification-time {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        // Load notifications on page load
+        loadNotifications();
+
+        // Reload notifications every 30 seconds
+        setInterval(loadNotifications, 30000);
+
+        // Load notifications when dropdown is opened
+        $('#notificationBell').on('click', function () {
+            loadNotifications();
+        });
+
+        function loadNotifications() {
+            $.ajax({
+                url: '@Url.Action("Unread", "Notification")',
+                type: 'GET',
+                success: function (response) {
+                    if (response.success) {
+                        updateNotificationBadge(response.count);
+                        renderNotifications(response.notifications);
+                    }
+                },
+                error: function () {
+                    $('#notificationDropdownContent').html(
+                        '<div class="text-center py-3 text-muted">Failed to load notifications</div>'
+                    );
+                }
+            });
+        }
+
+        function updateNotificationBadge(count) {
+            const $badge = $('#notificationBadge');
+            if (count > 0) {
+                $badge.text(count > 99 ? '99+' : count).show();
+            } else {
+                $badge.hide();
+            }
+        }
+
+        function renderNotifications(notifications) {
+            const $content = $('#notificationDropdownContent');
+
+            if (!notifications || notifications.length === 0) {
+                $content.html('<div class="text-center py-4 text-muted">No new notifications</div>');
+                return;
+            }
+
+            let html = '';
+            notifications.slice(0, 5).forEach(notification => {
+                const icon = getNotificationIcon(notification.type);
+                const timeAgo = getTimeAgo(notification.createdAt);
+
+                html += `
+                    <div class="notification-dropdown-item unread" onclick="handleNotificationClick(${notification.id}, '${notification.actionUrl || ''}')">
+                        <div class="d-flex">
+                            <div class="notification-icon-small ${icon.bgClass} me-3">
+                                <i class="${icon.icon} ${icon.color}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold mb-1">${escapeHtml(notification.title)}</div>
+                                <div class="text-muted small mb-1">${escapeHtml(notification.message)}</div>
+                                <div class="notification-time">${timeAgo}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (notifications.length > 5) {
+                html += `
+                    <div class="text-center py-2">
+                        <a href="@Url.Action("Index", "Notification")" class="btn btn-sm btn-link">
+                            View all ${notifications.length} notifications
+                        </a>
+                    </div>
+                `;
+            }
+
+            $content.html(html);
+        }
+
+        function getNotificationIcon(type) {
+            const iconMap = {
+                'Success': { icon: 'fas fa-check-circle', color: 'text-success', bgClass: 'bg-success-subtle' },
+                'Warning': { icon: 'fas fa-exclamation-triangle', color: 'text-warning', bgClass: 'bg-warning-subtle' },
+                'Error': { icon: 'fas fa-times-circle', color: 'text-danger', bgClass: 'bg-danger-subtle' },
+                'FaultAssigned': { icon: 'fas fa-tools', color: 'text-primary', bgClass: 'bg-primary-subtle' },
+                'FaultScheduled': { icon: 'fas fa-calendar-check', color: 'text-info', bgClass: 'bg-info-subtle' },
+                'FaultResolved': { icon: 'fas fa-check-double', color: 'text-success', bgClass: 'bg-success-subtle' },
+                'MaintenanceScheduled': { icon: 'fas fa-wrench', color: 'text-info', bgClass: 'bg-info-subtle' },
+                'MaintenanceCompleted': { icon: 'fas fa-check', color: 'text-success', bgClass: 'bg-success-subtle' },
+                'PurchaseRequestApproved': { icon: 'fas fa-shopping-cart', color: 'text-success', bgClass: 'bg-success-subtle' },
+                'FridgeAllocated': { icon: 'fas fa-box', color: 'text-primary', bgClass: 'bg-primary-subtle' },
+                'QuotationReceived': { icon: 'fas fa-file-invoice-dollar', color: 'text-info', bgClass: 'bg-info-subtle' }
+            };
+
+            return iconMap[type] || { icon: 'fas fa-info-circle', color: 'text-info', bgClass: 'bg-info-subtle' };
+        }
+
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + ' days ago';
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    });
+
+    function handleNotificationClick(notificationId, actionUrl) {
+        // Mark as read
+        $.ajax({
+            url: '@Url.Action("MarkAsRead", "Notification")',
+            type: 'POST',
+            data: {
+                id: notificationId,
+                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function () {
+                // Redirect if there's an action URL
+                if (actionUrl && actionUrl !== '' && actionUrl !== 'null') {
+                    window.location.href = actionUrl;
+                } else {
+                    // Otherwise just reload notifications
+                    loadNotifications();
+                }
+            }
+        });
+    }
+</script>

@@ -1,10 +1,12 @@
 ﻿using FridgeManagement.AppStatus;
 using FridgeManagement.Data;
 using FridgeManagement.Models;
+using FridgeManagement.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FridgeManagement.Controllers
 {
@@ -12,11 +14,14 @@ namespace FridgeManagement.Controllers
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly NotificationService _notificationService;   // new
 
-        public AdminController(ApplicationDbContext context)
+        public AdminController(ApplicationDbContext context, NotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
+
 
         // ==================== DASHBOARD ====================
         public IActionResult DashBoard()
@@ -55,11 +60,52 @@ namespace FridgeManagement.Controllers
             {
                 customer.Status = Status.Active;
                 _context.Add(customer);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();   // 1) Save the Customer entity
+
+                // 2) Create a matching User account if one doesn't already exist
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == customer.Email &&
+                                              u.Role == UserRole.CUSTOMER &&
+                                              u.Status == Status.Active);
+
+                if (existingUser == null)
+                {
+                    // Generate a temporary password (8 random characters)
+                    var tempPassword = Guid.NewGuid().ToString().Substring(0, 8);
+                    var newUser = new User
+                    {
+                        Name = customer.Name,                  // use business name as first name
+                        Surname = "Customer",
+                        Username = customer.Email,
+                        Email = customer.Email,
+                        PasswordHash = tempPassword,           // plain text for demo (hash in production)
+                        Role = UserRole.CUSTOMER,
+                        Gender = GenderType.Male,
+                        Status = Status.Active,
+                        Title = "Mr"
+                    };
+
+                    _context.Users.Add(newUser);
+                    await _context.SaveChangesAsync();
+
+                    // 3) Send welcome notification
+                    var adminName = User.FindFirst(ClaimTypes.Name)?.Value ?? "Administrator";
+                    await _notificationService.CreateNotificationAsync(
+                        userId: newUser.Id,
+                        title: "Welcome to Fridge Management!",
+                        message: $"Your account was created by {adminName}. " +
+                                 $"Your temporary password is: {tempPassword}. " +
+                                 "Please change it after logging in.",
+                        type: NotificationType.Success,
+                        actionUrl: "/Customer/DashBoard"
+                    );
+                }
+
                 return RedirectToAction(nameof(Customers));
             }
             return View(customer);
         }
+    
 
         public async Task<IActionResult> EditCustomer(int? id)
         {
@@ -185,12 +231,32 @@ namespace FridgeManagement.Controllers
                 employee.Status = Status.Active;
                 _context.Add(employee);
                 await _context.SaveChangesAsync();
+
+                // ────── NEW: Send welcome notification if the new user is a CUSTOMER ──────
+                if (employee.Role == UserRole.CUSTOMER)
+                {
+                    // Get the name of the admin who is currently logged in
+                    var adminName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                                    ?? "Administrator";
+
+                    await _notificationService.CreateNotificationAsync(
+                        userId: employee.Id,
+                        title: "Welcome to Fridge Management!",
+                        message: $"Your account was created by {adminName}. You can now log in and manage your fridges.",
+                        type: NotificationType.Info,
+                        actionUrl: "/Customer/DashBoard"
+                    );
+                }
+                // ─────────────────────────────────────────────────────────────────────────
+
                 return RedirectToAction(nameof(Employees));
             }
+
             ViewBag.Roles = new SelectList(Enum.GetValues(typeof(UserRole)), employee.Role);
             ViewBag.Genders = new SelectList(Enum.GetValues(typeof(GenderType)), employee.Gender);
             return View(employee);
         }
+    
 
         public async Task<IActionResult> EditEmployee(int? id)
         {
@@ -574,12 +640,51 @@ namespace FridgeManagement.Controllers
             {
                 supplier.Status = Status.Active;
                 _context.Add(supplier);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();   // 1) Save the Supplier entity
+
+                // 2) Create a matching User account if one doesn't already exist
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == supplier.Email &&
+                                              u.Role == UserRole.SUPPLIER &&
+                                              u.Status == Status.Active);
+
+                if (existingUser == null)
+                {
+                    var tempPassword = Guid.NewGuid().ToString().Substring(0, 8);
+                    var newUser = new User
+                    {
+                        Name = supplier.Name,
+                        Surname = "Supplier",
+                        Username = supplier.Email,
+                        Email = supplier.Email,
+                        PasswordHash = tempPassword,
+                        Role = UserRole.SUPPLIER,
+                        Gender = GenderType.Male,
+                        Status = Status.Active,
+                        Title = "Supplier"
+                    };
+
+                    _context.Users.Add(newUser);
+                    await _context.SaveChangesAsync();
+
+                    // 3) Send welcome notification
+                    var adminName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Administrator";
+                    await _notificationService.CreateNotificationAsync(
+                        userId: newUser.Id,
+                        title: "Welcome to Fridge Management – Supplier Portal",
+                        message: $"Your supplier account was created by {adminName}. " +
+                                 $"Your temporary password is: {tempPassword}. " +
+                                 "Please change it after logging in.",
+                        type: NotificationType.Success,
+                        actionUrl: "/Supplier/DashBoard"
+                    );
+                }
+
+                TempData["SuccessMessage"] = "Supplier added successfully.";
                 return RedirectToAction(nameof(Suppliers));
             }
             return View(supplier);
         }
-
         public async Task<IActionResult> EditSupplier(int? id)
         {
             if (id == null) return NotFound();

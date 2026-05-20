@@ -9,6 +9,7 @@ namespace FridgeManagement.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
+        public DbSet<Notification> Notifications { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Location> Locations { get; set; }
@@ -75,6 +76,22 @@ namespace FridgeManagement.Data
 
             modelBuilder.Entity<DeliveryNote>()
                 .HasOne(d => d.PurchaseOrder).WithMany().HasForeignKey(d => d.PurchaseOrderId).OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<Notification>()
+               .HasOne(n => n.User)
+               .WithMany()
+               .HasForeignKey(n => n.UserId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Notification>()
+                .HasIndex(n => new { n.UserId, n.IsRead })
+                .HasDatabaseName("IX_Notifications_UserId_IsRead");
+
+            modelBuilder.Entity<Notification>()
+                .HasIndex(n => n.CreatedAt)
+                .HasDatabaseName("IX_Notifications_CreatedAt");
+
 
             // ────────── Seed Users (Employees / System Accounts) ──────────
             modelBuilder.Entity<User>().HasData(

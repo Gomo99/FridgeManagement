@@ -1,6 +1,7 @@
 ﻿using FridgeManagement.AppStatus;
 using FridgeManagement.Data;
 using FridgeManagement.Models;
+using FridgeManagement.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -12,11 +13,14 @@ namespace FridgeManagement.Controllers
     public class CustomerLiaisonManagementController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly NotificationService _notificationService;   // new
 
-        public CustomerLiaisonManagementController(ApplicationDbContext context)
+        public CustomerLiaisonManagementController(ApplicationDbContext context, NotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
+
 
         // ==================== DASHBOARD ====================
         public IActionResult DashBoard()
@@ -66,6 +70,26 @@ namespace FridgeManagement.Controllers
                 .Where(a => a.Status == AllocationStatus.Active)
                 .OrderByDescending(a => a.AllocationDate)
                 .ToListAsync();
+
+            // ---- ADD THESE LINES ----
+            var customers = await _context.Customers
+                .Where(c => c.Status == Status.Active)
+                .Select(c => new { value = c.Id.ToString(), text = c.Name })
+                .ToListAsync();
+
+            var allocatedFridgeIds = _context.FridgeAllocations
+                .Where(a => a.Status == AllocationStatus.Active)
+                .Select(a => a.FridgeId);
+
+            var availableFridges = await _context.Fridges
+                .Where(f => f.Status == Status.Active && !allocatedFridgeIds.Contains(f.Id))
+                .Select(f => new { value = f.Id.ToString(), text = f.SerialNumber })
+                .ToListAsync();
+
+            ViewBag.CustomerJson = System.Text.Json.JsonSerializer.Serialize(customers);
+            ViewBag.FridgeJson = System.Text.Json.JsonSerializer.Serialize(availableFridges);
+            // ------------------------
+
             return View(allocations);
         }
 
@@ -93,7 +117,6 @@ namespace FridgeManagement.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Check fridge is still available
                 var alreadyAllocated = await _context.FridgeAllocations
                     .AnyAsync(a => a.FridgeId == allocation.FridgeId && a.Status == AllocationStatus.Active);
                 if (alreadyAllocated)
@@ -108,6 +131,30 @@ namespace FridgeManagement.Controllers
                 allocation.Status = AllocationStatus.Active;
                 _context.Add(allocation);
                 await _context.SaveChangesAsync();
+
+                // ───── NEW: Notify the customer ─────
+                var customer = await _context.Customers.FindAsync(allocation.CustomerId);
+                var fridge = await _context.Fridges.FindAsync(allocation.FridgeId);
+                if (customer != null && fridge != null)
+                {
+                    // Find the User account linked to this customer (by email)
+                    var user = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Email == customer.Email &&
+                                                  u.Role == UserRole.CUSTOMER &&
+                                                  u.Status == Status.Active);
+                    if (user != null)
+                    {
+                        await _notificationService.CreateNotificationAsync(
+                            userId: user.Id,
+                            title: "New Fridge Allocated",
+                            message: $"A fridge ({fridge.SerialNumber} - {fridge.Model}) has been allocated to your shop.",
+                            type: NotificationType.FridgeAllocated,
+                            actionUrl: "/Customer/MyFridges"
+                        );
+                    }
+                }
+                // ─────────────────────────────────
+
                 return RedirectToAction(nameof(Allocations));
             }
 
@@ -115,6 +162,7 @@ namespace FridgeManagement.Controllers
             ViewBag.Fridges = new SelectList(_context.Fridges.Where(f => f.Status == Status.Active), "Id", "SerialNumber", allocation.FridgeId);
             return View(allocation);
         }
+    
 
         // Return a fridge (end allocation)
         public async Task<IActionResult> ReturnAllocation(int? id)
