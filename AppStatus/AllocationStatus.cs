@@ -1,8 +1,9 @@
 ﻿namespace FridgeManagement.AppStatus
 {
-    public enum Status
+    public enum AllocationStatus
     {
         Active,
-        Inactive
+        Returned,
+        Cancelled
     }
 }
