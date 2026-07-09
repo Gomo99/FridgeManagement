@@ -19,6 +19,7 @@ namespace FridgeManagement.Data
         public DbSet<MaintenanceSchedule> MaintenanceSchedules { get; set; }
         public DbSet<MaintenanceLog> MaintenanceLogs { get; set; }
         public DbSet<FridgeAllocation> FridgeAllocations { get; set; }
+        public DbSet<RepairFeedback> RepairFeedbacks { get; set; }
         public DbSet<PurchaseRequest> PurchaseRequests { get; set; }
         public DbSet<FaultReport> FaultReports { get; set; }
         public DbSet<FridgeRequest> FridgeRequests { get; set; }
@@ -153,6 +154,19 @@ namespace FridgeManagement.Data
                 new PurchaseRequest { Id = 1, RequestedById = 3, Reason = "Low stock of Cooler X100", QuantityRequested = 5, RequestDate = new DateTime(2025, 4, 26), Status = PurchaseRequestStatus.Pending },
                 new PurchaseRequest { Id = 2, RequestedById = 3, Reason = "Need additional fridges for new customers", QuantityRequested = 10, RequestDate = new DateTime(2025, 4, 29), Status = PurchaseRequestStatus.Approved }
             );
+
+
+            modelBuilder.Entity<BusinessInfo>().HasData(new BusinessInfo
+            {
+                Id = 1,
+                CompanyName = "Beverage Manufacturer",
+                Address = "123 Main Street, Beverage City",
+                PhoneNumber = "012-345-6789",
+                Email = "info@beveragemanufacturer.com",
+                Website = "www.beveragemanufacturer.com",
+                TaxId = "TAX123456"
+            });
+
 
             // ────────── Enum → String conversion (all entities) ──────────
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())

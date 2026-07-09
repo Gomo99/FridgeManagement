@@ -1,0 +1,190 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Supplier Profile";
+    var supplier = ViewBag.Supplier as FridgeManagement.Models.Supplier;
+    var quotations = ViewBag.Quotations as List<FridgeManagement.Models.Quotation>;
+    var purchaseOrders = ViewBag.PurchaseOrders as List<FridgeManagement.Models.PurchaseOrder>;
+    var deliveryNotes = ViewBag.DeliveryNotes as List<FridgeManagement.Models.DeliveryNote>;
+    var fridgesPurchased = ViewBag.FridgesPurchased as List<FridgeManagement.Models.Fridge>;
+    var averageDeliveryDays = (double)ViewBag.AverageDeliveryDays;
+    var supplierRating = (double)ViewBag.SupplierRating;
+}
+
+<div class="fd-wrap" style="padding: 2rem;">
+    <div class="fd-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="fd-title">Supplier Profile</h1>
+            <p class="fd-sub">@supplier?.Name</p>
+        </div>
+        <a asp-action="Suppliers" class="btn-fms btn-ghost-fms">
+            <i class="fa-solid fa-arrow-left"></i> Back to Suppliers
+        </a>
+    </div>
+
+    <!-- Supplier Information -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Supplier Information</div>
+        </div>
+        <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div><strong>Company:</strong> @supplier?.Name</div>
+            <div><strong>Contact Person:</strong> @supplier?.ContactPerson</div>
+            <div><strong>Phone:</strong> @supplier?.PhoneNumber</div>
+            <div><strong>Email:</strong> @supplier?.Email</div>
+            <div style="grid-column: span 2;"><strong>Address:</strong> @supplier?.Address</div>
+        </div>
+    </div>
+
+    <!-- Quotation History -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Quotation History (@quotations?.Count)</div>
+        </div>
+        @if (quotations != null && quotations.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>RFQ</th>
+                        <th>Date Received</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var q in quotations)
+                    {
+                        <tr>
+                            <td>RFQ #@q.RFQId</td>
+                            <td>@q.ReceivedDate.ToString("yyyy-MM-dd")</td>
+                            <td>@q.TotalAmount.ToString("C")</td>
+                            <td>@q.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:20px;"><em>No quotations received.</em></div>
+        }
+    </div>
+
+    <!-- Purchase Orders -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Purchase Orders (@purchaseOrders?.Count)</div>
+        </div>
+        @if (purchaseOrders != null && purchaseOrders.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>Order Date</th>
+                        <th>Expected Delivery</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var po in purchaseOrders)
+                    {
+                        <tr>
+                            <td>@po.OrderDate.ToString("yyyy-MM-dd")</td>
+                            <td>@po.ExpectedDeliveryDate?.ToString("yyyy-MM-dd") ?? "N/A"</td>
+                            <td>@po.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:20px;"><em>No purchase orders placed.</em></div>
+        }
+    </div>
+
+    <!-- Delivery Notes -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Delivery Notes (@deliveryNotes?.Count)</div>
+        </div>
+        @if (deliveryNotes != null && deliveryNotes.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>Delivery Date</th>
+                        <th>Quantity</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var dn in deliveryNotes)
+                    {
+                        <tr>
+                            <td>@dn.DeliveryDate.ToString("yyyy-MM-dd")</td>
+                            <td>@dn.QuantityDelivered</td>
+                            <td>@dn.Notes</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:20px;"><em>No deliveries recorded.</em></div>
+        }
+    </div>
+
+    <!-- Fridges Purchased from this Supplier -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Fridges Purchased (@fridgesPurchased?.Count)</div>
+        </div>
+        @if (fridgesPurchased != null && fridgesPurchased.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>Serial Number</th>
+                        <th>Model</th>
+                        <th>Purchase Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fridge in fridgesPurchased)
+                    {
+                        <tr>
+                            <td>@fridge.SerialNumber</td>
+                            <td>@fridge.Model</td>
+                            <td>@fridge.PurchaseDate?.ToString("yyyy-MM-dd")</td>
+                            <td>@fridge.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:20px;"><em>No fridges purchased from this supplier.</em></div>
+        }
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Performance Metrics</div>
+        </div>
+        <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div>
+                <strong>Average Delivery Time:</strong>
+                @averageDeliveryDays.ToString("F1") days
+            </div>
+            <div>
+                <strong>Supplier Rating:</strong>
+                @supplierRating.ToString("F1") / 5
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,255 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Employee Profile";
+    var user = ViewBag.User as FridgeManagement.Models.User;
+    var assignedFaults = ViewBag.AssignedFaults as List<FridgeManagement.Models.FaultReport>;
+    var completedFaults = ViewBag.CompletedFaults as List<FridgeManagement.Models.FaultReport>;
+    var assignedMaintenance = ViewBag.AssignedMaintenance as List<FridgeManagement.Models.MaintenanceSchedule>;
+    var completedMaintenanceLogs = ViewBag.CompletedMaintenanceLogs as List<FridgeManagement.Models.MaintenanceLog>;
+    var notifications = ViewBag.Notifications as List<FridgeManagement.Models.Notification>;
+    var recentActivity = ViewBag.RecentActivity as List<dynamic>;
+    var faultCompletionRate = (double)ViewBag.FaultCompletionRate;
+    var maintenanceCompletionRate = (double)ViewBag.MaintenanceCompletionRate;
+    var avgFaultResolutionDays = (double)ViewBag.AvgFaultResolutionDays;
+}
+
+<div class="fd-wrap" style="padding: 2rem;">
+    <div class="fd-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="fd-title">Employee Profile</h1>
+            <p class="fd-sub">@user?.FullName</p>
+        </div>
+        <a asp-action="Employees" class="btn-fms btn-ghost-fms">
+            <i class="fa-solid fa-arrow-left"></i> Back to Employees
+        </a>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Personal Information</div>
+        </div>
+        <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div><strong>Full Name:</strong> @user?.FullName</div>
+            <div><strong>Username:</strong> @user?.Username</div>
+            <div><strong>Email:</strong> @user?.Email</div>
+            <div><strong>Phone:</strong> @user?.PhoneNumber</div>
+            <div><strong>Role:</strong> @user?.Role.ToString().Replace("_", " ")</div>
+            <div><strong>Gender:</strong> @user?.Gender</div>
+            <div><strong>Status:</strong> @user?.Status</div>
+        </div>
+    </div>
+
+    <!-- Role-Specific Job Stats -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Job Overview</div>
+        </div>
+        <div style="padding:20px; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:15px;">
+            <div>
+                <strong>Faults Assigned:</strong> @assignedFaults?.Count<br />
+                <strong>Faults Completed:</strong> @completedFaults?.Count<br />
+                <strong>Completion Rate:</strong> @faultCompletionRate.ToString("F1")%
+            </div>
+            <div>
+                <strong>Maintenance Assigned:</strong> @assignedMaintenance?.Count<br />
+                <strong>Maintenance Completed:</strong> @completedMaintenanceLogs?.Count<br />
+                <strong>Completion Rate:</strong> @maintenanceCompletionRate.ToString("F1")%
+            </div>
+            <div>
+                <strong>Avg Resolution (Faults):</strong>
+                @(avgFaultResolutionDays > 0 ? $"{avgFaultResolutionDays:F1} days" : "N/A")
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Jobs (Tables) -->
+    @if ((assignedFaults != null && assignedFaults.Any()) || (assignedMaintenance != null && assignedMaintenance.Any()))
+    {
+        <div class="fms-card" style="margin-bottom:20px;">
+            <div class="fms-card-header">
+                <div class="fms-card-title">Assigned Jobs</div>
+            </div>
+            @if (assignedFaults.Any())
+            {
+                <h4 style="padding:10px 20px 0;">Faults</h4>
+                <table class="fms-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Fridge</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var f in assignedFaults)
+                        {
+                            <tr>
+                                <td>@f.ReportedDate.ToString("yyyy-MM-dd")</td>
+                                <td>@f.Fridge?.SerialNumber</td>
+                                <td>@f.Description</td>
+                                <td>@f.Status</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            @if (assignedMaintenance.Any())
+            {
+                <h4 style="padding:10px 20px 0;">Maintenance</h4>
+                <table class="fms-table">
+                    <thead>
+                        <tr>
+                            <th>Scheduled Date</th>
+                            <th>Fridge</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in assignedMaintenance)
+                        {
+                            <tr>
+                                <td>@s.ScheduledDate.ToString("yyyy-MM-dd")</td>
+                                <td>@s.Fridge?.SerialNumber</td>
+                                <td>@s.Status</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+
+    <!-- Completed Jobs -->
+    @if ((completedFaults != null && completedFaults.Any()) || (completedMaintenanceLogs != null && completedMaintenanceLogs.Any()))
+    {
+        <div class="fms-card" style="margin-bottom:20px;">
+            <div class="fms-card-header">
+                <div class="fms-card-title">Completed Jobs</div>
+            </div>
+            @if (completedFaults.Any())
+            {
+                <h4 style="padding:10px 20px 0;">Faults Repaired</h4>
+                <table class="fms-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Fridge</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var f in completedFaults)
+                        {
+                            <tr>
+                                <td>@f.ReportedDate.ToString("yyyy-MM-dd")</td>
+                                <td>@f.Fridge?.SerialNumber</td>
+                                <td>@f.Description</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            @if (completedMaintenanceLogs.Any())
+            {
+                <h4 style="padding:10px 20px 0;">Maintenance Completed</h4>
+                <table class="fms-table">
+                    <thead>
+                        <tr>
+                            <th>Completion Date</th>
+                            <th>Fridge</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in completedMaintenanceLogs)
+                        {
+                            <tr>
+                                <td>@log.CompletedDate?.ToString("yyyy-MM-dd")</td>
+                                <td>@log.MaintenanceSchedule?.Fridge?.SerialNumber</td>
+                                <td>@log.ServiceNotes</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+
+    <!-- Attendance (placeholder) -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Attendance</div>
+        </div>
+        <div style="padding:20px;"><em>Attendance module not yet implemented.</em></div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Notifications (@notifications?.Count)</div>
+        </div>
+        @if (notifications != null && notifications.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Title</th>
+                        <th>Message</th>
+                        <th>Read</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var n in notifications)
+                    {
+                        <tr>
+                            <td>@n.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@n.Title</td>
+                            <td>@n.Message</td>
+                            <td>@(n.IsRead ? "✓" : "✗")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:20px;"><em>No notifications.</em></div>
+        }
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="fms-card">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Recent Activity</div>
+        </div>
+        @if (recentActivity != null && recentActivity.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in recentActivity)
+                    {
+                        <tr>
+                            <td>@a.Date.ToString("yyyy-MM-dd")</td>
+                            <td>@a.Description</td>
+                            <td>@a.Type</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:20px;"><em>No recent activity.</em></div>
+        }
+    </div>
+</div>

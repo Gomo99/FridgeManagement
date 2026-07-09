@@ -1,0 +1,81 @@
+﻿@model FridgeManagement.Models.Customer
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Business Information";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Business Information</h1>
+        <p>Your shop details</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="MyProfile" class="btn-fms btn-primary-fms">
+            <i class="fa-solid fa-pen"></i> Edit Profile
+        </a>
+        <a asp-action="DashBoard" class="btn-fms btn-ghost-fms">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="fms-card" style="margin-bottom:20px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-store"></i> Shop Details</div>
+    </div>
+    <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div><strong>Shop Name:</strong> @Model.Name</div>
+        <div><strong>Owner:</strong> @(Model.Owner ?? "N/A")</div>
+        <div><strong>Business Type:</strong> @(Model.BusinessType?.ToString() ?? "N/A")</div>
+        <div><strong>Contact Person:</strong> @Model.ContactPerson</div>
+        <div><strong>Phone:</strong> @Model.PhoneNumber</div>
+        <div><strong>Email:</strong> @Model.Email</div>
+        <div style="grid-column: span 2;"><strong>Address:</strong> @Model.Address</div>
+        <div><strong>Trading Hours:</strong> @(Model.OperatingHours ?? "N/A")</div>
+        <div><strong>Emergency Contact:</strong> @(Model.EmergencyContact ?? "N/A")</div>
+    </div>
+</div>
+
+<div class="fms-card" style="margin-bottom:20px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-location-dot"></i> Location</div>
+    </div>
+    <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div>
+            <strong>GPS Coordinates:</strong>
+            @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+            {
+                <span>@Model.Latitude.Value.ToString("F6"), @Model.Longitude.Value.ToString("F6")</span>
+            }
+            else
+            {
+                <span>N/A</span>
+            }
+        </div>
+        <div>
+            <strong>Map:</strong>
+            @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+            {
+                <a href="https://www.google.com/maps?q=@Model.Latitude,@Model.Longitude" target="_blank" class="btn-fms btn-ghost-fms btn-sm-fms">
+                    <i class="fa-solid fa-map"></i> View on Google Maps
+                </a>
+            }
+            else
+            {
+                <span>N/A</span>
+            }
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.OperatingHours))
+{
+    <div class="fms-card">
+        <div class="fms-card-header">
+            <div class="fms-card-title"><i class="fa-solid fa-clock"></i> Operating Hours</div>
+        </div>
+        <div style="padding:20px;">
+            <p>@Model.OperatingHours</p>
+        </div>
+    </div>
+}

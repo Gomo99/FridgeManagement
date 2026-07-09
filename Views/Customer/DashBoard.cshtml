@@ -4,8 +4,16 @@
     var customer = ViewBag.Customer as FridgeManagement.Models.Customer;
     var allocatedFridges = ViewBag.AllocatedFridges as List<FridgeManagement.Models.FridgeAllocation>;
     var recentFaults = ViewBag.RecentFaults as List<FridgeManagement.Models.FaultReport>;
-    // Serialized list of { id = FridgeId, serial = SerialNumber } for the fault report modal
     var fridgeListJson = ViewBag.FridgeListJson as string ?? "[]";
+
+    var allocatedFridgesCount = (int)ViewBag.AllocatedFridgesCount;
+    var pendingFaultsCount = (int)ViewBag.PendingFaults;
+    var openFaultsCount = (int)ViewBag.OpenFaults;
+    var completedRepairsCount = (int)ViewBag.CompletedRepairs;
+    var upcomingMaintenanceCount = (int)ViewBag.UpcomingMaintenance;
+    var pendingRequestsCount = (int)ViewBag.PendingRequests;
+    var approvedRequestsCount = (int)ViewBag.ApprovedRequests;
+    var completedServicesCount = (int)ViewBag.CompletedServices;
 }
 
 <div class="page-header">
@@ -15,26 +23,68 @@
     </div>
 </div>
 
-<!-- Quick Stats -->
+<!-- ==================== STATISTICS CARDS ==================== -->
 <div class="grid-4" style="margin-bottom:28px;">
     <div class="stat-card">
         <div class="stat-icon teal"><i class="fa-solid fa-snowflake"></i></div>
         <div>
-            <div class="stat-value">@(allocatedFridges?.Count ?? 0)</div>
+            <div class="stat-value">@allocatedFridgesCount</div>
             <div class="stat-label">Allocated Fridges</div>
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stat-icon orange"><i class="fa-solid fa-clock"></i></div>
         <div>
-            <div class="stat-value">@(recentFaults?.Count ?? 0)</div>
-            <div class="stat-label">Recent Faults</div>
+            <div class="stat-value">@pendingFaultsCount</div>
+            <div class="stat-label">Pending Faults</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="fa-solid fa-wrench"></i></div>
+        <div>
+            <div class="stat-value">@openFaultsCount</div>
+            <div class="stat-label">Open Faults</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+            <div class="stat-value">@completedRepairsCount</div>
+            <div class="stat-label">Completed Repairs</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon teal"><i class="fa-solid fa-calendar-check"></i></div>
+        <div>
+            <div class="stat-value">@upcomingMaintenanceCount</div>
+            <div class="stat-label">Upcoming Maintenance</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div>
+            <div class="stat-value">@pendingRequestsCount</div>
+            <div class="stat-label">Pending Requests</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa-solid fa-thumbs-up"></i></div>
+        <div>
+            <div class="stat-value">@approvedRequestsCount</div>
+            <div class="stat-label">Approved Requests</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-gears"></i></div>
+        <div>
+            <div class="stat-value">@completedServicesCount</div>
+            <div class="stat-label">Completed Services</div>
         </div>
     </div>
 </div>
 
-<!-- Quick Actions -->
-<div class="fms-card">
+<!-- ==================== QUICK ACTIONS ==================== -->
+<div class="fms-card" style="margin-bottom:28px;">
     <div class="fms-card-header"><div class="fms-card-title">Quick Actions</div></div>
     <div class="grid-2" style="gap:12px; padding:16px;">
         <a asp-action="MyFridges" class="btn-fms btn-primary-fms w-100">My Fridges</a>
@@ -43,18 +93,54 @@
         <button onclick="openReportFaultModal()" class="btn-fms btn-danger-fms">Report a Fault</button>
         <button onclick="openRequestFridgeModal()" class="btn-fms btn-success-fms">Request a Fridge</button>
         <a asp-action="UpcomingMaintenance" class="btn-fms btn-ghost-fms">Upcoming Maintenance</a>
+        <a asp-action="MyProfile" class="btn-fms btn-ghost-fms">
+            <i class="fa-solid fa-user-pen"></i> Edit Profile
+        </a>
+        <a asp-action="BusinessInfo" class="btn-fms btn-ghost-fms">
+            <i class="fa-solid fa-building"></i> Business Info
+        </a>
     </div>
 </div>
 
-<!-- MODALS -->
-@* Report Fault Modal *@
+<!-- ==================== RECENT FAULTS (optional) ==================== -->
+@if (recentFaults != null && recentFaults.Any())
+{
+    <div class="fms-card" style="margin-bottom:28px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Recent Faults</div>
+        </div>
+        <table class="fms-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Fridge</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var fault in recentFaults)
+                {
+                    <tr>
+                        <td>@fault.ReportedDate.ToString("yyyy-MM-dd")</td>
+                        <td>@fault.Fridge?.SerialNumber</td>
+                        <td>@fault.Description</td>
+                        <td>@fault.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<!-- ═══════ MODALS (unchanged) ═══════ -->
 <div class="fms-modal-overlay" id="reportFaultModal">
     <div class="fms-modal">
         <div class="fms-modal-header">
             <div class="fms-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i> Report Fault</div>
             <button class="fms-modal-close" onclick="closeModal('reportFaultModal')"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <form asp-action="ReportFault" method="post">
+        <form asp-action="ReportFault" method="post" id="reportFaultForm">
             @Html.AntiForgeryToken()
             <div class="fms-form-group">
                 <label for="FridgeId">Fridge</label>
@@ -64,10 +150,27 @@
                 <label for="Description">Description</label>
                 <textarea name="Description" class="fms-textarea" rows="3" required></textarea>
             </div>
-            <div class="fms-form-group">
-                <label for="Priority">Priority</label>
-                <select name="Priority" class="fms-select" asp-items="Html.GetEnumSelectList<FridgeManagement.AppStatus.FaultPriority>()"></select>
+
+            <!-- Emergency Fault Checkbox -->
+            <div class="fms-form-group" style="margin-bottom:12px;">
+                <div class="fms-checkbox-wrapper">
+                    <input type="checkbox" id="isCritical" name="isCritical" value="true" onchange="toggleEmergency(this)">
+                    <label for="isCritical" class="fms-label" style="display:inline; margin-left:6px;">
+                        <i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i>
+                        <strong>Emergency Fault (Critical)</strong>
+                    </label>
+                </div>
+                <small style="color:var(--text-muted);">Check this if the fridge is completely broken and needs immediate attention.</small>
             </div>
+
+            <!-- Priority Dropdown (hidden when emergency is checked) -->
+            <div class="fms-form-group" id="priorityGroup">
+                <label for="Priority">Priority</label>
+                <select name="Priority" class="fms-select" asp-items="Html.GetEnumSelectList<FridgeManagement.AppStatus.FaultPriority>()">
+                    <option value="">-- Select --</option>
+                </select>
+            </div>
+
             <div style="display:flex; gap:10px; justify-content:flex-end;">
                 <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('reportFaultModal')">Cancel</button>
                 <button type="submit" class="btn-fms btn-danger-fms">Submit Fault</button>
@@ -75,6 +178,42 @@
         </form>
     </div>
 </div>
+
+<!-- ═══════════════ CHARTS SECTION ═══════════════ -->
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Performance Overview</div>
+    </div>
+    <div style="padding:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+        <div>
+            <h4 style="margin-bottom:8px;">Faults This Year</h4>
+            <canvas id="chartFaultsYear" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Maintenance History</h4>
+            <canvas id="chartMaintHistory" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Repairs per Month</h4>
+            <canvas id="chartRepairsMonth" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Request Status</h4>
+            <canvas id="chartRequestStatus" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ MAINTENANCE CALENDAR ═══════════════ -->
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-calendar-days"></i> Maintenance Calendar</div>
+    </div>
+    <div id="calendar" style="padding: 0 16px 16px;"></div>
+</div>
+
+
 
 @* Request Fridge Modal *@
 <div class="fms-modal-overlay" id="requestFridgeModal">
@@ -101,9 +240,130 @@
     </div>
 </div>
 
+
+@* ═══════════════ SERVICE REMINDER ═══════════════ *@
+@{
+    var tomorrowMaintenance = ViewBag.TomorrowMaintenance as FridgeManagement.Models.MaintenanceSchedule;
+}
+@if (tomorrowMaintenance != null)
+{
+    <div class="fms-card" style="margin-bottom:28px; border-left: 4px solid var(--ice);">
+        <div style="padding:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px;">
+            <div>
+                <h3 style="margin:0; color:var(--ice);"><i class="fa-solid fa-calendar-check"></i> Upcoming Maintenance Tomorrow</h3>
+                <p style="margin:8px 0 0; color:var(--text-primary);">
+                    <strong>Fridge:</strong> @tomorrowMaintenance.Fridge?.SerialNumber<br />
+                    <strong>Technician:</strong> @(tomorrowMaintenance.AssignedTechnician?.FullName ?? "Not assigned")<br />
+                    <strong>Scheduled Time:</strong> @tomorrowMaintenance.ScheduledDate.ToString("HH:mm")<br />
+                    <strong>Location:</strong> @(ViewBag.Customer?.Address ?? "Your premises")
+                </p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                @if (!tomorrowMaintenance.IsConfirmed)
+                {
+                    <form asp-action="ConfirmMaintenanceAttendance" method="post" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="scheduleId" value="@tomorrowMaintenance.Id" />
+                        <button type="submit" class="btn-fms btn-success-fms" style="white-space:nowrap;">
+                            <i class="fa-solid fa-circle-check"></i> Confirm
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <span class="fms-badge green" style="font-size:0.9rem; padding:8px 14px;">
+                        <i class="fa-solid fa-check"></i> Attendance Confirmed
+                    </span>
+                }
+                <button type="button" class="btn-fms btn-primary-fms" onclick="openRescheduleModal(@tomorrowMaintenance.Id, '@tomorrowMaintenance.ScheduledDate.ToString("yyyy-MM-dd")', '@tomorrowMaintenance.ScheduledDate.ToString("HH:mm")')">
+                    <i class="fa-solid fa-calendar-alt"></i> Reschedule
+                </button>
+                <form asp-action="CancelMaintenanceVisit" method="post" style="display:inline;"
+                      onsubmit="return confirm('Cancel this maintenance visit? The schedule will be removed.')">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="scheduleId" value="@tomorrowMaintenance.Id" />
+                    <button type="submit" class="btn-fms btn-danger-fms">
+                        <i class="fa-solid fa-times"></i> Cancel
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+
+@* ═══════════════ RESCHEDULE MAINTENANCE MODAL ═══════════════ *@
+<div class="fms-modal-overlay" id="rescheduleModal">
+    <div class="fms-modal" style="max-width:450px;">
+        <div class="fms-modal-header">
+            <div class="fms-modal-title"><i class="fa-solid fa-calendar-alt" style="color:var(--ice); margin-right:10px;"></i>Reschedule Maintenance</div>
+            <button class="fms-modal-close" onclick="closeModal('rescheduleModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form asp-action="RescheduleMaintenance" method="post" style="padding:20px;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="scheduleId" id="rescheduleScheduleId" />
+
+            <div class="fms-form-group">
+                <label class="fms-label">Quick Options</label>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                    <button type="button" class="btn-fms btn-ghost-fms btn-sm-fms" onclick="setQuickReschedule('Tomorrow')">Tomorrow</button>
+                    <button type="button" class="btn-fms btn-ghost-fms btn-sm-fms" onclick="setQuickReschedule('Friday')">This Friday</button>
+                    <button type="button" class="btn-fms btn-ghost-fms btn-sm-fms" onclick="setQuickReschedule('NextWeek')">Next Week</button>
+                    <button type="button" class="btn-fms btn-ghost-fms btn-sm-fms" onclick="setQuickReschedule('Morning')">Morning (09:00)</button>
+                    <button type="button" class="btn-fms btn-ghost-fms btn-sm-fms" onclick="setQuickReschedule('Afternoon')">Afternoon (14:00)</button>
+                </div>
+                <input type="hidden" name="quickOption" id="quickOption" value="" />
+            </div>
+
+            <div class="fms-form-group">
+                <label class="fms-label">Or choose custom date & time</label>
+                <div class="grid-2">
+                    <input type="date" name="customDate" id="customDate" class="fms-input" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <input type="time" name="customTime" id="customTime" class="fms-input" />
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+                <button type="button" class="btn-fms btn-ghost-fms" onclick="closeModal('rescheduleModal')">Cancel</button>
+                <button type="submit" class="btn-fms btn-primary-fms">Save New Schedule</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+
 @section Scripts {
     <script>
-        // Fridge list data for the fault modal (from ViewBag)
+
+        <!-- FullCalendar CSS & JS -->
+        <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+            var customerFridges = @Html.Raw(fridgeListJson);
+
+            function openModal(id) { document.getElementById(id).classList.add('show'); }
+            function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+            document.querySelectorAll('.fms-modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+            function openReportFaultModal(selectedFridgeId = null) {
+                var select = document.getElementById('faultFridgeSelect');
+                select.innerHTML = '<option value="">-- Select fridge --</option>';
+                customerFridges.forEach(f => {
+                    select.innerHTML += `<option value="${f.id}" ${selectedFridgeId == f.id ? 'selected' : ''}>${f.serial}</option>`;
+                });
+                openModal('reportFaultModal');
+            }
+
+            function openRequestFridgeModal() {
+                openModal('requestFridgeModal');
+            }
+
+
+
         var customerFridges = @Html.Raw(fridgeListJson);
 
         function openModal(id) { document.getElementById(id).classList.add('show'); }
@@ -122,5 +382,242 @@
         function openRequestFridgeModal() {
             openModal('requestFridgeModal');
         }
+
+
+       
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+        // ═══════ CHARTS ═══════
+        const chartFontColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#e0e0e0';
+        const chartGridColor = 'rgba(150,210,230,0.15)';
+
+        function makeBarChart(canvasId, labels, data, color) {
+            new Chart(document.getElementById(canvasId), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: color,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: chartFontColor }, grid: { color: chartGridColor } },
+                        y: { beginAtZero: true, ticks: { precision: 0, color: chartFontColor }, grid: { color: chartGridColor } }
+                    }
+                }
+            });
+        }
+
+        // 1. Faults This Year
+        makeBarChart('chartFaultsYear',
+            @Html.Raw(ViewBag.FaultsYearLabels ?? "[]"),
+            @Html.Raw(ViewBag.FaultsYearData ?? "[]"),
+            '#F0637A'
+        );
+
+        // 2. Maintenance History
+        makeBarChart('chartMaintHistory',
+            @Html.Raw(ViewBag.MaintHistoryLabels ?? "[]"),
+            @Html.Raw(ViewBag.MaintHistoryData ?? "[]"),
+            '#5FD4E0'
+        );
+
+        // 3. Repairs per Month
+        makeBarChart('chartRepairsMonth',
+            @Html.Raw(ViewBag.RepairsMonthLabels ?? "[]"),
+            @Html.Raw(ViewBag.RepairsMonthData ?? "[]"),
+            '#3ECF8E'
+        );
+
+        // 4. Request Status (doughnut chart)
+        new Chart(document.getElementById('chartRequestStatus'), {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(ViewBag.RequestStatusLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.RequestStatusData ?? "[]"),
+                    backgroundColor: ['#5FD4E0','#F5A623','#F0637A','#3ECF8E','#8FAEBE'],
+                    borderColor: 'rgba(0,0,0,0.2)'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { labels: { color: chartFontColor } }
+                }
+            }
+        });
+
+
+            function toggleEmergency(checkbox) {
+            const priorityGroup = document.getElementById('priorityGroup');
+            if (checkbox.checked) {
+                priorityGroup.style.display = 'none';
+                // Set a hidden field for Priority to ensure model binding, but it will be overridden in controller
+                document.querySelector('select[name="Priority"]').value = '';
+            } else {
+                priorityGroup.style.display = '';
+            }
+        }
+            function openRescheduleModal(scheduleId, currentDate, currentTime) {
+        document.getElementById('rescheduleScheduleId').value = scheduleId;
+        document.getElementById('customDate').value = currentDate;
+        document.getElementById('customTime').value = currentTime;
+        document.getElementById('quickOption').value = '';
+        openModal('rescheduleModal');
+    }
+
+    function setQuickReschedule(option) {
+        document.getElementById('quickOption').value = option;
+        // Clear custom fields
+        document.getElementById('customDate').value = '';
+        document.getElementById('customTime').value = '';
+    }
     </script>
 }
+
+
+<style>
+
+
+
+    .fc {
+        color: var(--text-primary);
+        background: transparent;
+    }
+
+        .fc .fc-toolbar-title {
+            color: var(--text-primary);
+        }
+
+        .fc .fc-button {
+            background: var(--panel-bg);
+            border-color: var(--panel-border);
+            color: var(--text-primary);
+        }
+
+            .fc .fc-button:hover {
+                background: var(--ice);
+                color: #fff;
+            }
+
+        .fc .fc-daygrid-day-number {
+            color: var(--text-muted);
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            color: var(--text-muted);
+        }
+
+    .fc-theme-standard td, .fc-theme-standard th {
+        border-color: var(--panel-border);
+    }
+
+    .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    }
+
+    .stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 1rem;
+    }
+
+    .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+    }
+    .stat-icon.teal { background: linear-gradient(135deg, #5FD4E0, #3AA8B8); }
+    .stat-icon.orange { background: linear-gradient(135deg, #F5A623, #D48C1A); }
+    .stat-icon.red { background: linear-gradient(135deg, #F0637A, #D14A5A); }
+    .stat-icon.green { background: linear-gradient(135deg, #3ECF8E, #2EA873); }
+    .stat-icon.blue { background: linear-gradient(135deg, #5D9CEC, #406EB5); }
+
+    .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    }
+
+    .stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    }
+
+    .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+        .stat-icon.teal {
+            background: linear-gradient(135deg, #5FD4E0, #3AA8B8);
+        }
+
+        .stat-icon.orange {
+            background: linear-gradient(135deg, #F5A623, #D48C1A);
+        }
+
+        .stat-icon.red {
+            background: linear-gradient(135deg, #F0637A, #D14A5A);
+        }
+
+        .stat-icon.green {
+            background: linear-gradient(135deg, #3ECF8E, #2EA873);
+        }
+
+        .stat-icon.blue {
+            background: linear-gradient(135deg, #5D9CEC, #406EB5);
+        }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+</style>

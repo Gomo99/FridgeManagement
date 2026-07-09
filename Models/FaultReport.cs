@@ -46,5 +46,13 @@ namespace FridgeManagement.Models
         public DateTime? ResolvedDate { get; set; }
 
         public bool IsDeleted { get; set; } = false;
+
+        public DateTime? AssignedDate { get; set; }
+        public DateTime? TechnicianTravelingAt { get; set; }
+        public DateTime? TechnicianArrivedAt { get; set; }
+        public DateTime? RepairStartedAt { get; set; }
+        public DateTime? RepairCompletedAt { get; set; }
+
+        public DateTime? EstimatedArrivalTime { get; set; }
     }
 }

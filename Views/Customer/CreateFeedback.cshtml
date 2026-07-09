@@ -1,0 +1,123 @@
+﻿@model FridgeManagement.Models.RepairFeedback
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Repair Feedback";
+    var fault = ViewBag.Fault as FridgeManagement.Models.FaultReport;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Repair Feedback</h1>
+        <p>Fault #@fault?.Id – @fault?.Fridge?.SerialNumber</p>
+    </div>
+    <a asp-action="FaultDetails" asp-route-id="@fault?.Id" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-star" style="color:gold;"></i> Rate Your Repair</div>
+    </div>
+
+    <form asp-action="CreateFeedback" method="post" style="padding:20px;">
+        @Html.AntiForgeryToken()
+        <input asp-for="FaultReportId" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom:16px;"></div>
+
+        <div class="grid-2">
+            <div class="fms-form-group">
+                <label class="fms-label">Technician Rating</label>
+                <div class="star-rating">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <input type="radio" asp-for="TechnicianRating" value="@i" id="tech@i" />
+                        <label for="tech@i" title="@i star@(i > 1 ? "s" : "")">&#9733;</label>
+                    }
+                </div>
+                <span asp-validation-for="TechnicianRating" class="text-danger"></span>
+            </div>
+
+            <div class="fms-form-group">
+                <label class="fms-label">Repair Quality</label>
+                <div class="star-rating">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <input type="radio" asp-for="RepairQualityRating" value="@i" id="qual@i" />
+                        <label for="qual@i" title="@i star@(i > 1 ? "s" : "")">&#9733;</label>
+                    }
+                </div>
+                <span asp-validation-for="RepairQualityRating" class="text-danger"></span>
+            </div>
+
+            <div class="fms-form-group">
+                <label class="fms-label">Friendliness</label>
+                <div class="star-rating">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <input type="radio" asp-for="FriendlinessRating" value="@i" id="friend@i" />
+                        <label for="friend@i" title="@i star@(i > 1 ? "s" : "")">&#9733;</label>
+                    }
+                </div>
+                <span asp-validation-for="FriendlinessRating" class="text-danger"></span>
+            </div>
+
+            <div class="fms-form-group">
+                <label class="fms-label">Speed of Repair</label>
+                <div class="star-rating">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <input type="radio" asp-for="SpeedRating" value="@i" id="speed@i" />
+                        <label for="speed@i" title="@i star@(i > 1 ? "s" : "")">&#9733;</label>
+                    }
+                </div>
+                <span asp-validation-for="SpeedRating" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="fms-form-group">
+            <label asp-for="Comments" class="fms-label">Comments (optional)</label>
+            <textarea asp-for="Comments" class="fms-textarea" rows="3" placeholder="Any additional feedback..."></textarea>
+            <span asp-validation-for="Comments" class="text-danger"></span>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+            <a asp-action="FaultDetails" asp-route-id="@fault?.Id" class="btn-fms btn-ghost-fms">Cancel</a>
+            <button type="submit" class="btn-fms btn-primary-fms">
+                <i class="fa-solid fa-paper-plane"></i> Submit Feedback
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <style>
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+
+            .star-rating input {
+                display: none;
+            }
+
+            .star-rating label {
+                font-size: 1.8rem;
+                color: #ccc;
+                cursor: pointer;
+                transition: color 0.2s;
+                padding: 0 2px;
+            }
+
+                .star-rating input:checked ~ label,
+                .star-rating label:hover,
+                .star-rating label:hover ~ label {
+                    color: gold;
+                }
+    </style>
+}

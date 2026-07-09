@@ -1,0 +1,124 @@
+﻿@model FridgeManagement.Models.Customer
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="page-header">
+    <div>
+        <h1>My Profile</h1>
+        <p>Update your business and personal details</p>
+    </div>
+    <a asp-action="DashBoard" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="fms-card" style="margin-bottom:20px; padding:16px 20px; background:rgba(16,185,129,0.15); border:1px solid var(--success);">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--success);">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    </div>
+}
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-user-edit" style="color:var(--ice); margin-right:8px;"></i>Edit Information</div>
+    </div>
+
+    <form asp-action="MyProfile" method="post" style="padding:20px;">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom:16px;"></div>
+
+        <div class="grid-2">
+            <div class="fms-form-group">
+                <label asp-for="Name" class="fms-label">Business Name</label>
+                <input asp-for="Name" class="fms-input" placeholder="Your business name" required />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="fms-form-group">
+                <label asp-for="Owner" class="fms-label">Owner</label>
+                <input asp-for="Owner" class="fms-input" placeholder="Owner's full name" />
+                <span asp-validation-for="Owner" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="fms-form-group">
+                <label asp-for="BusinessType" class="fms-label">Business Type</label>
+                <select asp-for="BusinessType" class="fms-select" asp-items="Html.GetEnumSelectList<FridgeManagement.AppStatus.BusinessType>()">
+                    <option value="">-- Select --</option>
+                </select>
+                <span asp-validation-for="BusinessType" class="text-danger"></span>
+            </div>
+            <div class="fms-form-group">
+                <label asp-for="ContactPerson" class="fms-label">Contact Person</label>
+                <input asp-for="ContactPerson" class="fms-input" placeholder="Full name" />
+                <span asp-validation-for="ContactPerson" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="fms-form-group">
+                <label asp-for="Email" class="fms-label">Email</label>
+                <input asp-for="Email" class="fms-input" type="email" placeholder="email@example.com" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="fms-form-group">
+                <label asp-for="PhoneNumber" class="fms-label">Phone</label>
+                <input asp-for="PhoneNumber" class="fms-input" type="tel" placeholder="0XX XXX XXXX" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="fms-form-group">
+            <label asp-for="Address" class="fms-label">Address</label>
+            <textarea asp-for="Address" class="fms-textarea" rows="2" placeholder="Full street address..."></textarea>
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+
+        <div class="grid-2">
+            <div class="fms-form-group">
+                <label asp-for="OperatingHours" class="fms-label">Operating Hours</label>
+                <input asp-for="OperatingHours" class="fms-input" placeholder="e.g. Mon-Fri 8am-5pm" />
+                <span asp-validation-for="OperatingHours" class="text-danger"></span>
+            </div>
+            <div class="fms-form-group">
+                <label asp-for="EmergencyContact" class="fms-label">Emergency Contact</label>
+                <input asp-for="EmergencyContact" class="fms-input" placeholder="Name & phone" />
+                <span asp-validation-for="EmergencyContact" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- GPS Coordinates -->
+        <div class="grid-2">
+            <div class="fms-form-group">
+                <label asp-for="Latitude" class="fms-label">GPS Latitude</label>
+                <input asp-for="Latitude" class="fms-input" placeholder="-26.123456" />
+                <span asp-validation-for="Latitude" class="text-danger"></span>
+            </div>
+            <div class="fms-form-group">
+                <label asp-for="Longitude" class="fms-label">GPS Longitude</label>
+                <input asp-for="Longitude" class="fms-input" placeholder="28.123456" />
+                <span asp-validation-for="Longitude" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+            <a asp-action="DashBoard" class="btn-fms btn-ghost-fms">Cancel</a>
+            <button type="submit" class="btn-fms btn-primary-fms">
+                <i class="fa-solid fa-floppy-disk"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

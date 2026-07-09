@@ -1,0 +1,116 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Fridge Profile";
+
+    var fridge = ViewBag.Fridge as FridgeManagement.Models.Fridge;
+    var allocation = ViewBag.Allocation as FridgeManagement.Models.FridgeAllocation;
+    var lastService = ViewBag.LastService as FridgeManagement.Models.MaintenanceLog;
+    var nextService = ViewBag.NextService as FridgeManagement.Models.MaintenanceSchedule;
+    var technicianName = ViewBag.TechnicianName as string;
+
+    var faults = ViewBag.Faults as List<FridgeManagement.Models.FaultReport>;
+    var upcomingSchedules = ViewBag.UpcomingSchedules as List<FridgeManagement.Models.MaintenanceSchedule>;
+    var completedLogs = ViewBag.CompletedLogs as List<FridgeManagement.Models.MaintenanceLog>;
+    var historyEvents = ViewBag.HistoryEvents as List<dynamic>;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Fridge Profile</h1>
+        <p>@fridge?.SerialNumber</p>
+    </div>
+    <a asp-action="MyFridges" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to My Fridges
+    </a>
+</div>
+
+<!-- Tabs Navigation -->
+<div class="fridge-tabs">
+    <button class="fridge-tab active" data-tab="overview">Overview</button>
+    <button class="fridge-tab" data-tab="faults">Faults</button>
+    <button class="fridge-tab" data-tab="maintenance">Maintenance</button>
+    <button class="fridge-tab" data-tab="documents">Documents</button>
+    <button class="fridge-tab" data-tab="timeline">Timeline</button>
+</div>
+
+<!-- ═══════════ TAB PANELS ═══════════ -->
+<div id="tab-overview" class="fridge-tab-panel active">
+    @await Html.PartialAsync("_FridgeTabOverview", (fridge, allocation, lastService, nextService, technicianName))
+</div>
+
+<div id="tab-faults" class="fridge-tab-panel" style="display:none;">
+    @await Html.PartialAsync("_FridgeTabFaults", faults)
+</div>
+
+<div id="tab-maintenance" class="fridge-tab-panel" style="display:none;">
+    @await Html.PartialAsync("_FridgeTabMaintenance", (upcomingSchedules, completedLogs))
+</div>
+
+<div id="tab-documents" class="fridge-tab-panel" style="display:none;">
+    @await Html.PartialAsync("_FridgeTabDocuments")
+</div>
+
+<div id="tab-timeline" class="fridge-tab-panel" style="display:none;">
+    @await Html.PartialAsync("_FridgeTabTimeline", (object)ViewBag.Timeline)
+</div>
+
+@section Scripts {
+    <script>
+        // Tab switching
+        document.querySelectorAll('.fridge-tab').forEach(tab => {
+            tab.addEventListener('click', function () {
+                // Deactivate all tabs
+                document.querySelectorAll('.fridge-tab').forEach(t => t.classList.remove('active'));
+                // Hide all panels
+                document.querySelectorAll('.fridge-tab-panel').forEach(p => p.style.display = 'none');
+                // Activate clicked tab
+                this.classList.add('active');
+                // Show corresponding panel
+                const panelId = 'tab-' + this.dataset.tab;
+                document.getElementById(panelId).style.display = '';
+            });
+        });
+    </script>
+}
+
+<style>
+    .fridge-tabs {
+        display: flex;
+        gap: 2px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid var(--panel-border);
+    }
+    .fridge-tab {
+        background: none;
+        border: none;
+        padding: 12px 20px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        position: relative;
+        transition: color 0.2s;
+    }
+    .fridge-tab.active {
+        color: var(--ice);
+    }
+    .fridge-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--ice);
+    }
+    .fridge-tab:hover:not(.active) {
+        color: var(--text-primary);
+    }
+    .fridge-tab-panel {
+        animation: fadeIn 0.25s ease;
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

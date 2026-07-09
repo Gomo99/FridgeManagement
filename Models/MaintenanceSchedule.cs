@@ -28,5 +28,7 @@ namespace FridgeManagement.Models
         public MaintenanceStatus Status { get; set; } = MaintenanceStatus.Scheduled;
 
         public bool IsDeleted { get; set; } = false;
+
+        public bool IsConfirmed { get; set; } = false;
     }
 }

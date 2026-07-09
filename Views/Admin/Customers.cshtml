@@ -52,6 +52,9 @@
                         <td style="color:var(--muted);">@c.PhoneNumber</td>
                         <td style="color:var(--muted);">@c.Email</td>
                         <td><span class="fms-badge green">Active</span></td>
+                        <a asp-action="CustomerProfile" asp-route-id="@c.Id" class="btn-fms btn-ghost-fms btn-sm-fms" title="View Profile">
+                            <i class="fa-solid fa-id-card"></i>
+                        </a>
                         <td style="text-align:right;">
                             <button class="btn-fms btn-ghost-fms btn-sm-fms"
                                     onclick="openEditModal(@c.Id, '@c.Name.Replace("'", "\\'")', '@c.ContactPerson.Replace("'", "\\'")', '@c.PhoneNumber', '@c.Email', '@c.Address.Replace("'", "\\'")')">

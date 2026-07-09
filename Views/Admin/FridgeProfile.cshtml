@@ -1,0 +1,253 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Fridge Profile";
+}
+@{
+    var fridge = ViewBag.Fridge as FridgeManagement.Models.Fridge;
+    var allocationHistory = ViewBag.AllocationHistory as List<FridgeManagement.Models.FridgeAllocation>;
+    var faultHistory = ViewBag.FaultHistory as List<FridgeManagement.Models.FaultReport>;
+    var serviceHistory = ViewBag.ServiceHistory as List<FridgeManagement.Models.MaintenanceLog>;
+    var purchaseHistory = ViewBag.PurchaseHistory as List<FridgeManagement.Models.PurchaseRequest>;
+    var currentCustomer = ViewBag.CurrentCustomer as FridgeManagement.Models.Customer;
+}
+
+<div class="fd-wrap" style="padding: 2rem;">
+    <div class="fd-header">
+        <h1 class="fd-title">Fridge Profile</h1>
+        <p class="fd-sub">Serial: @fridge?.SerialNumber</p>
+    </div>
+
+    <!-- General Information -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">General Information</div>
+        </div>
+        <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div><strong>Model:</strong> @fridge?.Model</div>
+            <div><strong>Brand:</strong> @fridge?.Brand</div>
+            <div><strong>Serial Number:</strong> @fridge?.SerialNumber</div>
+            <div><strong>Purchase Date:</strong> @fridge?.PurchaseDate?.ToString("yyyy-MM-dd")</div>
+            <div><strong>Condition:</strong> @fridge?.Status</div>
+            <div><strong>Warranty Expiry:</strong> @fridge?.WarrantyExpiryDate?.ToString("yyyy-MM-dd") ?? "N/A"</div>
+        </div>
+    </div>
+
+    <!-- Current Customer & Location -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Current Customer</div>
+        </div>
+        <div style="padding:20px;">
+            @if (currentCustomer != null)
+            {
+                <p><strong>Name:</strong> @currentCustomer.Name</p>
+                <p><strong>Contact Person:</strong> @currentCustomer.ContactPerson</p>
+                <p><strong>Phone:</strong> @currentCustomer.PhoneNumber</p>
+                <p><strong>Email:</strong> @currentCustomer.Email</p>
+                <p><strong>Address:</strong> @currentCustomer.Address</p>
+            }
+            else
+            {
+                <p><em>Not currently allocated to any customer.</em></p>
+            }
+        </div>
+    </div>
+
+    <!-- Allocation History -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Allocation History</div>
+        </div>
+        <table class="fms-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Allocated Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (allocationHistory != null && allocationHistory.Any())
+                {
+                    foreach (var alloc in allocationHistory)
+                    {
+                        <tr>
+                            <td>@alloc.Customer?.Name</td>
+                            <td>@alloc.AllocationDate.ToString("yyyy-MM-dd")</td>
+                            <td>@alloc.Status</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="3">No allocation records</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Fault History -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Fault History</div>
+        </div>
+        <table class="fms-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Technician</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (faultHistory != null && faultHistory.Any())
+                {
+                    foreach (var fault in faultHistory)
+                    {
+                        <tr>
+                            <td>@fault.ReportedDate.ToString("yyyy-MM-dd")</td>
+                            <td>@fault.Description</td>
+                            <td>@fault.AssignedTechnician?.FullName</td>
+                            <td>@fault.Status</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="4">No fault records</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Maintenance History -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Maintenance History</div>
+        </div>
+        <table class="fms-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Technician</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (serviceHistory != null && serviceHistory.Any())
+                {
+                    foreach (var log in serviceHistory)
+                    {
+                        <tr>
+                            <td>@log.CompletedDate?.ToString("yyyy-MM-dd")</td>
+                            <td>@log.Technician?.FullName</td>
+                            <td>@log.ServiceNotes</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="3">No service records</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Images -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Images</div>
+        </div>
+        <div style="padding:20px;">
+            @if (!string.IsNullOrEmpty(fridge?.ImageUrl))
+            {
+                <img src="@fridge.ImageUrl" alt="Fridge image" style="max-width:300px; border-radius:10px;" />
+            }
+            else
+            {
+                <p><em>No image available.</em></p>
+            }
+        </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Notes</div>
+        </div>
+        <div style="padding:20px;">
+            <p>@fridge?.Notes ?? "No notes recorded."</p>
+        </div>
+    </div>
+
+    <!-- Warranty -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Warranty</div>
+        </div>
+        <div style="padding:20px;">
+            @if (fridge?.WarrantyExpiryDate.HasValue == true)
+            {
+                var daysLeft = (fridge.WarrantyExpiryDate.Value - DateTime.Today).Days;
+                <p><strong>Expiry Date:</strong> @fridge.WarrantyExpiryDate.Value.ToString("yyyy-MM-dd")</p>
+                <p><strong>Status:</strong> @(daysLeft > 0 ? $"{daysLeft} days remaining" : "Expired")</p>
+            }
+            else
+            {
+                <p><em>No warranty information.</em></p>
+            }
+        </div>
+    </div>
+
+    <!-- Supplier -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Supplier</div>
+        </div>
+        <div style="padding:20px;">
+            @if (fridge?.Supplier != null)
+            {
+                <p><strong>Name:</strong> @fridge.Supplier.Name</p>
+                <p><strong>Contact Person:</strong> @fridge.Supplier.ContactPerson</p>
+                <p><strong>Phone:</strong> @fridge.Supplier.PhoneNumber</p>
+                <p><strong>Email:</strong> @fridge.Supplier.Email</p>
+            }
+            else
+            {
+                <p><em>No supplier linked.</em></p>
+            }
+        </div>
+    </div>
+
+    <!-- Purchase History -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Purchase History</div>
+        </div>
+        <table class="fms-table">
+            <thead>
+                <tr>
+                    <th>Request Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (purchaseHistory != null && purchaseHistory.Any())
+                {
+                    foreach (var pr in purchaseHistory)
+                    {
+                        <tr>
+                            <td>@pr.RequestDate.ToString("yyyy-MM-dd")</td>
+                            <td>@pr.Status</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="2">No purchase requests recorded.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

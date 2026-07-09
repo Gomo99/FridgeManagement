@@ -25,5 +25,19 @@ namespace FridgeManagement.Models
         public Status Status { get; set; } = Status.Active;
 
         public virtual ICollection<FridgeAllocation>? FridgeAllocations { get; set; }
+
+        [StringLength(200)]
+        public string? OperatingHours { get; set; }
+
+        [StringLength(100)]
+        public string? EmergencyContact { get; set; }
+
+        public string? Owner { get; set; }
+
+        public BusinessType? BusinessType { get; set; }
+
+        public double? Latitude { get; set; }
+
+        public double? Longitude { get; set; }
     }
 }

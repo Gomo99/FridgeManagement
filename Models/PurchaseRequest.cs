@@ -21,6 +21,13 @@ namespace FridgeManagement.Models
         [StringLength(200)]
         public string Reason { get; set; } = string.Empty;
 
+        // NEW: link directly to the fridge being purchased
+        public int? FridgeId { get; set; }
+
+        [ForeignKey("FridgeId")]
+        public virtual Fridge? Fridge { get; set; }
+
+
         [Required]
         [Range(1, 100)]
         public int QuantityRequested { get; set; }

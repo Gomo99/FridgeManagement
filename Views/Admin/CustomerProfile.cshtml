@@ -1,0 +1,222 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Customer Profile";
+    var customer = ViewBag.Customer as FridgeManagement.Models.Customer;
+    var allocatedFridges = ViewBag.AllocatedFridges as List<FridgeManagement.Models.FridgeAllocation>;
+    var faultHistory = ViewBag.FaultHistory as List<FridgeManagement.Models.FaultReport>;
+    var maintenanceSchedules = ViewBag.MaintenanceSchedules as List<FridgeManagement.Models.MaintenanceSchedule>;
+    var purchaseRequests = ViewBag.PurchaseRequests as List<FridgeManagement.Models.PurchaseRequest>;
+    var fridgeRequests = ViewBag.FridgeRequests as List<FridgeManagement.Models.FridgeRequest>;
+}
+
+<div class="fd-wrap" style="padding: 2rem;">
+    <div class="fd-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="fd-title">Customer Profile</h1>
+            <p class="fd-sub">@customer?.Name</p>
+        </div>
+        <a asp-action="Customers" class="btn-fms btn-ghost-fms">
+            <i class="fa-solid fa-arrow-left"></i> Back to Customers
+        </a>
+    </div>
+
+    <!-- Customer Details -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Customer Details</div>
+        </div>
+        <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div><strong>Business Name:</strong> @customer?.Name</div>
+            <div><strong>Contact Person:</strong> @customer?.ContactPerson</div>
+            <div><strong>Phone:</strong> @customer?.PhoneNumber</div>
+            <div><strong>Email:</strong> @customer?.Email</div>
+            <div style="grid-column: span 2;"><strong>Address:</strong> @customer?.Address</div>
+        </div>
+    </div>
+
+    <!-- Allocated Fridges -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Allocated Fridges (@allocatedFridges?.Count)</div>
+        </div>
+        @if (allocatedFridges != null && allocatedFridges.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>Serial Number</th>
+                        <th>Model</th>
+                        <th>Allocation Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var alloc in allocatedFridges)
+                    {
+                        <tr>
+                            <td>@alloc.Fridge?.SerialNumber</td>
+                            <td>@alloc.Fridge?.Model</td>
+                            <td>@alloc.AllocationDate.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:20px;"><em>No fridges currently allocated.</em></div>
+        }
+    </div>
+
+    <!-- Fault History -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Fault History</div>
+        </div>
+        @if (faultHistory != null && faultHistory.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Fridge</th>
+                        <th>Description</th>
+                        <th>Technician</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fault in faultHistory)
+                    {
+                        <tr>
+                            <td>@fault.ReportedDate.ToString("yyyy-MM-dd")</td>
+                            <td>@fault.Fridge?.SerialNumber</td>
+                            <td>@fault.Description</td>
+                            <td>@fault.AssignedTechnician?.FullName</td>
+                            <td>@fault.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:20px;"><em>No faults reported.</em></div>
+        }
+    </div>
+
+    <!-- Maintenance Visits -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Maintenance Visits</div>
+        </div>
+        @if (maintenanceSchedules != null && maintenanceSchedules.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>Scheduled Date</th>
+                        <th>Fridge</th>
+                        <th>Technician</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sched in maintenanceSchedules)
+                    {
+                        <tr>
+                            <td>@sched.ScheduledDate.ToString("yyyy-MM-dd")</td>
+                            <td>@sched.Fridge?.SerialNumber</td>
+                            <td>@sched.AssignedTechnician?.FullName</td>
+                            <td>@sched.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:20px;"><em>No maintenance visits recorded.</em></div>
+        }
+    </div>
+
+    <!-- Purchase Requests (if model supports) -->
+    @if (purchaseRequests != null)
+    {
+        <div class="fms-card" style="margin-bottom:20px;">
+            <div class="fms-card-header">
+                <div class="fms-card-title">Purchase Requests</div>
+            </div>
+            @if (purchaseRequests.Any())
+            {
+                <table class="fms-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pr in purchaseRequests)
+                        {
+                            <tr>
+                                <td>@pr.RequestDate.ToString("yyyy-MM-dd")</td>
+                                <td>@pr.Status</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div style="padding:20px;"><em>No purchase requests.</em></div>
+            }
+        </div>
+    }
+
+    <!-- Fridge Requests -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Fridge Requests</div>
+        </div>
+        @if (fridgeRequests != null && fridgeRequests.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var req in fridgeRequests)
+                    {
+                        <tr>
+                            <td>@req.RequestDate.ToString("yyyy-MM-dd")</td>
+                            <td>@req.Reason</td>
+                            <td>@req.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:20px;"><em>No fridge requests.</em></div>
+        }
+    </div>
+
+    <!-- Invoices & Contact History (optional placeholders) -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Invoices</div>
+        </div>
+        <div style="padding:20px;"><em>Invoicing module not yet implemented.</em></div>
+    </div>
+    <div class="fms-card">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Contact History</div>
+        </div>
+        <div style="padding:20px;"><em>No contact logs available.</em></div>
+    </div>
+</div>

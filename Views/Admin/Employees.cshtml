@@ -95,6 +95,10 @@
                         </td>
                         <td style="text-align:right;">
                             <div style="display:flex; gap:6px; justify-content:flex-end;">
+                                <a asp-action="EmployeeProfile" asp-route-id="@emp.Id"
+                                   class="btn-fms btn-ghost-fms btn-sm-fms" title="View Profile">
+                                    <i class="fa-solid fa-id-card"></i>
+                                </a>
                                 <button class="btn-fms btn-ghost-fms btn-sm-fms"
                                         onclick="openEditModal(@emp.Id, '@emp.FullName.Replace("'", "\\'")', '@emp.Email', '@emp.PhoneNumber', '@emp.Role', '@emp.Gender', '@emp.Username')">
                                     <i class="fa-solid fa-pen"></i>

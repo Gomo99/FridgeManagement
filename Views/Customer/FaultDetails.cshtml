@@ -1,33 +1,212 @@
-﻿@model FridgeManagement.Models.FaultReport
-@{
+﻿@{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Fault Details";
+    var fault = ViewBag.Fault as FridgeManagement.Models.FaultReport;
+    var technician = ViewBag.Technician as FridgeManagement.Models.User;
+    var steps = ViewBag.Steps as dynamic[];
+    var activeIndex = (int)ViewBag.ActiveIndex;
 }
 
 <div class="page-header">
-    <h1>Fault #@Model.Id</h1>
-    <a asp-action="MyFaults" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    <div>
+        <h1>Fault Details</h1>
+        <p>Fault #@fault?.Id – @fault?.Fridge?.SerialNumber</p>
+    </div>
+    <a asp-action="MyFaults" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to My Faults
+    </a>
 </div>
 
-<div class="fms-card" style="max-width:700px;">
-    <dl class="row" style="padding:16px;">
-        <dt class="col-sm-4">Fridge</dt>
-        <dd class="col-sm-8">@Model.Fridge?.SerialNumber</dd>
-        <dt class="col-sm-4">Reported</dt>
-        <dd class="col-sm-8">@Model.ReportedDate.ToString("g")</dd>
-        <dt class="col-sm-4">Priority</dt>
-        <dd class="col-sm-8">@Model.Priority</dd>
-        <dt class="col-sm-4">Status</dt>
-        <dd class="col-sm-8">@Model.Status</dd>
-        <dt class="col-sm-4">Description</dt>
-        <dd class="col-sm-8">@Model.Description</dd>
-        <dt class="col-sm-4">Technician</dt>
-        <dd class="col-sm-8">@(Model.AssignedTechnician?.FullName ?? "—")</dd>
-        <dt class="col-sm-4">Diagnosis</dt>
-        <dd class="col-sm-8">@(Model.DiagnosisNotes ?? "—")</dd>
-        <dt class="col-sm-4">Resolution</dt>
-        <dd class="col-sm-8">@(Model.ResolutionNotes ?? "—")</dd>
-        <dt class="col-sm-4">Scheduled Repair</dt>
-        <dd class="col-sm-8">@(Model.ScheduledRepairDate?.ToString("g") ?? "—")</dd>
-    </dl>
+<!-- ═══════ LIVE PROGRESS TRACKER ═══════ -->
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-route"></i> Live Tracking</div>
+    </div>
+    <div class="tracker-container">
+        @if (steps != null)
+        {
+            foreach (var step in steps)
+            {
+                bool isCompleted = (bool)step.Completed;
+                bool isActive = (bool)step.Completed == false && activeIndex == Array.IndexOf(steps, step);
+                string icon = (string)step.Icon;
+                string label = (string)step.Label;
+
+                <div class="tracker-step @(isCompleted ? "completed" : "") @(isActive ? "active" : "")">
+                    <div class="tracker-circle">
+                        <i class="fa-solid @icon"></i>
+                    </div>
+                    <div class="tracker-label">@label</div>
+                    @if (step != steps.Last())
+                    {
+                        <div class="tracker-line @(isCompleted ? "completed" : "")"></div>
+                    }
+                </div>
+            }
+        }
+    </div>
 </div>
+
+
+
+<!-- ═══════ FAULT INFORMATION ═══════ -->
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Fault Information</div>
+    </div>
+    <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div><strong>Fridge:</strong> @fault?.Fridge?.SerialNumber</div>
+        <div><strong>Reported Date:</strong> @fault?.ReportedDate.ToString("yyyy-MM-dd HH:mm")</div>
+        <div><strong>Description:</strong> @fault?.Description</div>
+        <div><strong>Priority:</strong> @fault?.Priority</div>
+        <div><strong>Current Status:</strong> @fault?.Status</div>
+        <div><strong>Assigned Technician:</strong> @(fault?.AssignedTechnician?.FullName ?? "Not assigned")</div>
+    </div>
+</div>
+
+<!-- ═══════ TECHNICIAN CARD (shown when assigned) ═══════ -->
+@if (technician != null)
+{
+    <div class="fms-card" style="margin-bottom:28px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title"><i class="fa-solid fa-user-gear"></i> Your Technician</div>
+        </div>
+        <div style="padding:20px; display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+            <div style="flex-shrink:0; width:80px; height:80px; border-radius:50%; overflow:hidden; background:var(--panel-bg); border:2px solid var(--ice);">
+                @if (!string.IsNullOrEmpty(technician.PhotoUrl))
+                {
+                    <img src="@technician.PhotoUrl" alt="Technician photo" style="width:100%; height:100%; object-fit:cover;" />
+                }
+                else
+                {
+                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:32px; color:var(--ice);">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                }
+            </div>
+            <div style="flex:1;">
+                <h3 style="margin:0 0 8px; color:var(--text-primary);">@technician.FullName</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                    <div><i class="fa-solid fa-phone" style="color:var(--ice); width:20px;"></i> @technician.PhoneNumber</div>
+                    <div><i class="fa-solid fa-envelope" style="color:var(--ice); width:20px;"></i> @technician.Email</div>
+                    @if (!string.IsNullOrEmpty(technician.Vehicle))
+                    {
+                        <div><i class="fa-solid fa-truck" style="color:var(--ice); width:20px;"></i> @technician.Vehicle</div>
+                    }
+                    <div>
+                        <i class="fa-solid fa-star" style="color:gold;"></i>
+                        @technician.Rating.ToString("F1") / 5
+                    </div>
+                </div>
+                @if (fault?.EstimatedArrivalTime != null)
+                {
+                    <div style="margin-top:10px;">
+                        <strong><i class="fa-solid fa-clock"></i> Estimated Arrival:</strong>
+                        @fault.EstimatedArrivalTime.Value.ToString("yyyy-MM-dd HH:mm")
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@if (fault.Status == FaultStatus.Repaired)
+{
+    <div class="fms-card" style="margin-bottom:20px; padding:16px; text-align:center;">
+        <p style="margin:0 0 10px;">Your fridge has been repaired!</p>
+        <a asp-action="CreateFeedback" asp-route-faultId="@fault.Id" class="btn-fms btn-warning-fms">
+            <i class="fa-solid fa-star"></i> Leave Feedback
+        </a>
+    </div>
+}
+
+
+<style>
+    .tracker-container {
+        display: flex;
+        align-items: flex-start;
+        padding: 25px 20px 15px;
+        overflow-x: auto;
+        gap: 0;
+    }
+
+    .tracker-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        min-width: 90px;
+        flex: 1;
+    }
+
+    .tracker-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--panel-bg);
+        border: 3px solid var(--panel-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: var(--text-muted);
+        transition: all 0.3s;
+        z-index: 1;
+    }
+
+    .tracker-step.completed .tracker-circle {
+        background: var(--ice);
+        border-color: var(--ice);
+        color: #fff;
+    }
+
+    .tracker-step.active .tracker-circle {
+        border-color: var(--ice);
+        color: var(--ice);
+        box-shadow: 0 0 0 4px rgba(95,212,224,0.2);
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(95,212,224,0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(95,212,224,0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(95,212,224,0);
+        }
+    }
+
+    .tracker-label {
+        margin-top: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .tracker-step.completed .tracker-label,
+    .tracker-step.active .tracker-label {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .tracker-line {
+        position: absolute;
+        top: 21px;
+        left: calc(50% + 24px);
+        width: calc(100% - 48px);
+        height: 3px;
+        background: var(--panel-border);
+        z-index: 0;
+    }
+
+        .tracker-line.completed {
+            background: var(--ice);
+        }
+</style>

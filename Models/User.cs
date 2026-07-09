@@ -49,5 +49,14 @@ namespace FridgeManagement.Models
         public int FailedLoginAttempts { get; set; } = 0;
         public DateTime? LockoutEnd { get; set; }
         public DateTime? ResetPinExpiration { get; set; }
+
+
+        [StringLength(300)]
+        public string? PhotoUrl { get; set; }
+
+        [StringLength(100)]
+        public string? Vehicle { get; set; }
+
+        public double Rating { get; set; } = 0;   // scale 0–5
     }
 }

@@ -1,16 +1,561 @@
-@{
+﻿@{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Admin Dashboard";
     ViewData["ActivePage"] = "Dashboard";
 
-    /* These would normally come from ViewBag / ViewModel */
-    var totalEmployees  = ViewBag.TotalEmployees  ?? 0;
-    var totalCustomers  = ViewBag.TotalCustomers  ?? 0;
-    var totalFridges    = ViewBag.TotalFridges    ?? 0;
-    var allocatedFridges= ViewBag.AllocatedFridges?? 0;
-    var totalSuppliers  = ViewBag.TotalSuppliers  ?? 0;
-    var openFaults      = ViewBag.OpenFaults      ?? 0;
-    var pendingServices = ViewBag.PendingServices ?? 0;
-    var pendingOrders   = ViewBag.PendingOrders   ?? 0;
+    var totalCustomers = ViewBag.TotalCustomers ?? 0;
+    var activeCustomers = ViewBag.ActiveCustomers ?? 0;
+    var totalEmployees = ViewBag.TotalEmployees ?? 0;
+    var totalFridges = ViewBag.TotalFridges ?? 0;
+    var allocatedFridges = ViewBag.AllocatedFridges ?? 0;
+    var availableFridges = ViewBag.AvailableFridges ?? 0;
+    var faultsReported = ViewBag.FaultsReported ?? 0;
+    var faultsWaiting = ViewBag.FaultsWaiting ?? 0;
+    var faultsCompleted = ViewBag.FaultsCompleted ?? 0;
+    var upcomingMaintenance = ViewBag.UpcomingMaintenance ?? 0;
+    var totalSuppliers = ViewBag.TotalSuppliers ?? 0;
+    var pendingOrders = ViewBag.PendingOrders ?? 0;
 }
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --frost-bg-0: #081420;
+        --frost-bg-1: #0C1F30;
+        --frost-panel: rgba(255,255,255,0.045);
+        --frost-panel-brd: rgba(150,210,230,0.14);
+        --frost-cyan: #5FD4E0;
+        --frost-cyan-dim: #3AA8B8;
+        --frost-text: #E4F1F6;
+        --frost-text-dim: #8FAEBE;
+        --frost-amber: #F5A623;
+        --frost-mint: #3ECF8E;
+        --frost-rose: #F0637A;
+    }
+
+    .fd-wrap {
+        background: radial-gradient(circle at 15% 0%, rgba(95,212,224,0.09), transparent 40%), radial-gradient(circle at 90% 20%, rgba(62,207,142,0.06), transparent 35%), linear-gradient(180deg, var(--frost-bg-0), var(--frost-bg-1));
+        min-height: 100vh;
+        margin: -1.5rem -1.5rem 0;
+        padding: 2.5rem clamp(1rem, 4vw, 3rem) 3rem;
+        font-family: 'Inter', sans-serif;
+        color: var(--frost-text);
+        position: relative;
+        overflow: hidden;
+    }
+
+        /* signature: faint hexagonal ice-crystal lattice in the corner */
+        .fd-wrap::before {
+            content: "";
+            position: absolute;
+            top: -120px;
+            right: -120px;
+            width: 420px;
+            height: 420px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpath d='M30 0 L90 0 L120 52 L90 104 L30 104 L0 52 Z' fill='none' stroke='%235FD4E0' stroke-opacity='0.06' stroke-width='1'/%3E%3C/svg%3E");
+            background-size: 120px 104px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+    .fd-header {
+        position: relative;
+        z-index: 1;
+        margin-bottom: 2.25rem;
+    }
+
+    .fd-eyebrow {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--frost-cyan);
+        opacity: 0.85;
+        margin-bottom: 0.4rem;
+    }
+
+    .fd-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+        color: #fff;
+        letter-spacing: -0.01em;
+        margin: 0;
+    }
+
+    .fd-sub {
+        color: var(--frost-text-dim);
+        font-size: 0.92rem;
+        margin-top: 0.35rem;
+    }
+
+    .fd-section {
+        position: relative;
+        z-index: 1;
+        margin-bottom: 1.85rem;
+    }
+
+    .fd-section-head {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.9rem;
+    }
+
+    .fd-section-icon {
+        width: 26px;
+        height: 26px;
+        display: grid;
+        place-items: center;
+        border-radius: 7px;
+        background: rgba(95,212,224,0.1);
+        color: var(--frost-cyan);
+        flex-shrink: 0;
+    }
+
+    .fd-section-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 600;
+        font-size: 0.98rem;
+        color: var(--frost-text);
+        margin: 0;
+    }
+
+    .fd-section-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--frost-panel-brd), transparent);
+    }
+
+    .fd-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 1rem;
+    }
+
+    .fd-card {
+        background: var(--frost-panel);
+        border: 1px solid var(--frost-panel-brd);
+        border-radius: 14px;
+        padding: 1.15rem 1.25rem;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+        .fd-card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--fd-accent, var(--frost-cyan)), transparent);
+            opacity: 0.55;
+        }
+
+        .fd-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(150,210,230,0.3);
+            background: rgba(255,255,255,0.065);
+        }
+
+    .fd-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .fd-card-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        background: color-mix(in srgb, var(--fd-accent, var(--frost-cyan)) 16%, transparent);
+        color: var(--fd-accent, var(--frost-cyan));
+    }
+
+        .fd-card-icon svg {
+            width: 17px;
+            height: 17px;
+        }
+
+    .fd-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 700;
+        font-size: 2rem;
+        line-height: 1;
+        color: #fff;
+        margin-top: 0.85rem;
+    }
+
+    .fd-label {
+        font-size: 0.8rem;
+        color: var(--frost-text-dim);
+        margin-top: 0.3rem;
+        letter-spacing: 0.01em;
+    }
+
+    /* ── Chart Cards ── */
+    .chart-card {
+        background: var(--frost-panel);
+        border: 1px solid var(--frost-panel-brd);
+        border-radius: 14px;
+        padding: 1.25rem;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+        .chart-card canvas {
+            max-height: 260px;
+        }
+
+    @@media (max-width: 480px) {
+        .fd-wrap {
+            margin: -1rem -1rem 0;
+            padding: 1.75rem 1rem 2.25rem;
+        }
+
+        .fd-value {
+            font-size: 1.7rem;
+        }
+    }
+</style>
+
+<div class="fd-wrap">
+    <div class="fd-header">
+        <div class="fd-eyebrow">Fridge Management System</div>
+        <h1 class="fd-title">Administrator Dashboard</h1>
+        <p class="fd-sub">Live snapshot of customers, fleet, faults, maintenance and procurement.</p>
+    </div>
+
+    <!-- Customers -->
+    <div class="fd-section">
+        <div class="fd-section-head">
+            <span class="fd-section-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+            </span>
+            <h2 class="fd-section-title">Customers</h2>
+            <span class="fd-section-line"></span>
+        </div>
+        <div class="fd-grid">
+            <div class="fd-card" style="--fd-accent:#5FD4E0">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg></div>
+                </div>
+                <div class="fd-value">@totalCustomers</div>
+                <div class="fd-label">Total Customers</div>
+            </div>
+            <div class="fd-card" style="--fd-accent:#3ECF8E">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg></div>
+                </div>
+                <div class="fd-value">@activeCustomers</div>
+                <div class="fd-label">Active Customers</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workforce -->
+    <div class="fd-section">
+        <div class="fd-section-head">
+            <span class="fd-section-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>
+            </span>
+            <h2 class="fd-section-title">Workforce</h2>
+            <span class="fd-section-line"></span>
+        </div>
+        <div class="fd-grid">
+            <div class="fd-card" style="--fd-accent:#5FD4E0">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg></div>
+                </div>
+                <div class="fd-value">@totalEmployees</div>
+                <div class="fd-label">Total Employees</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fridge Fleet -->
+    <div class="fd-section">
+        <div class="fd-section-head">
+            <span class="fd-section-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" /><line x1="5" y1="10" x2="19" y2="10" /><line x1="8" y1="6" x2="8" y2="6" /><line x1="8" y1="14" x2="8" y2="14" /></svg>
+            </span>
+            <h2 class="fd-section-title">Fridge Fleet</h2>
+            <span class="fd-section-line"></span>
+        </div>
+        <div class="fd-grid">
+            <div class="fd-card" style="--fd-accent:#5FD4E0">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" /><line x1="5" y1="10" x2="19" y2="10" /></svg></div>
+                </div>
+                <div class="fd-value">@totalFridges</div>
+                <div class="fd-label">Total Fridges</div>
+            </div>
+            <div class="fd-card" style="--fd-accent:#F5A623">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg></div>
+                </div>
+                <div class="fd-value">@allocatedFridges</div>
+                <div class="fd-label">Allocated Fridges</div>
+            </div>
+            <div class="fd-card" style="--fd-accent:#3ECF8E">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg></div>
+                </div>
+                <div class="fd-value">@availableFridges</div>
+                <div class="fd-label">Available Fridges</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Faults -->
+    <div class="fd-section">
+        <div class="fd-section-head">
+            <span class="fd-section-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+            </span>
+            <h2 class="fd-section-title">Fault Reports</h2>
+            <span class="fd-section-line"></span>
+        </div>
+        <div class="fd-grid">
+            <div class="fd-card" style="--fd-accent:#5FD4E0">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" /></svg></div>
+                </div>
+                <div class="fd-value">@faultsReported</div>
+                <div class="fd-label">Faults Reported</div>
+            </div>
+            <div class="fd-card" style="--fd-accent:#F0637A">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg></div>
+                </div>
+                <div class="fd-value">@faultsWaiting</div>
+                <div class="fd-label">Faults Waiting</div>
+            </div>
+            <div class="fd-card" style="--fd-accent:#3ECF8E">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg></div>
+                </div>
+                <div class="fd-value">@faultsCompleted</div>
+                <div class="fd-label">Faults Completed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance -->
+    <div class="fd-section">
+        <div class="fd-section-head">
+            <span class="fd-section-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>
+            </span>
+            <h2 class="fd-section-title">Maintenance</h2>
+            <span class="fd-section-line"></span>
+        </div>
+        <div class="fd-grid">
+            <div class="fd-card" style="--fd-accent:#5FD4E0">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg></div>
+                </div>
+                <div class="fd-value">@upcomingMaintenance</div>
+                <div class="fd-label">Upcoming Maintenance</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Procurement -->
+    <div class="fd-section">
+        <div class="fd-section-head">
+            <span class="fd-section-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" /><rect x="10" y="6" width="12" height="12" rx="2" /></svg>
+            </span>
+            <h2 class="fd-section-title">Procurement</h2>
+            <span class="fd-section-line"></span>
+        </div>
+        <div class="fd-grid">
+            <div class="fd-card" style="--fd-accent:#5FD4E0">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 3h15l-1 9H6" /><path d="M16 12l1.5 6H23" /><circle cx="7" cy="21" r="1" /><circle cx="18" cy="21" r="1" /></svg></div>
+                </div>
+                <div class="fd-value">@totalSuppliers</div>
+                <div class="fd-label">Suppliers</div>
+            </div>
+            <div class="fd-card" style="--fd-accent:#F5A623">
+                <div class="fd-card-top">
+                    <div class="fd-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg></div>
+                </div>
+                <div class="fd-value">@pendingOrders</div>
+                <div class="fd-label">Purchase Requests</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ CHARTS ═══════════════ -->
+    <div class="fd-section">
+        <div class="fd-section-head">
+            <span class="fd-section-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+            </span>
+            <h2 class="fd-section-title">Analytics</h2>
+            <span class="fd-section-line"></span>
+        </div>
+        <div class="fd-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.2rem;">
+            <!-- Fridges by Condition -->
+            <div class="chart-card">
+                <h3 style="font-size:0.9rem; color:var(--frost-text-dim); margin:0 0 0.8rem;">Fridges by Condition</h3>
+                <canvas id="chartFridgeCondition"></canvas>
+            </div>
+            <!-- Faults per Month -->
+            <div class="chart-card">
+                <h3 style="font-size:0.9rem; color:var(--frost-text-dim); margin:0 0 0.8rem;">Faults per Month</h3>
+                <canvas id="chartFaultsMonth"></canvas>
+            </div>
+            <!-- Purchases per Month -->
+            <div class="chart-card">
+                <h3 style="font-size:0.9rem; color:var(--frost-text-dim); margin:0 0 0.8rem;">Purchases per Month</h3>
+                <canvas id="chartPurchasesMonth"></canvas>
+            </div>
+            <!-- Customers per City -->
+            <div class="chart-card">
+                <h3 style="font-size:0.9rem; color:var(--frost-text-dim); margin:0 0 0.8rem;">Customers per City</h3>
+                <canvas id="chartCustomersCity"></canvas>
+            </div>
+            <!-- Maintenance Visits per Month -->
+            <div class="chart-card">
+                <h3 style="font-size:0.9rem; color:var(--frost-text-dim); margin:0 0 0.8rem;">Maintenance per Month</h3>
+                <canvas id="chartMaintMonth"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Frost palette
+        const frostColors = {
+            cyan:   '#5FD4E0',
+            mint:   '#3ECF8E',
+            amber:  '#F5A623',
+            rose:   '#F0637A',
+            text:   '#E4F1F6',
+            grid:   'rgba(150,210,230,0.15)',
+            bg:     'rgba(255,255,255,0.03)'
+        };
+
+        const defaultOptions = (type) => ({
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    labels: { color: frostColors.text, font: { size: 11 } }
+                }
+            },
+            scales: type === 'pie' || type === 'doughnut' ? {} : {
+                x: {
+                    ticks: { color: frostColors.text, font: { size: 10 } },
+                    grid: { color: frostColors.grid }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: frostColors.text, font: { size: 10 }, precision: 0 },
+                    grid: { color: frostColors.grid }
+                }
+            }
+        });
+
+        // 1. Fridges by Condition (Pie/Donut)
+        new Chart(document.getElementById('chartFridgeCondition'), {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(ViewBag.FridgeConditionLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.FridgeConditionData ?? "[]"),
+                    backgroundColor: [frostColors.cyan, frostColors.mint, frostColors.amber, frostColors.rose, '#8FAEBE'],
+                    borderColor: 'rgba(0,0,0,0.2)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                ...defaultOptions('doughnut'),
+                plugins: { legend: { labels: { color: frostColors.text } } }
+            }
+        });
+
+        // 2. Faults per Month (Bar)
+        new Chart(document.getElementById('chartFaultsMonth'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(ViewBag.FaultsMonthLabels ?? "[]"),
+                datasets: [{
+                    label: 'Faults',
+                    data: @Html.Raw(ViewBag.FaultsMonthData ?? "[]"),
+                    backgroundColor: frostColors.rose,
+                    borderRadius: 4
+                }]
+            },
+            options: defaultOptions('bar')
+        });
+
+        // 3. Purchases per Month (Bar)
+        new Chart(document.getElementById('chartPurchasesMonth'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(ViewBag.PurchasesMonthLabels ?? "[]"),
+                datasets: [{
+                    label: 'Purchase Requests',
+                    data: @Html.Raw(ViewBag.PurchasesMonthData ?? "[]"),
+                    backgroundColor: frostColors.amber,
+                    borderRadius: 4
+                }]
+            },
+            options: defaultOptions('bar')
+        });
+
+        // 4. Customers per City (Bar horizontal or pie)
+        new Chart(document.getElementById('chartCustomersCity'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(ViewBag.CityLabels ?? "[]"),
+                datasets: [{
+                    label: 'Customers',
+                    data: @Html.Raw(ViewBag.CityData ?? "[]"),
+                    backgroundColor: frostColors.cyan,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                ...defaultOptions('bar'),
+                indexAxis: 'y',  // horizontal bar looks nice for cities
+                scales: {
+                    x: { ticks: { color: frostColors.text }, grid: { color: frostColors.grid } },
+                    y: { ticks: { color: frostColors.text }, grid: { color: frostColors.grid } }
+                }
+            }
+        });
+
+        // 5. Maintenance per Month (Line)
+        new Chart(document.getElementById('chartMaintMonth'), {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(ViewBag.MaintMonthLabels ?? "[]"),
+                datasets: [{
+                    label: 'Maintenance Visits',
+                    data: @Html.Raw(ViewBag.MaintMonthData ?? "[]"),
+                    borderColor: frostColors.mint,
+                    backgroundColor: 'rgba(62,207,142,0.15)',
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: frostColors.mint
+                }]
+            },
+            options: defaultOptions('line')
+        });
+    </script>
+}

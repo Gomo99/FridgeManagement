@@ -48,6 +48,9 @@
                         <td style="color:var(--muted);">@s.PhoneNumber</td>
                         <td style="color:var(--muted);">@s.Email</td>
                         <td style="text-align:right;">
+                            <a asp-action="SupplierProfile" asp-route-id="@s.Id" class="btn-fms btn-ghost-fms btn-sm-fms" title="View Profile">
+                                <i class="fa-solid fa-id-card"></i>
+                            </a>
                             <button class="btn-fms btn-ghost-fms btn-sm-fms"
                                     onclick="openEditModal(@s.Id, '@s.Name.Replace("'", "\\'")', '@s.ContactPerson.Replace("'", "\\'")', '@s.PhoneNumber', '@s.Email', '@s.Address.Replace("'", "\\'")')">
                                 <i class="fa-solid fa-pen"></i>

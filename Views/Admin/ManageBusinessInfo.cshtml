@@ -1,0 +1,88 @@
+﻿@model FridgeManagement.Models.BusinessInfo
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Manage Business Info";
+    ViewData["ActivePage"] = "BusinessInfo";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Business Info</h1>
+        <p>Update company details & system information</p>
+    </div>
+    <a asp-action="DashBoard" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="fms-card" style="margin-bottom:20px; padding:16px 20px; background:rgba(16,185,129,0.15); border:1px solid var(--success);">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--success);">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    </div>
+}
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-building" style="color:var(--ice); margin-right:8px;"></i>Company Profile</div>
+    </div>
+
+    <form asp-action="ManageBusinessInfo" method="post" style="padding:20px;">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom:16px;"></div>
+
+        <div class="grid-2">
+            <div class="fms-form-group">
+                <label asp-for="CompanyName" class="fms-label"></label>
+                <input asp-for="CompanyName" class="fms-input" placeholder="Beverage Manufacturer" required />
+                <span asp-validation-for="CompanyName" class="text-danger"></span>
+            </div>
+            <div class="fms-form-group">
+                <label asp-for="TaxId" class="fms-label"></label>
+                <input asp-for="TaxId" class="fms-input" placeholder="TAX/VAT number" />
+                <span asp-validation-for="TaxId" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="fms-form-group">
+                <label asp-for="Email" class="fms-label"></label>
+                <input asp-for="Email" class="fms-input" type="email" placeholder="info@company.com" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="fms-form-group">
+                <label asp-for="PhoneNumber" class="fms-label"></label>
+                <input asp-for="PhoneNumber" class="fms-input" type="tel" placeholder="0XX XXX XXXX" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="fms-form-group">
+            <label asp-for="Address" class="fms-label"></label>
+            <textarea asp-for="Address" class="fms-textarea" rows="2" placeholder="123 Main Street, Beverage City"></textarea>
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+
+        <div class="fms-form-group">
+            <label asp-for="Website" class="fms-label"></label>
+            <input asp-for="Website" class="fms-input" type="url" placeholder="https://www.company.com" />
+            <span asp-validation-for="Website" class="text-danger"></span>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+            <a asp-action="DashBoard" class="btn-fms btn-ghost-fms">Cancel</a>
+            <button type="submit" class="btn-fms btn-primary-fms">
+                <i class="fa-solid fa-floppy-disk"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

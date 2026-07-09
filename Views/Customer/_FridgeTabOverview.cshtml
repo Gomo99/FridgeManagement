@@ -1,0 +1,72 @@
+﻿@{
+    var fridge = (Model as dynamic).Item1 as FridgeManagement.Models.Fridge;
+    var allocation = (Model as dynamic).Item2 as FridgeManagement.Models.FridgeAllocation;
+    var lastService = (Model as dynamic).Item3 as FridgeManagement.Models.MaintenanceLog;
+    var nextService = (Model as dynamic).Item4 as FridgeManagement.Models.MaintenanceSchedule;
+    var technicianName = (Model as dynamic).Item5 as string;
+}
+
+<div class="fms-card" style="margin-bottom:20px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title">General Information</div>
+    </div>
+    <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        @if (!string.IsNullOrEmpty(fridge?.ImageUrl))
+        {
+            <div style="grid-column: span 2; text-align:center; margin-bottom:10px;">
+                <img src="@fridge.ImageUrl" alt="Fridge photo"
+                     style="max-width:250px; border-radius:8px; border:1px solid var(--panel-border);" />
+            </div>
+        }
+        else
+        {
+            <div style="grid-column: span 2; text-align:center; padding:20px; background:var(--panel-bg); border-radius:8px;">
+                <i class="fa-solid fa-snowflake" style="font-size:48px; color:var(--ice);"></i>
+                <p style="color:var(--muted);">No photo available</p>
+            </div>
+        }
+        <div><strong>Serial Number:</strong> @fridge?.SerialNumber</div>
+        <div><strong>Brand:</strong> @fridge?.Brand</div>
+        <div><strong>Model:</strong> @fridge?.Model</div>
+        <div><strong>Capacity:</strong> N/A</div>
+        <div><strong>Energy Rating:</strong> N/A</div>
+        <div><strong>Current Condition:</strong> @fridge?.Status</div>
+        <div><strong>Current Temperature:</strong> N/A</div>
+        <div>
+            <strong>Warranty:</strong>
+            @(fridge?.WarrantyExpiryDate?.ToString("yyyy-MM-dd") ?? "N/A")
+        </div>
+        <div><strong>Installation Date:</strong> @fridge?.PurchaseDate?.ToString("yyyy-MM-dd")</div>
+        <div><strong>Location:</strong> @allocation?.Customer?.Address</div>
+        <div><strong>Supplier:</strong> @fridge?.Supplier?.Name</div>
+    </div>
+</div>
+
+<div class="fms-card" style="margin-bottom:20px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Service Details</div>
+    </div>
+    <div style="padding:20px;">
+        <p>
+            <strong>Last Service:</strong>
+            @(lastService?.CompletedDate?.ToString("yyyy-MM-dd") ?? "No records")
+        </p>
+        <p>
+            <strong>Next Service:</strong>
+            @(nextService?.ScheduledDate.ToString("yyyy-MM-dd") ?? "Not scheduled")
+        </p>
+        <p><strong>Technician:</strong> @technicianName ?? "Not assigned"</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(fridge?.Notes))
+{
+    <div class="fms-card">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Notes</div>
+        </div>
+        <div style="padding:20px;">
+            <p>@fridge.Notes</p>
+        </div>
+    </div>
+}
