@@ -1,0 +1,57 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "QR Code Allocation";
+    var fridge = ViewBag.Fridge as FridgeManagement.Models.Fridge;
+    var customer = ViewBag.Customer as FridgeManagement.Models.Customer;
+    var allocation = ViewBag.Allocation as FridgeManagement.Models.FridgeAllocation;
+}
+
+<div class="page-header">
+    <div>
+        <h1>QR Code for Fridge</h1>
+        <p>@fridge?.SerialNumber</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <button onclick="window.print()" class="btn-fms btn-primary-fms">
+            <i class="fa-solid fa-print"></i> Print
+        </button>
+        <a asp-action="Allocations" class="btn-fms btn-ghost-fms">
+            <i class="fa-solid fa-arrow-left"></i> Back to Allocations
+        </a>
+    </div>
+</div>
+
+<div class="fms-card" style="margin-bottom:20px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Fridge QR Code Sticker</div>
+    </div>
+    <div style="padding:20px; text-align:center;">
+        <div style="display:inline-block; border:2px solid var(--panel-border); padding:20px; border-radius:12px; background:#fff;">
+            <!-- QR Code image -->
+            <img src="@Url.Action("GenerateAllocationQRCode", new { id = allocation?.Id })"
+                 alt="QR Code" style="width:200px; height:200px;" />
+
+            @if (fridge?.SerialNumber != null) {
+                <img src="@Url.Action("GenerateBarcode", new { text = fridge.SerialNumber })" 
+                     style="width:200px; height:60px; margin-top:10px;" />
+            } 
+
+            <div style="margin-top:10px; font-size:16px; font-weight:bold; color:#333;">
+                @fridge?.SerialNumber
+            </div>
+            <div style="font-size:14px; color:#666;">
+                @fridge?.Model – @fridge?.Brand
+            </div>
+            <div style="font-size:12px; color:#999;">
+                Warranty: @(fridge?.WarrantyExpiryDate?.ToString("yyyy-MM-dd") ?? "N/A")
+            </div>
+            <div style="font-size:12px; color:#999;">
+                Customer: @customer?.Name
+            </div>
+            <div style="margin-top:10px; font-size:10px; color:#aaa;">
+                Scan for full history & maintenance
+            </div>
+        </div>
+    </div>
+</div>
+

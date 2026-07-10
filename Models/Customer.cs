@@ -39,5 +39,20 @@ namespace FridgeManagement.Models
         public double? Latitude { get; set; }
 
         public double? Longitude { get; set; }
+
+        public DateTime? CreatedDate { get; set; }
+
+
+        [StringLength(500)]
+        public string? Notes { get; set; }
+
+        [StringLength(500)]
+        public string? SpecialInstructions { get; set; }
+
+        [StringLength(100)]
+        public string? PreferredContact { get; set; }
+
+        [StringLength(500)]
+        public string? DeliveryInstructions { get; set; }
     }
 }

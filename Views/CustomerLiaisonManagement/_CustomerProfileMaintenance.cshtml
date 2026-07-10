@@ -1,0 +1,26 @@
+﻿@model List<FridgeManagement.Models.MaintenanceSchedule>
+<div class="fms-card">
+    <div class="fms-card-header"><div class="fms-card-title">Maintenance Visits (@Model.Count)</div></div>
+    @if (Model.Any())
+    {
+        <table class="fms-table">
+            <thead><tr><th>Scheduled</th><th>Fridge</th><th>Technician</th><th>Status</th></tr></thead>
+            <tbody>
+                @foreach (var s in Model)
+                {
+                    <tr>
+                        <td>@s.ScheduledDate.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@s.Fridge?.SerialNumber</td>
+                        <td>@s.AssignedTechnician?.FullName</td>
+                        <td>@s.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+
+        <div style="padding:20px;"><em>No maintenance records.</em></div>
+    }
+</div>

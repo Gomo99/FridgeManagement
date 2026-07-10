@@ -3,16 +3,22 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Fault Technician Dashboard";
-    var totalOpen = ViewBag.TotalOpen ?? 0;
-    var assignedToMe = ViewBag.AssignedToMe ?? 0;
-    var highPriority = ViewBag.HighPriority ?? 0;
+    var totalOpen = (int)ViewBag.TotalOpen;
+    var assignedToMe = (int)ViewBag.AssignedToMe;
+    var highPriority = (int)ViewBag.HighPriority;
+    var avgRepairDays = (string)ViewBag.AvgRepairDays;
+    var recentActivities = ViewBag.RecentActivities as List<dynamic>;
 }
 
 <div class="page-header">
-    <h1>Fault Technician Dashboard</h1>
+    <div>
+        <h1>Fault Technician</h1>
+        <p>Overview, analytics & recent activity</p>
+    </div>
     <a asp-action="Index" class="btn-fms btn-primary-fms"><i class="fa-solid fa-list"></i> All Faults</a>
 </div>
 
+<!-- KPI Cards -->
 <div class="grid-4" style="margin-bottom:28px;">
     <div class="stat-card">
         <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
@@ -23,11 +29,68 @@
         <div><div class="stat-value">@assignedToMe</div><div class="stat-label">Assigned to Me</div></div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon amber"><i class="fa-solid fa-arrow-up-right-dots"></i></div>
+        <div class="stat-icon orange"><i class="fa-solid fa-arrow-up-right-dots"></i></div>
         <div><div class="stat-value">@highPriority</div><div class="stat-label">High Priority</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-clock"></i></div>
+        <div><div class="stat-value">@avgRepairDays</div><div class="stat-label">Avg Repair Days</div></div>
     </div>
 </div>
 
+<!-- Charts Section -->
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header"><div class="fms-card-title">Fault Analytics</div></div>
+    <div style="padding:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+        <div>
+            <h4 style="margin-bottom:8px;">Faults by Status</h4>
+            <canvas id="chartFaultStatus" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Faults by Priority</h4>
+            <canvas id="chartFaultPriority" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Monthly Repairs</h4>
+            <canvas id="chartRepairsMonth" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Most Common Fault Types</h4>
+            <canvas id="chartFaultDesc" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Repairs Per Technician</h4>
+            <canvas id="chartTechRepairs" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header"><div class="fms-card-title">Recent Activity</div></div>
+    @if (recentActivities != null && recentActivities.Any())
+    {
+        <table class="fms-table">
+            <thead><tr><th>Date</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                @foreach (var a in recentActivities)
+                {
+                    <tr>
+                        <td>@a.Date.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@a.Type</td>
+                        <td>@a.Description</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="padding:20px;"><em>No recent activity.</em></div>
+    }
+</div>
+
+<!-- Recent Faults Table -->
 <div class="fms-card">
     <div class="fms-card-header"><div class="fms-card-title">Recent Faults</div></div>
     <table class="fms-table">
@@ -39,10 +102,176 @@
                     <td>@f.Fridge?.SerialNumber</td>
                     <td>@f.ReportedByCustomer?.Name</td>
                     <td>@f.Description</td>
-                    <td><span class="fms-badge @(f.Priority >= FaultPriority.High ? "red" : "amber")">@f.Priority</span></td>
+                    <td><span class="fms-badge @(f.Priority >= FaultPriority.High ? "red" : "orange")">@f.Priority</span></td>
                     <td><span class="fms-badge @(f.Status == FaultStatus.Closed ? "gray" : f.Status == FaultStatus.Repaired ? "green" : "blue")">@f.Status</span></td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const chartFontColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#e0e0e0';
+        const chartGridColor = 'rgba(150,210,230,0.15)';
+
+        // 1. Faults by Status (doughnut)
+        new Chart(document.getElementById('chartFaultStatus'), {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(ViewBag.FaultStatusLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.FaultStatusData ?? "[]"),
+                    backgroundColor: ['#F0637A','#5FD4E0','#3ECF8E','#F5A623','#8FAEBE','#A78BFA'],
+                    borderColor: 'rgba(0,0,0,0.2)'
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { labels: { color: chartFontColor } } } }
+        });
+
+        // 2. Faults by Priority (bar)
+        new Chart(document.getElementById('chartFaultPriority'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(ViewBag.FaultPriorityLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.FaultPriorityData ?? "[]"),
+                    backgroundColor: '#F5A623',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: chartFontColor }, grid: { color: chartGridColor } },
+                    y: { beginAtZero: true, ticks: { precision: 0, color: chartFontColor }, grid: { color: chartGridColor } }
+                }
+            }
+        });
+
+        // 3. Monthly Repairs (line)
+        new Chart(document.getElementById('chartRepairsMonth'), {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(ViewBag.RepairsMonthLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.RepairsMonthData ?? "[]"),
+                    borderColor: '#3ECF8E',
+                    backgroundColor: 'rgba(62,207,142,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#3ECF8E'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: chartFontColor }, grid: { color: chartGridColor } },
+                    y: { beginAtZero: true, ticks: { precision: 0, color: chartFontColor }, grid: { color: chartGridColor } }
+                }
+            }
+        });
+
+        // 4. Most Common Fault Types (horizontal bar)
+        new Chart(document.getElementById('chartFaultDesc'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(ViewBag.FaultDescLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.FaultDescData ?? "[]"),
+                    backgroundColor: '#5FD4E0',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { precision: 0, color: chartFontColor }, grid: { color: chartGridColor } },
+                    y: { ticks: { color: chartFontColor }, grid: { color: chartGridColor } }
+                }
+            }
+        });
+
+        // 5. Repairs Per Technician (bar)
+        new Chart(document.getElementById('chartTechRepairs'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(ViewBag.TechLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.TechData ?? "[]"),
+                    backgroundColor: '#A78BFA',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: chartFontColor }, grid: { color: chartGridColor } },
+                    y: { beginAtZero: true, ticks: { precision: 0, color: chartFontColor }, grid: { color: chartGridColor } }
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+        .stat-icon.red {
+            background: linear-gradient(135deg, #F0637A, #D14A5A);
+        }
+
+        .stat-icon.blue {
+            background: linear-gradient(135deg, #5FD4E0, #3AA8B8);
+        }
+
+        .stat-icon.orange {
+            background: linear-gradient(135deg, #F5A623, #D48C1A);
+        }
+
+        .stat-icon.green {
+            background: linear-gradient(135deg, #3ECF8E, #2EA873);
+        }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+</style>

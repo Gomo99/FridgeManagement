@@ -1,94 +1,396 @@
-﻿@using FridgeManagement.AppStatus
-@model FridgeManagement.Models.FaultReport
+﻿@model FridgeManagement.Models.FaultReport
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Process Fault #" + Model.Id;
-    var technicians = ViewBag.Technicians as SelectList;
+    ViewData["Title"] = $"Workflow – Fault #{Model.Id}";
+    var workflowSteps = ViewBag.WorkflowSteps as List<FridgeManagement.Controllers.WorkflowStep>;
+    var currentStepIndex = (int)ViewBag.CurrentStepIndex;
+    var technicianList = ViewBag.TechnicianList as List<dynamic>;
+    var recommendedId = ViewBag.RecommendedTechnicianId != null ? (int)ViewBag.RecommendedTechnicianId : 0;
+
+    var requiredChecks = ViewBag.RequiredChecklistItems as List<string>;
+    var completedChecks = ViewBag.CompletedChecks as List<string>;
+    var checklistItemsJson = ViewBag.ChecklistItemsJson as string ?? "[]";
 }
 
 <div class="page-header">
     <div>
-        <h1>Process Fault #@Model.Id</h1>
-        <p>@Model.Fridge?.SerialNumber – @Model.ReportedByCustomer?.Name</p>
+        <h1>Repair Workflow – Fault #@Model.Id</h1>
+        <p>@Model.Fridge?.SerialNumber – @Model.Description</p>
     </div>
-    <a asp-action="Index" class="btn-fms btn-ghost-fms"><i class="fa-solid fa-arrow-left"></i> Back to List</a>
+    <a asp-action="Index" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to Faults
+    </a>
 </div>
 
-<div class="grid-2" style="align-items:start;">
-    <!-- Fault Information -->
-    <div class="fms-card">
-        <div class="fms-card-header"><div class="fms-card-title"><i class="fa-solid fa-info-circle"></i> Fault Info</div></div>
-        <dl class="row" style="padding:16px;">
-            <dt class="col-sm-4">Reported</dt>
-            <dd class="col-sm-8">@Model.ReportedDate.ToString("g")</dd>
-            <dt class="col-sm-4">Priority</dt>
-            <dd class="col-sm-8"><span class="fms-badge @(Model.Priority >= FaultPriority.High ? "red" : "amber")">@Model.Priority</span></dd>
-            <dt class="col-sm-4">Status</dt>
-            <dd class="col-sm-8">@Model.Status</dd>
-            @if (!string.IsNullOrEmpty(Model.DiagnosisNotes))
-            {
-                <dt>Diagnosis</dt>
-                <dd>@Model.DiagnosisNotes</dd>
- }
-            @if (!string.IsNullOrEmpty(Model.ResolutionNotes))
-            {
-                <dt>Resolution</dt>
-                <dd>@Model.ResolutionNotes</dd>
- }
-            @if (Model.ScheduledRepairDate.HasValue)
-            {
-                <dt>Scheduled</dt>
-                <dd>@Model.ScheduledRepairDate.Value.ToString("g")</dd>
- }
-        </dl>
+<!-- Workflow Step Indicator -->
+<div class="fms-card" style="margin-bottom:20px;">
+    <div class="fms-card-header"><div class="fms-card-title">Current Status: @Model.Status</div></div>
+    <div class="workflow-progress">
+        @for (int i = 0; i < workflowSteps.Count; i++)
+        {
+            var step = workflowSteps[i];
+            bool isCompleted = i < currentStepIndex;
+            bool isActive = i == currentStepIndex;
+            <div class="workflow-step @(isCompleted ? "completed" : "") @(isActive ? "active" : "")">
+                <div class="workflow-circle"><i class="fa-solid @step.Icon"></i></div>
+                <div class="workflow-label">@step.Label</div>
+                @if (i < workflowSteps.Count - 1)
+                {
+                    <div class="workflow-line @(isCompleted ? "completed" : "")"></div>
+                }
+            </div>
+        }
     </div>
+</div>
 
-    <!-- Action Forms -->
-    <div class="fms-card">
-        <div class="fms-card-header"><div class="fms-card-title"><i class="fa-solid fa-wrench"></i> Update Fault</div></div>
-        <div style="padding:16px;">
-            <form asp-action="ProcessFault" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@Model.Id" />
+<form asp-action="ProcessFault" method="post" id="workflowForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <input type="hidden" name="AssignedTechnicianId" id="selectedTechId" value="@Model.AssignedTechnicianId" />
 
-                <!-- Assign Technician -->
-                <div class="fms-form-group">
-                    <label class="fms-label" for="AssignedTechnicianId">Assign Technician</label>
-                    <select name="AssignedTechnicianId" class="fms-select" asp-items="technicians">
-                        <option value="">-- Select --</option>
-                    </select>
-                    <button type="submit" name="action" value="assign" class="btn-fms btn-sm-fms btn-primary-fms mt-2">Assign</button>
+    <!-- Technician Selection (only when Reported) -->
+    @if (Model.Status == FaultStatus.Reported)
+    {
+        <div class="fms-card" style="margin-bottom:20px;">
+            <div class="fms-card-header">
+                <div class="fms-card-title"><i class="fa-solid fa-user-gear"></i> Assign Technician</div>
+            </div>
+            <div style="padding:20px;">
+                <p style="color:var(--text-muted);">Select a technician. The <strong>least busy is recommended</strong>.</p>
+                <div class="tech-selection-grid">
+                    @foreach (var tech in technicianList)
+                    {
+                        bool isRec = (int)tech.Id == recommendedId;
+                        bool isCur = (bool)tech.IsCurrent;
+                        <div class="tech-card @(isRec ? "recommended" : "") @(isCur ? "current" : "")"
+                             data-id="@tech.Id"
+                             onclick="selectTechnician(this, @tech.Id)">
+                            <div class="tech-header">
+                                <strong>@tech.Name</strong>
+                                @if (isRec)
+                                {
+                                    <span class="fms-badge green">Recommended</span>
+                                }
+                                @if (isCur)
+                                {
+                                    <span class="fms-badge blue">Current</span>
+                                }
+                            </div>
+                            <div class="tech-body">
+                                <div>Open Jobs: <strong>@tech.OpenJobs</strong></div>
+                                <div>Availability: <strong>@tech.Availability</strong></div>
+                                <div>Rating: <strong>@tech.Rating.ToString("F1") / 5</strong></div>
+                                <div>Last Completed: <em>@tech.LastCompletedJob</em></div>
+                            </div>
+                        </div>
+                    }
                 </div>
+                <button type="submit" name="action" value="assign" class="btn-fms btn-primary-fms" style="margin-top:16px;">Assign Selected Technician</button>
+            </div>
+        </div>
+    }
 
-                <!-- Schedule Repair -->
+    <!-- Common Workflow Fields -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header"><div class="fms-card-title">Repair Details</div></div>
+        <div style="padding:20px;">
+            <div class="grid-2">
                 <div class="fms-form-group">
-                    <label class="fms-label" for="ScheduledRepairDate">Schedule Repair</label>
-                    <input type="datetime-local" name="ScheduledRepairDate" class="fms-input" />
-                    <button type="submit" name="action" value="schedule" class="btn-fms btn-sm-fms btn-primary-fms mt-2">Schedule</button>
+                    <label asp-for="ScheduledRepairDate" class="fms-label">Scheduled Date & Time</label>
+                    <input asp-for="ScheduledRepairDate" class="fms-input" type="datetime-local" />
                 </div>
-
-                <!-- Diagnose -->
                 <div class="fms-form-group">
-                    <label class="fms-label" for="DiagnosisNotes">Diagnosis Notes</label>
-                    <textarea name="DiagnosisNotes" class="fms-textarea" rows="2"></textarea>
-                    <button type="submit" name="action" value="diagnose" class="btn-fms btn-sm-fms btn-primary-fms mt-2">Start Diagnosis</button>
+                    <label asp-for="EstimatedArrivalTime" class="fms-label">Estimated Arrival Time</label>
+                    <input asp-for="EstimatedArrivalTime" class="fms-input" type="datetime-local" />
                 </div>
-
-                <!-- Repair -->
+            </div>
+            <div class="grid-2">
                 <div class="fms-form-group">
-                    <label class="fms-label" for="ResolutionNotes">Resolution Notes</label>
-                    <textarea name="ResolutionNotes" class="fms-textarea" rows="2"></textarea>
-                    <button type="submit" name="action" value="repair" class="btn-fms btn-sm-fms btn-success-fms mt-2">Mark Repaired</button>
+                    <label asp-for="TravelTimeMinutes" class="fms-label">Travel Time (min)</label>
+                    <input asp-for="TravelTimeMinutes" class="fms-input" type="number" min="0" />
                 </div>
-
-                <!-- Close -->
                 <div class="fms-form-group">
-                    <button type="submit" name="action" value="close" class="btn-fms btn-danger-fms"
-                            onclick="return confirm('Close this fault? It will be soft‑deleted.');">
-                        <i class="fa-solid fa-xmark"></i> Close Fault
-                    </button>
+                    <label asp-for="RepairDurationMinutes" class="fms-label">Repair Duration (min)</label>
+                    <input asp-for="RepairDurationMinutes" class="fms-input" type="number" min="0" />
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- Notes -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header"><div class="fms-card-title">Notes</div></div>
+        <div style="padding:20px;">
+            <div class="fms-form-group">
+                <label asp-for="DiagnosisNotes" class="fms-label">Diagnosis Notes</label>
+                <textarea asp-for="DiagnosisNotes" class="fms-textarea" rows="2"></textarea>
+            </div>
+            <div class="fms-form-group">
+                <label asp-for="ResolutionNotes" class="fms-label">Repair Notes</label>
+                <textarea asp-for="ResolutionNotes" class="fms-textarea" rows="2"></textarea>
+            </div>
+            <div class="grid-2">
+                <div class="fms-form-group">
+                    <label asp-for="TechnicianNotes" class="fms-label">Technician Notes</label>
+                    <textarea asp-for="TechnicianNotes" class="fms-textarea" rows="2"></textarea>
+                </div>
+                <div class="fms-form-group">
+                    <label asp-for="CustomerNotes" class="fms-label">Customer Notes</label>
+                    <textarea asp-for="CustomerNotes" class="fms-textarea" rows="2"></textarea>
+                </div>
+                <div class="fms-form-group">
+                    <label asp-for="ManagerNotes" class="fms-label">Manager Notes</label>
+                    <textarea asp-for="ManagerNotes" class="fms-textarea" rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔒 REPAIR CHECKLIST CARD -->
+    <div class="fms-card" style="margin-bottom:20px;">
+        <div class="fms-card-header">
+            <div class="fms-card-title"><i class="fa-solid fa-clipboard-check"></i> Repair Checklist</div>
+        </div>
+        <div style="padding:20px;">
+            <p style="color:var(--text-muted); margin-bottom:12px;">
+                All items must be checked before the repair can be completed.
+            </p>
+            <div class="checklist-grid">
+                @foreach (var item in requiredChecks)
+                {
+                    bool isChecked = completedChecks != null && completedChecks.Contains(item);
+                    <label class="checklist-item @(isChecked ? "checked" : "")">
+                        <input type="checkbox" name="checklistItems" value="@item" @(isChecked ? "checked" : "") />
+                        <i class="fa-solid fa-square-check"></i>
+                        <span>@item</span>
+                    </label>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Single Advance Button -->
+    <div style="text-align:right; margin-bottom:20px;">
+        @if (Model.Status == FaultStatus.Closed || Model.Status == FaultStatus.Cancelled)
+        {
+            <button type="button" class="btn-fms btn-ghost-fms" disabled>Workflow Complete</button>
+        }
+        else
+        {
+            <button type="submit" name="action" value="advance" class="btn-fms btn-primary-fms btn-lg" id="advanceBtn">
+                <i class="fa-solid fa-arrow-right"></i> Advance to Next Step
+            </button>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        var requiredChecks = @Html.Raw(checklistItemsJson); // array of strings
+
+        // Technician selection
+        function selectTechnician(card, id) {
+            document.querySelectorAll('.tech-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            document.getElementById('selectedTechId').value = id;
+        }
+        window.addEventListener('DOMContentLoaded', function() {
+            var recommendedCard = document.querySelector('.tech-card.recommended');
+            if (recommendedCard) selectTechnician(recommendedCard, @recommendedId);
+        });
+
+        // Checklist UI
+        document.querySelectorAll('.checklist-item input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', function() {
+                var label = this.closest('.checklist-item');
+                if (this.checked) label.classList.add('checked');
+                else label.classList.remove('checked');
+            });
+        });
+
+        // Prevent submit if checklist incomplete (when advancing)
+        document.getElementById('workflowForm').addEventListener('submit', function(e) {
+            var actionButton = document.activeElement;
+            if (actionButton && actionButton.name === 'action' && actionButton.value === 'advance') {
+                var allChecked = requiredChecks.every(function(item) {
+                    return document.querySelector(`input[name="checklistItems"][value="${item}"]`)?.checked;
+                });
+                if (!allChecked) {
+                    e.preventDefault();
+                    alert('You must complete the repair checklist before advancing.');
+                }
+            }
+        });
+    </script>
+    <style>
+        /* Existing styles ... (keep them) */
+        .workflow-progress {
+            display: flex;
+            align-items: flex-start;
+            padding: 25px 20px 15px;
+            overflow-x: auto;
+        }
+
+        .workflow-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            min-width: 80px;
+            flex: 1;
+        }
+
+        .workflow-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--panel-bg);
+            border: 3px solid var(--panel-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--text-muted);
+            transition: 0.3s;
+            z-index: 1;
+        }
+
+        .workflow-step.completed .workflow-circle {
+            background: var(--ice);
+            border-color: var(--ice);
+            color: #fff;
+        }
+
+        .workflow-step.active .workflow-circle {
+            border-color: var(--ice);
+            color: var(--ice);
+            box-shadow: 0 0 0 4px rgba(95,212,224,0.2);
+        }
+
+        .workflow-label {
+            margin-top: 6px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .workflow-step.completed .workflow-label, .workflow-step.active .workflow-label {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .workflow-line {
+            position: absolute;
+            top: 18px;
+            left: calc(50% + 20px);
+            width: calc(100% - 40px);
+            height: 3px;
+            background: var(--panel-border);
+            z-index: 0;
+        }
+
+            .workflow-line.completed {
+                background: var(--ice);
+            }
+
+        .tech-selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .tech-card {
+            background: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+        }
+
+            .tech-card:hover {
+                border-color: var(--ice);
+            }
+
+            .tech-card.selected {
+                border-color: var(--ice);
+                box-shadow: 0 0 0 3px rgba(95,212,224,0.3);
+            }
+
+            .tech-card.recommended {
+                border-color: var(--success);
+            }
+
+                .tech-card.recommended::after {
+                    content: "★";
+                    position: absolute;
+                    top: 8px;
+                    right: 12px;
+                    color: var(--success);
+                    font-size: 1.2rem;
+                }
+
+        .tech-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .tech-body {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+            .tech-body > div {
+                margin-bottom: 4px;
+            }
+
+        .btn-lg {
+            padding: 12px 24px;
+            font-size: 1.1rem;
+        }
+
+        /* Checklist styling */
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 8px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            background: var(--panel-bg);
+            color: var(--text-muted);
+        }
+
+            .checklist-item input {
+                display: none;
+            }
+
+            .checklist-item i {
+                font-size: 1.2rem;
+                color: var(--panel-border);
+                transition: 0.2s;
+            }
+
+            .checklist-item.checked {
+                border-color: var(--ice);
+                background: rgba(95,212,224,0.08);
+                color: var(--text-primary);
+            }
+
+                .checklist-item.checked i {
+                    color: var(--ice);
+                }
+    </style>
+}

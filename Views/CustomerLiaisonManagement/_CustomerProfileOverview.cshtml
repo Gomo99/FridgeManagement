@@ -1,0 +1,22 @@
+﻿@model FridgeManagement.Models.Customer
+<div class="fms-card" style="margin-bottom:20px;">
+    <div class="fms-card-header"><div class="fms-card-title">Business Information</div></div>
+    <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div><strong>Shop Name:</strong> @Model.Name</div>
+        <div><strong>Owner:</strong> @(Model.Owner ?? "N/A")</div>
+        <div><strong>Business Type:</strong> @(Model.BusinessType?.ToString() ?? "N/A")</div>
+        <div><strong>Contact Person:</strong> @Model.ContactPerson</div>
+        <div><strong>Phone:</strong> @Model.PhoneNumber</div>
+        <div><strong>Email:</strong> @Model.Email</div>
+        <div style="grid-column:span 2;"><strong>Address:</strong> @Model.Address</div>
+        <div><strong>Trading Hours:</strong> @(Model.OperatingHours ?? "N/A")</div>
+        <div><strong>Emergency Contact:</strong> @(Model.EmergencyContact ?? "N/A")</div>
+    </div>
+</div>
+@if (!string.IsNullOrEmpty(Model.Notes))
+{
+    <div class="fms-card">
+        <div class="fms-card-header"><div class="fms-card-title">Notes</div></div>
+        <div style="padding:20px;">@Model.Notes</div>
+    </div>
+}

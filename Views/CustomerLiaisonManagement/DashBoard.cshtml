@@ -1,0 +1,237 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Customer Liaison Dashboard";
+    var totalCustomers = (int)ViewBag.TotalCustomers;
+    var activeCustomers = (int)ViewBag.ActiveCustomers;
+    var allocatedFridges = (int)ViewBag.AllocatedFridges;
+    var availableFridges = (int)ViewBag.AvailableFridges;
+    var pendingFridgeRequests = (int)ViewBag.PendingFridgeRequests;
+    var approvedRequests = (int)ViewBag.ApprovedRequests;
+    var returnedFridges = (int)ViewBag.ReturnedFridges;
+    var avgAllocationDays = (string)ViewBag.AvgAllocationDays;
+    var recentActivities = ViewBag.RecentActivities as List<dynamic>;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Customer Liaison</h1>
+        <p>Fridge allocation & customer overview</p>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid-4" style="margin-bottom:28px;">
+    <div class="stat-card">
+        <div class="stat-icon teal"><i class="fa-solid fa-users"></i></div>
+        <div>
+            <div class="stat-value">@totalCustomers</div>
+            <div class="stat-label">Total Customers</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-user-check"></i></div>
+        <div>
+            <div class="stat-value">@activeCustomers</div>
+            <div class="stat-label">Active Customers</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa-solid fa-snowflake"></i></div>
+        <div>
+            <div class="stat-value">@allocatedFridges</div>
+            <div class="stat-label">Allocated Fridges</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fa-solid fa-warehouse"></i></div>
+        <div>
+            <div class="stat-value">@availableFridges</div>
+            <div class="stat-label">Available Fridges</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div>
+            <div class="stat-value">@pendingFridgeRequests</div>
+            <div class="stat-label">Pending Requests</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa-solid fa-thumbs-up"></i></div>
+        <div>
+            <div class="stat-value">@approvedRequests</div>
+            <div class="stat-label">Approved Requests</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="fa-solid fa-rotate-left"></i></div>
+        <div>
+            <div class="stat-value">@returnedFridges</div>
+            <div class="stat-label">Returned Fridges</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon teal"><i class="fa-solid fa-clock"></i></div>
+        <div>
+            <div class="stat-value">@avgAllocationDays</div>
+            <div class="stat-label">Avg. Allocation Days</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Analytics</div>
+    </div>
+    <div style="padding:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+        <div>
+            <h4 style="margin-bottom:8px;">Customers by Business Type</h4>
+            <canvas id="chartCustomerType" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Allocations per Month</h4>
+            <canvas id="chartAllocMonth" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Top Customers</h4>
+            <canvas id="chartTopCustomers" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Fridges by Brand</h4>
+            <canvas id="chartFridgeBrand" height="200"></canvas>
+        </div>
+        <div>
+            <h4 style="margin-bottom:8px;">Allocation Status</h4>
+            <canvas id="chartAllocStatus" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header">
+        <div class="fms-card-title">Recent Activity</div>
+    </div>
+    <div style="padding:16px;">
+        @if (recentActivities != null && recentActivities.Any())
+        {
+            <table class="fms-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var act in recentActivities)
+                    {
+                        <tr>
+                            <td>@act.Date.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@act.Type</td>
+                            <td>@act.Description</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p style="color:var(--muted);">No recent activity.</p>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const chartFontColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#e0e0e0';
+        const chartGridColor = 'rgba(150,210,230,0.15)';
+
+        // 1. Customers by Business Type (doughnut)
+        new Chart(document.getElementById('chartCustomerType'), {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(ViewBag.CustomerTypeLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.CustomerTypeData ?? "[]"),
+                    backgroundColor: ['#5FD4E0','#F5A623','#3ECF8E','#F0637A','#8FAEBE'],
+                    borderColor: 'rgba(0,0,0,0.2)'
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { labels: { color: chartFontColor } } } }
+        });
+
+        // 2. Allocations per Month (bar)
+        new Chart(document.getElementById('chartAllocMonth'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(ViewBag.AllocMonthLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.AllocMonthData ?? "[]"),
+                    backgroundColor: '#5FD4E0',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: chartFontColor }, grid: { color: chartGridColor } },
+                    y: { beginAtZero: true, ticks: { precision: 0, color: chartFontColor }, grid: { color: chartGridColor } }
+                }
+            }
+        });
+
+        // 3. Top Customers (horizontal bar)
+        new Chart(document.getElementById('chartTopCustomers'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(ViewBag.TopCustomersLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.TopCustomersData ?? "[]"),
+                    backgroundColor: '#3ECF8E',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { precision: 0, color: chartFontColor }, grid: { color: chartGridColor } },
+                    y: { ticks: { color: chartFontColor }, grid: { color: chartGridColor } }
+                }
+            }
+        });
+
+        // 4. Fridges by Brand (doughnut)
+        new Chart(document.getElementById('chartFridgeBrand'), {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(ViewBag.FridgeBrandLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.FridgeBrandData ?? "[]"),
+                    backgroundColor: ['#5FD4E0','#F5A623','#3ECF8E','#F0637A','#8FAEBE','#D4A5A5','#A5D4A5','#A5A5D4'],
+                    borderColor: 'rgba(0,0,0,0.2)'
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { labels: { color: chartFontColor } } } }
+        });
+
+        // 5. Allocation Status (doughnut)
+        new Chart(document.getElementById('chartAllocStatus'), {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(ViewBag.AllocationStatusLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.AllocationStatusData ?? "[]"),
+                    backgroundColor: ['#5FD4E0','#3ECF8E','#F5A623','#F0637A','#8FAEBE'],
+                    borderColor: 'rgba(0,0,0,0.2)'
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { labels: { color: chartFontColor } } } }
+        });
+    </script>
+}

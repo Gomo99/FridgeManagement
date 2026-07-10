@@ -47,6 +47,20 @@ namespace FridgeManagement.Models
 
         public bool IsDeleted { get; set; } = false;
 
+
+        public int? TravelTimeMinutes { get; set; }
+
+        // Expected repair duration in minutes
+        public int? RepairDurationMinutes { get; set; }
+
+        public DateTime? PartsArrivedDate { get; set; }
+
+        [StringLength(2000)]
+        public string? RepairChecklistJson { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? RepairCost { get; set; }
+
         public DateTime? AssignedDate { get; set; }
         public DateTime? TechnicianTravelingAt { get; set; }
         public DateTime? TechnicianArrivedAt { get; set; }
@@ -54,5 +68,24 @@ namespace FridgeManagement.Models
         public DateTime? RepairCompletedAt { get; set; }
 
         public DateTime? EstimatedArrivalTime { get; set; }
+
+        [StringLength(2000)]
+        public string? RepairNotes { get; set; }
+
+        [StringLength(2000)]
+        public string? TechnicianNotes { get; set; }
+
+        [StringLength(2000)]
+        public string? CustomerNotes { get; set; }
+
+        [StringLength(2000)]
+        public string? ManagerNotes { get; set; }
+
+        // Estimated repair duration in minutes
+        public int? EstimatedDuration { get; set; }
+
+        // Travel time from previous job in minutes (can be set manually or calculated later)
+        public int? TravelTime { get; set; }
+
     }
 }

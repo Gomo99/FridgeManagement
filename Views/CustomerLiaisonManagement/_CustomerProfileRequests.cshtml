@@ -1,0 +1,25 @@
+﻿@model List<FridgeManagement.Models.FridgeRequest>
+<div class="fms-card">
+    <div class="fms-card-header"><div class="fms-card-title">Fridge Requests (@Model.Count)</div></div>
+    @if (Model.Any())
+    {
+        <table class="fms-table">
+            <thead><tr><th>Date</th><th>Reason</th><th>Status</th></tr></thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td>@r.RequestDate.ToString("yyyy-MM-dd")</td>
+                        <td>@r.Reason</td>
+                        <td>@r.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+
+        <div style="padding:20px;"><em>No fridge requests.</em></div>
+    }
+</div>

@@ -27,7 +27,13 @@
                                 onclick="openReturnModal(@a.Id, '@a.Fridge?.SerialNumber', '@a.Customer?.Name')">
                             <i class="fa-solid fa-rotate-left"></i> Return
                         </button>
-                        <a asp-action="FridgeHistory" asp-route-fridgeId="@a.FridgeId" class="btn-fms btn-sm-fms btn-info-fms">History</a>
+                        <a asp-action="FridgeHistory" asp-route-fridgeId="@a.FridgeId" class="btn-fms btn-ghost-fms btn-sm-fms">
+                            <i class="fa-solid fa-clock-rotate-left"></i> History
+                        </a>
+                        <a asp-action="AllocationQRCode" asp-route-id="@a.Id" class="btn-fms btn-ghost-fms btn-sm-fms" title="QR Code">
+                            <i class="fa-solid fa-qrcode"></i> QR
+                        </a>
+
                     </td>
                 </tr>
             }

@@ -1,0 +1,202 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Fault Analytics";
+    var topFailingModels = ViewBag.TopFailingModels as List<dynamic>;
+    var expensiveRepairs = ViewBag.ExpensiveRepairs as List<dynamic>;
+    var commonFaults = ViewBag.CommonFaults as List<dynamic>;
+    var avgRepairCost = ViewBag.AvgRepairCost as string;
+    var avgResponseHours = ViewBag.AvgResponseHours as string;
+    var avgCompletionDays = ViewBag.AvgCompletionDays as string;
+    var repeatFaultCount = (int)ViewBag.RepeatFaultCount;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Fault Analytics</h1>
+        <p>Repair performance & fault statistics</p>
+    </div>
+    <a asp-action="DashBoard" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid-4" style="margin-bottom:28px;">
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa-solid fa-clock"></i></div>
+        <div>
+            <div class="stat-value">@avgResponseHours h</div>
+            <div class="stat-label">Avg Response Time</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+            <div class="stat-value">@avgCompletionDays d</div>
+            <div class="stat-label">Avg Completion Time</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fa-solid fa-dollar-sign"></i></div>
+        <div>
+            <div class="stat-value">@avgRepairCost</div>
+            <div class="stat-label">Avg Repair Cost</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="fa-solid fa-repeat"></i></div>
+        <div>
+            <div class="stat-value">@repeatFaultCount</div>
+            <div class="stat-label">Repeat Faults</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header"><div class="fms-card-title">Top Failing Models</div></div>
+    <div style="padding:16px;">
+        <canvas id="chartTopModels" height="150"></canvas>
+    </div>
+</div>
+
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header"><div class="fms-card-title">Most Common Faults</div></div>
+    <div style="padding:16px;">
+        <canvas id="chartCommonFaults" height="150"></canvas>
+    </div>
+</div>
+
+<!-- Most Expensive Repairs Table -->
+<div class="fms-card" style="margin-bottom:28px;">
+    <div class="fms-card-header"><div class="fms-card-title">Most Expensive Repairs</div></div>
+    @if (expensiveRepairs != null && expensiveRepairs.Any())
+    {
+        <table class="fms-table">
+            <thead><tr><th>Fault #</th><th>Fridge</th><th>Description</th><th>Cost</th></tr></thead>
+            <tbody>
+                @foreach (var r in expensiveRepairs)
+                {
+                    <tr>
+                        <td>#@r.Id</td>
+                        <td>@r.SerialNumber</td>
+                        <td>@r.Description</td>
+                        <td>@r.RepairCost?.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="padding:20px;"><em>No repair costs recorded.</em></div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const fontColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#e0e0e0';
+        const gridColor = 'rgba(150,210,230,0.15)';
+
+        // Top failing models
+        new Chart(document.getElementById('chartTopModels'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(ViewBag.TopModelsLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.TopModelsData ?? "[]"),
+                    backgroundColor: '#F0637A',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { precision:0, color:fontColor }, grid: { color:gridColor } },
+                    y: { ticks: { color:fontColor }, grid: { color:gridColor } }
+                }
+            }
+        });
+
+        // Most common faults
+        new Chart(document.getElementById('chartCommonFaults'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(ViewBag.CommonFaultLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.CommonFaultData ?? "[]"),
+                    backgroundColor: '#5FD4E0',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { precision:0, color:fontColor }, grid: { color:gridColor } },
+                    y: { ticks: { color:fontColor }, grid: { color:gridColor } }
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+        .stat-icon.blue {
+            background: linear-gradient(135deg, #5FD4E0, #3AA8B8);
+        }
+
+        .stat-icon.green {
+            background: linear-gradient(135deg, #3ECF8E, #2EA873);
+        }
+
+        .stat-icon.orange {
+            background: linear-gradient(135deg, #F5A623, #D48C1A);
+        }
+
+        .stat-icon.red {
+            background: linear-gradient(135deg, #F0637A, #D14A5A);
+        }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+</style>

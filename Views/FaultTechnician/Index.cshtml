@@ -54,6 +54,9 @@
                     <td style="text-align:right;">
                         <a asp-action="ProcessFault" asp-route-id="@f.Id" class="btn-fms btn-sm-fms btn-primary-fms">Process</a>
                         <a asp-action="Details" asp-route-id="@f.Id" class="btn-fms btn-sm-fms btn-ghost-fms">View</a>
+                        <a asp-action="FridgeHistory" asp-route-id="@f.Id" class="btn-fms btn-sm-fms btn-ghost-fms">
+                            <i class="fa-solid fa-clock-rotate-left"></i> History
+                        </a>
                     </td>
                 </tr>
             }

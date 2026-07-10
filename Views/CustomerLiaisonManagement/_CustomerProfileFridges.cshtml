@@ -1,0 +1,51 @@
+﻿@{
+    var activeFridges = Model.Item1 as List<FridgeManagement.Models.FridgeAllocation>;
+    var history = Model.Item2 as List<FridgeManagement.Models.FridgeAllocation>;
+}
+
+<div class="fms-card" style="margin-bottom:20px;">
+    <div class="fms-card-header"><div class="fms-card-title">Allocated Fridges (@activeFridges.Count)</div></div>
+    @if (activeFridges.Any())
+    {
+        <table class="fms-table">
+            <thead><tr><th>Serial</th><th>Model</th><th>Allocated Date</th></tr></thead>
+            <tbody>
+                @foreach (var a in activeFridges)
+                {
+                    <tr><td>@a.Fridge?.SerialNumber</td><td>@a.Fridge?.Model</td><td>@a.AllocationDate.ToString("yyyy-MM-dd")</td></tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+
+        <div style="padding:20px;"><em>No active allocations.</em></div>
+    }
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header"><div class="fms-card-title">Allocation History</div></div>
+    @if (history.Any())
+    {
+        <table class="fms-table">
+            <thead><tr><th>Date</th><th>Fridge</th><th>Status</th><th>Return Date</th></tr></thead>
+            <tbody>
+                @foreach (var a in history)
+                {
+                    <tr>
+                        <td>@a.AllocationDate.ToString("yyyy-MM-dd")</td>
+                        <td>@a.Fridge?.SerialNumber</td>
+                        <td>@a.Status</td>
+                        <td>@(a.ReturnDate?.ToString("yyyy-MM-dd") ?? "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+
+        <div style="padding:20px;"><em>No history.</em></div>
+    }
+</div>

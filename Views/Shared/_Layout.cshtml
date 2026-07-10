@@ -848,6 +848,21 @@
                     <li><a asp-controller="CustomerLiaisonManagement" asp-action="Allocations" class="@(ViewData["ActivePage"]?.ToString() == "Allocations" ? "active" : "")"><i class="fa-solid fa-link"></i> Allocations</a></li>
                     <li><a asp-controller="CustomerLiaisonManagement" asp-action="CreateAllocation" class="@(ViewData["ActivePage"]?.ToString() == "CreateAllocation" ? "active" : "")"><i class="fa-solid fa-plus"></i> New Allocation</a></li>
                     <li><a asp-controller="CustomerLiaisonManagement" asp-action="FridgeHistory" class="@(ViewData["ActivePage"]?.ToString() == "History" ? "active" : "")"><i class="fa-solid fa-clock-rotate-left"></i> Fridge History</a></li>
+                    <li>
+                        <a asp-action="AllocationWizard" class="btn-fms btn-primary-fms">
+                            <i class="fa-solid fa-plus"></i> New Allocation (Wizard)
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-action="FridgeAvailability" class="btn-fms btn-ghost-fms">
+                            <i class="fa-solid fa-chart-pie"></i> Fridge Inventory
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-action="AllocationCalendar" class="btn-fms btn-ghost-fms">
+                            <i class="fa-solid fa-calendar-alt"></i> Allocation Calendar
+                        </a>
+                    </li>
                 </ul>
             }
             else if (role == "INVENTORYLIAISON")
@@ -881,6 +896,21 @@
                     <li><a asp-controller="FaultTechnician" asp-action="Index" class="@(ViewData["ActivePage"]?.ToString() == "AllFaults" ? "active" : "")"><i class="fa-solid fa-list"></i> All Faults</a></li>
                     <li><a asp-controller="FaultTechnician" asp-action="MyAssignedFaults" class="@(ViewData["ActivePage"]?.ToString() == "Assigned" ? "active" : "")"><i class="fa-solid fa-user-check"></i> My Assigned</a></li>
                     <li><a asp-controller="FaultTechnician" asp-action="Details" class="@(ViewData["ActivePage"]?.ToString() == "Details" ? "active" : "")"><i class="fa-solid fa-magnifying-glass"></i> Fault Details</a></li>
+                    <li>
+                        <a asp-action="ScheduleCalendar" class="btn-fms btn-ghost-fms">
+                            <i class="fa-solid fa-calendar-alt"></i> Repair Calendar
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-action="FaultAnalytics" class="btn-fms btn-ghost-fms">
+                            <i class="fa-solid fa-chart-pie"></i> Fault Analytics
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-action="FridgeQRList" class="btn-fms btn-ghost-fms">
+                            <i class="fa-solid fa-qrcode"></i> Fridge QR Codes
+                        </a>
+                    </li>
                 </ul>
             }
             else if (role == "MAINTENANCETECHNICIAN")

@@ -1,0 +1,80 @@
+﻿@model FridgeManagement.Models.Customer
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Customer Notes";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Customer Notes</h1>
+        <p>@Model.Name</p>
+    </div>
+    <a asp-action="CustomerDetails" asp-route-id="@Model.Id" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to Profile
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="fms-card" style="margin-bottom:20px; padding:16px 20px; background:rgba(16,185,129,0.15); border:1px solid var(--success);">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--success);">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    </div>
+}
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-note-sticky" style="color:var(--ice); margin-right:8px;"></i>Edit Notes & Preferences</div>
+    </div>
+
+    <form asp-action="CustomerNotes" asp-route-id="@Model.Id" method="post" style="padding:20px;">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom:16px;"></div>
+
+        <div class="fms-form-group">
+            <label asp-for="Notes" class="fms-label">General Notes</label>
+            <textarea asp-for="Notes" class="fms-textarea" rows="3" placeholder="Any internal notes about the customer..."></textarea>
+            <span asp-validation-for="Notes" class="text-danger"></span>
+        </div>
+
+        <div class="fms-form-group">
+            <label asp-for="SpecialInstructions" class="fms-label">Special Instructions</label>
+            <textarea asp-for="SpecialInstructions" class="fms-textarea" rows="2" placeholder="e.g. Access code, security, parking..."></textarea>
+            <span asp-validation-for="SpecialInstructions" class="text-danger"></span>
+        </div>
+
+        <div class="grid-2">
+            <div class="fms-form-group">
+                <label asp-for="OperatingHours" class="fms-label">Operating Hours</label>
+                <input asp-for="OperatingHours" class="fms-input" placeholder="e.g. Mon-Fri 8am-5pm" />
+                <span asp-validation-for="OperatingHours" class="text-danger"></span>
+            </div>
+            <div class="fms-form-group">
+                <label asp-for="PreferredContact" class="fms-label">Preferred Contact Method</label>
+                <input asp-for="PreferredContact" class="fms-input" placeholder="e.g. Phone, WhatsApp, Email" />
+                <span asp-validation-for="PreferredContact" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="fms-form-group">
+            <label asp-for="DeliveryInstructions" class="fms-label">Delivery Instructions</label>
+            <textarea asp-for="DeliveryInstructions" class="fms-textarea" rows="2" placeholder="e.g. Deliver to back entrance, ask for manager..."></textarea>
+            <span asp-validation-for="DeliveryInstructions" class="text-danger"></span>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+            <a asp-action="CustomerDetails" asp-route-id="@Model.Id" class="btn-fms btn-ghost-fms">Cancel</a>
+            <button type="submit" class="btn-fms btn-primary-fms">
+                <i class="fa-solid fa-floppy-disk"></i> Save Notes
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

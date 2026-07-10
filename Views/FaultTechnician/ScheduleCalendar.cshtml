@@ -1,0 +1,104 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Repair Scheduling Calendar";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Scheduling Calendar</h1>
+        <p>Drag & drop to reschedule repairs</p>
+    </div>
+    <a asp-action="DashBoard" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="fms-card">
+    <div id="calendar"></div>
+</div>
+
+@section Scripts {
+    <!-- FullCalendar -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                editable: true,
+                droppable: false,
+                eventDurationEditable: false,
+
+
+                       eventDrop: function (info) {
+            fetch('/FaultTechnician/UpdateFaultSchedule', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                },
+                body: JSON.stringify({
+                    id: parseInt(info.event.id),
+                    newDate: info.event.start.toISOString()
+                })
+            }).then(response => {
+                if (!response.ok) {
+                    info.revert();
+                    response.text().then(text => alert(text || 'Double booking prevented.'));
+                }
+            });
+        },
+
+
+                eventClick: function(info) {
+                    // Navigate to process fault page
+                    window.location.href = '/FaultTechnician/ProcessFault?id=' + info.event.id;
+                },
+                height: 'auto',
+                themeSystem: 'standard',
+                eventTimeFormat: { hour: '2-digit', minute: '2-digit' }
+            });
+            calendar.render();
+        });
+    </script>
+    <style>
+        .fc {
+            color: var(--text-primary);
+            background: transparent;
+        }
+
+            .fc .fc-toolbar-title {
+                color: var(--text-primary);
+            }
+
+            .fc .fc-button {
+                background: var(--panel-bg);
+                border-color: var(--panel-border);
+                color: var(--text-primary);
+            }
+
+                .fc .fc-button:hover {
+                    background: var(--ice);
+                    color: #fff;
+                }
+
+            .fc .fc-daygrid-day-number {
+                color: var(--text-muted);
+            }
+
+            .fc .fc-col-header-cell-cushion {
+                color: var(--text-muted);
+            }
+
+        .fc-theme-standard td, .fc-theme-standard th {
+            border-color: var(--panel-border);
+        }
+    </style>
+}

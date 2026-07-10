@@ -5,8 +5,14 @@
         Reported,
         Assigned,
         Scheduled,
-        InProgress,
+        Travelling,
+        OnSite,
+        Diagnosing,
+        WaitingForParts,
+        Repairing,
+        Testing,
         Repaired,
+        CustomerConfirmed,
         Closed,
         Cancelled
     }

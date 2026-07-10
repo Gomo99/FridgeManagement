@@ -1,0 +1,262 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Allocation Wizard";
+}
+
+<div class="page-header">
+    <div>
+        <h1>New Fridge Allocation</h1>
+        <p>4‑step wizard – assign a fridge to a customer</p>
+    </div>
+    <a asp-action="Allocations" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to Allocations
+    </a>
+</div>
+
+<!-- Wizard progress indicator -->
+<div class="wizard-progress">
+    <div class="progress-step active" data-step="1">
+        <div class="step-circle">1</div>
+        <div class="step-label">Customer</div>
+    </div>
+    <div class="progress-connector" id="conn1"></div>
+    <div class="progress-step" data-step="2">
+        <div class="step-circle">2</div>
+        <div class="step-label">Fridge</div>
+    </div>
+    <div class="progress-connector" id="conn2"></div>
+    <div class="progress-step" data-step="3">
+        <div class="step-circle">3</div>
+        <div class="step-label">Review</div>
+    </div>
+    <div class="progress-connector" id="conn3"></div>
+    <div class="progress-step" data-step="4">
+        <div class="step-circle">4</div>
+        <div class="step-label">Confirm</div>
+    </div>
+</div>
+
+<form asp-action="CreateAllocation" method="post" id="wizardForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="CustomerId" id="hiddenCustomerId" />
+    <input type="hidden" name="FridgeId" id="hiddenFridgeId" />
+
+    <!-- Step 1: Choose Customer -->
+    <div class="fms-card wizard-panel active" id="step1">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Step 1 – Select Customer</div>
+        </div>
+        <div class="fms-form-group" style="padding:20px;">
+            <label class="fms-label">Customer</label>
+            <select id="customerSelect" class="fms-select" required>
+                <option value="">-- Choose customer --</option>
+            </select>
+        </div>
+        <div style="padding:0 20px 20px; text-align:right;">
+            <button type="button" class="btn-fms btn-primary-fms" onclick="goToStep(2)">Next <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <!-- Step 2: Choose Fridge -->
+    <div class="fms-card wizard-panel" id="step2" style="display:none;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Step 2 – Select Fridge</div>
+        </div>
+        <div class="fms-form-group" style="padding:20px;">
+            <label class="fms-label">Available Fridges</label>
+            <select id="fridgeSelect" class="fms-select" required>
+                <option value="">-- Choose fridge --</option>
+            </select>
+        </div>
+        <div style="padding:0 20px 20px; display:flex; justify-content:space-between;">
+            <button type="button" class="btn-fms btn-ghost-fms" onclick="goToStep(1)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            <button type="button" class="btn-fms btn-primary-fms" onclick="goToStep(3)">Next <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <!-- Step 3: Review -->
+    <div class="fms-card wizard-panel" id="step3" style="display:none;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Step 3 – Review Allocation</div>
+        </div>
+        <div style="padding:20px;">
+            <table class="fms-table">
+                <tr><td><strong>Customer</strong></td><td id="reviewCustomer"></td></tr>
+                <tr><td><strong>Fridge Serial</strong></td><td id="reviewFridgeSerial"></td></tr>
+                <tr><td><strong>Model</strong></td><td id="reviewFridgeModel"></td></tr>
+                <tr><td><strong>Brand</strong></td><td id="reviewFridgeBrand"></td></tr>
+            </table>
+        </div>
+        <div style="padding:0 20px 20px; display:flex; justify-content:space-between;">
+            <button type="button" class="btn-fms btn-ghost-fms" onclick="goToStep(2)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            <button type="button" class="btn-fms btn-primary-fms" onclick="goToStep(4)">Next <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <!-- Step 4: Confirm -->
+    <div class="fms-card wizard-panel" id="step4" style="display:none;">
+        <div class="fms-card-header">
+            <div class="fms-card-title">Step 4 – Confirm & Submit</div>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <p>Allocation details verified. Click "Confirm Allocation" to finalise.</p>
+        </div>
+        <div style="padding:0 20px 20px; display:flex; justify-content:space-between;">
+            <button type="button" class="btn-fms btn-ghost-fms" onclick="goToStep(3)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            <button type="submit" class="btn-fms btn-success-fms"><i class="fa-solid fa-check"></i> Confirm Allocation</button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // Data from server
+        const customers = @Html.Raw(ViewBag.CustomersJson ?? "[]");
+        const fridges = @Html.Raw(ViewBag.FridgesJson ?? "[]");
+
+        // Populate customer dropdown
+        const customerSelect = document.getElementById('customerSelect');
+        customers.forEach(c => {
+            customerSelect.innerHTML += `<option value="${c.Id}">${c.Name}</option>`;
+        });
+
+        // Populate fridge dropdown
+        const fridgeSelect = document.getElementById('fridgeSelect');
+        fridges.forEach(f => {
+            fridgeSelect.innerHTML += `<option value="${f.Id}" data-serial="${f.SerialNumber}" data-model="${f.Model}" data-brand="${f.Brand}">${f.SerialNumber} (${f.Model})</option>`;
+        });
+
+        // Navigation
+        function goToStep(step) {
+            // Validate current step
+            if (step === 2) {
+                if (!customerSelect.value) {
+                    alert('Please select a customer.');
+                    return;
+                }
+            }
+            if (step === 3) {
+                if (!fridgeSelect.value) {
+                    alert('Please select a fridge.');
+                    return;
+                }
+            }
+
+            // Update hidden fields
+            document.getElementById('hiddenCustomerId').value = customerSelect.value;
+            document.getElementById('hiddenFridgeId').value = fridgeSelect.value;
+
+            // Review data
+            if (step === 3 || step === 4) {
+                const custName = customerSelect.options[customerSelect.selectedIndex].text;
+                const fridgeOption = fridgeSelect.options[fridgeSelect.selectedIndex];
+                document.getElementById('reviewCustomer').textContent = custName;
+                document.getElementById('reviewFridgeSerial').textContent = fridgeOption.dataset.serial;
+                document.getElementById('reviewFridgeModel').textContent = fridgeOption.dataset.model;
+                document.getElementById('reviewFridgeBrand').textContent = fridgeOption.dataset.brand;
+            }
+
+            // Show/hide panels
+            document.querySelectorAll('.wizard-panel').forEach(p => p.style.display = 'none');
+            document.getElementById('step' + step).style.display = '';
+
+            // Update progress indicator
+            document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('active', 'completed'));
+            document.querySelectorAll('.progress-connector').forEach(c => c.classList.remove('active'));
+            for (let i = 1; i <= step; i++) {
+                const stepEl = document.querySelector(`.progress-step[data-step="${i}"]`);
+                if (i < step) stepEl.classList.add('completed');
+                else if (i == step) stepEl.classList.add('active');
+            }
+            for (let i = 1; i < step; i++) {
+                document.getElementById('conn' + i).classList.add('active');
+            }
+        }
+
+        // Initialise to step 1
+        goToStep(1);
+    </script>
+
+    <style>
+        .wizard-progress {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+            gap: 0;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .step-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: 0.3s;
+        }
+
+        .progress-step.completed .step-circle {
+            background: var(--ice);
+            border-color: var(--ice);
+            color: #fff;
+        }
+
+        .progress-step.active .step-circle {
+            border-color: var(--ice);
+            color: var(--ice);
+            box-shadow: 0 0 0 4px rgba(95,212,224,0.2);
+        }
+
+        .step-label {
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .progress-step.completed .step-label,
+        .progress-step.active .step-label {
+            color: var(--text-primary);
+        }
+
+        .progress-connector {
+            width: 40px;
+            height: 3px;
+            background: var(--panel-border);
+            margin: 0 8px;
+            transition: 0.3s;
+            margin-top: -20px;
+        }
+
+            .progress-connector.active {
+                background: var(--ice);
+            }
+
+        .wizard-panel {
+            animation: fadeSlide 0.3s ease;
+        }
+
+        @@keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+}

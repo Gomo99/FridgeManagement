@@ -1,0 +1,57 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Fridge Availability";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Fridge Availability</h1>
+        <p>Live inventory status breakdown</p>
+    </div>
+    <a asp-action="DashBoard" class="btn-fms btn-ghost-fms">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="fms-card">
+    <div class="fms-card-header">
+        <div class="fms-card-title"><i class="fa-solid fa-chart-pie"></i> Fridge Status Distribution</div>
+    </div>
+    <div style="padding:20px; display:flex; justify-content:center;">
+        <canvas id="availabilityChart" style="max-width:500px; max-height:500px;"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const labels = @Html.Raw(ViewBag.Labels);
+        const data = @Html.Raw(ViewBag.Data);
+        const colors = @Html.Raw(ViewBag.Colors);
+
+        new Chart(document.getElementById('availabilityChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: 'rgba(0,0,0,0.2)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#e0e0e0',
+                            padding: 15
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

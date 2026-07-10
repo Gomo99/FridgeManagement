@@ -1,0 +1,27 @@
+﻿@model List<FridgeManagement.Models.FaultReport>
+<div class="fms-card">
+    <div class="fms-card-header"><div class="fms-card-title">Fault History (@Model.Count)</div></div>
+    @if (Model.Any())
+    {
+        <table class="fms-table">
+            <thead><tr><th>Date</th><th>Fridge</th><th>Description</th><th>Technician</th><th>Status</th></tr></thead>
+            <tbody>
+                @foreach (var f in Model)
+                {
+                    <tr>
+                        <td>@f.ReportedDate.ToString("yyyy-MM-dd")</td>
+                        <td>@f.Fridge?.SerialNumber</td>
+                        <td>@f.Description</td>
+                        <td>@f.AssignedTechnician?.FullName</td>
+                        <td>@f.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+
+        <div style="padding:20px;"><em>No faults reported.</em></div>
+    }
+</div>
